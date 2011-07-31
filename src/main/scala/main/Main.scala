@@ -1,6 +1,6 @@
 package main
 
 
-object Main extends App {
+object Main extends Application {
 	println("SBT working!!!!!!!")
 }
