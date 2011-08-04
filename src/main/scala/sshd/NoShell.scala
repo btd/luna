@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2011 Denis Bardadym
+ * This project like github.
+ * Distributed under Apache Licence.
+ */
+
 package sshd
 
 import org.apache.sshd.common.Factory
@@ -32,8 +38,10 @@ class NoShell extends Factory[Command] {
     }
 
     def start(env: Environment) {
-      val message = "Test message"
-      err.write(Constants.encodeASCII(message));
+      val message = "Test message\n"
+      err.write(Constants.encode(message));
+      err.flush();
+
       in.close();
       out.close();
       err.close();

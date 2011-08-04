@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2011 Denis Bardadym
+ * This project like github.
+ * Distributed under Apache Licence.
+ */
+
 package sshd
 
 import org.apache.sshd.server.PublickeyAuthenticator
@@ -21,6 +27,11 @@ class DatabasePubKeyAuth extends PublickeyAuthenticator {
    * @param session the server session
    * @return a boolean indicating if authentication succeeded or not
    */
-  def authenticate(username: String, key: PublicKey, session: ServerSession): Boolean = true
+  def authenticate(username: String, key: PublicKey, session: ServerSession): Boolean = {
+    //TODO в первую очередь
+    println("User: " + username)
+    println("Key: " + key.getAlgorithm)
+    true
+  }
 
 }

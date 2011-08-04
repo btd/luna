@@ -1,7 +1,12 @@
+/*
+ * Copyright (c) 2011 Denis Bardadym
+ * This project like github.
+ * Distributed under Apache Licence.
+ */
+
 package sshd
 
 import org.apache.sshd.server.{Command, CommandFactory}
-import collection.Map
 
 /**
  * Created by IntelliJ IDEA.
@@ -21,8 +26,8 @@ class GitoChtoToCommandFactory extends CommandFactory {
    * @return a non null <code>Command</code>
    */
   def createCommand(command: String): Command = command match {
-      //case "git upload-pack" => UploadCommand()
-      //case "git receive-pack" => ReceiveCommand()
+    //case "git upload-pack" => UploadCommand()
+    //case "git receive-pack" => ReceiveCommand()
     case _ => throw new NoSuchCommandException(command + " doesn't supported by this server")
   }
 }

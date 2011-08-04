@@ -1,13 +1,15 @@
+/*
+ * Copyright (c) 2011 Denis Bardadym
+ * This project like github.
+ * Distributed under Apache Licence.
+ */
+
 package sshd
 
 import org.apache.sshd.SshServer
-import org.apache.sshd.common.keyprovider.FileKeyPairProvider
 import org.apache.sshd.server.auth.UserAuthPublicKey
-import org.apache.sshd.server.auth.UserAuthPublicKey.Factory
-import org.apache.sshd.common.NamedFactory
-import org.apache.sshd.server.UserAuth
 import org.apache.sshd.server.keyprovider.SimpleGeneratorHostKeyProvider
-import java.util.{Arrays, Collections, ArrayList}
+import java.util.Arrays
 
 /**
  * Created by IntelliJ IDEA.
@@ -22,13 +24,12 @@ object SshDaemon {
   private val sshd = SshServer.setUpDefaultServer()
 
   sshd.setPort(port)
-  //sshd.setKeyPairProvider(new FileKeyPairProvider(List("./ssh_host_rsa_key", "./ssh_host_dsa_key").toArray))
+  //TODO sshd.setKeyPairProvider(new FileKeyPairProvider(List("./ssh_host_rsa_key", "./ssh_host_dsa_key").toArray))
   sshd.setKeyPairProvider(new SimpleGeneratorHostKeyProvider("keycert"))
   sshd.setUserAuthFactories(Arrays.asList(new UserAuthPublicKey.Factory))
   sshd.setPublickeyAuthenticator(new DatabasePubKeyAuth())
   sshd.setCommandFactory(new GitoChtoToCommandFactory())
   sshd.setShellFactory(new NoShell())
-
 
   def start() = sshd.start()
 

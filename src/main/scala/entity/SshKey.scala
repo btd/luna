@@ -4,16 +4,19 @@
  * Distributed under Apache Licence.
  */
 
-package sshd
+package entity
 
 /**
  * Created by IntelliJ IDEA.
  * User: denis.bardadym
  * Date: 8/4/11
- * Time: 1:05 PM
+ * Time: 3:53 PM
  * To change this template use File | Settings | File Templates.
  */
 
-class NoSuchCommandException(message: String) extends Exception {
-  override def getMessage = message
-}
+class SshKey(
+              val ownerId: Int,
+              var value: String
+              )
+
+//TODO добавить companion object для доступа
