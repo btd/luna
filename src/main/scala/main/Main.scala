@@ -1,6 +1,9 @@
 package main
 
+import sshd.SshDaemon
+
 
 object Main extends Application {
-	println("SBT working!!!!!!!")
+	SshDaemon.start()
+
 }
