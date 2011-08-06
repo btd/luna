@@ -33,4 +33,5 @@ object Main extends Application {
   }
 
   println("Data from table " + i)*/
+  SshDaemon.start()
 }
