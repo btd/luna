@@ -3,16 +3,19 @@
  * Distributed under Apache License.
  */
 
-package sshd.git
+package server
 
-import java.io.{OutputStream, InputStream}
-import org.apache.sshd.server.{Environment, ExitCallback, Command}
+import org.eclipse.jgit.lib.RepositoryCache
 
 /**
  * Created by IntelliJ IDEA.
  * User: den
  * Date: 06.08.11
- * Time: 12:56
+ * Time: 14:20
  * To change this template use File | Settings | File Templates.
  */
 
+object Server {
+//load from configuration
+   val baseDir = "./"
+}

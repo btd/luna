@@ -5,6 +5,7 @@
 
 package sshd
 
+import git.{Receive, Upload}
 import org.apache.sshd.server.{Command, CommandFactory}
 
 /**
@@ -24,9 +25,21 @@ class GitoChtoToCommandFactory extends CommandFactory {
    * @param command
    * @return a non null <code>Command</code>
    */
-  def createCommand(command: String): Command = command match {
-    //case "git upload-pack" => UploadCommand()
-    //case "git receive-pack" => ReceiveCommand()
-    case _ => throw new NoSuchCommandException(command + " doesn't supported by this server")
+  def createCommand(command: String): Command = {
+    val args: List[String] = command.split(' ').toList
+
+    args match {
+      case "git-upload-pack" :: repoPath :: Nil => Upload(preparePath(repoPath))
+      case "git-receive-pack" :: repoPath :: Nil => Receive(repoPath)
+      //case "git upload-pack" => UploadCommand()
+      //case "git receive-pack" => ReceiveCommand()
+      case _ => throw new NoSuchCommandException(command + " doesn't supported by this server")
+    }
   }
+
+  def preparePath(path: String) =
+    if ((path startsWith "'") && (path endsWith "'"))
+      path substring (1, path.length - 1)
+    else path
+
 }

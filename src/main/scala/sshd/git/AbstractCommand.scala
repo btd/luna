@@ -5,9 +5,14 @@
 
 package sshd.git
 
-import java.io.{OutputStream, InputStream}
 import org.apache.sshd.server.{Environment, ExitCallback, Command}
-import org.eclipse.jgit.lib.Constants
+import org.eclipse.jgit.transport.UploadPack
+import org.eclipse.jgit.lib.RepositoryCache.FileKey
+import server.Server
+import org.eclipse.jgit.util.FS
+import org.eclipse.jgit.lib.{Repository, RepositoryCache}
+import java.io.{File, OutputStream, InputStream}
+import com.twitter.logging.Logger
 
 /**
  * Created by IntelliJ IDEA.
@@ -18,37 +23,49 @@ import org.eclipse.jgit.lib.Constants
  */
 
 abstract sealed class AbstractCommand extends Command {
- private var in: InputStream = null
-    private var out: OutputStream = null
-    private var err: OutputStream = null
+  protected val log = Logger.get(this.getClass)
 
-    private var callback: ExitCallback = null
+  protected var in: InputStream = null
+  protected var out: OutputStream = null
+  protected var err: OutputStream = null
 
-    def setInputStream(in: InputStream) {
-      this.in = in
-    }
+  protected var callback: ExitCallback = null
 
-    def destroy() {}
+  def setInputStream(in: InputStream) {
+    this.in = in
+  }
 
-    def setExitCallback(callback: ExitCallback) {
-      this.callback = callback
-    }
+  def destroy() {}
 
-    def start(env: Environment)
+  def setExitCallback(callback: ExitCallback) {
+    this.callback = callback
+  }
 
-    def setErrorStream(err: OutputStream) {
-      this.err = err
-    }
+  def start(env: Environment)
 
-    def setOutputStream(out: OutputStream) {
-      this.out = out
-    }
+  def setErrorStream(err: OutputStream) {
+    this.err = err
+  }
 
-    def parseCommandLine(args:String*): String
+  def setOutputStream(out: OutputStream) {
+    this.out = out
+  }
+
+
 }
 
-case class Upload(repo:String) extends AbstractCommand {
-  def start(env: Environment) = null
+case class Upload(repoPath: String) extends AbstractCommand {
+  def start(env: Environment) = {
+    log.info("Repo path %s", repoPath)
+    val repo : Repository = RepositoryCache.open(
+      FileKey.lenient(new File(Server.baseDir + repoPath) , FS.DETECTED))
+    val up = new UploadPack(repo)
+    up.upload(in, out, err)
+  }
+}
 
-  def parseCommandLine(args: String*) = null
+case class Receive(repoPath: String) extends AbstractCommand {
+  def start(env: Environment) = {
+    //UploadPack up = new UploadPack()
+  }
 }
