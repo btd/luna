@@ -1,7 +1,6 @@
 /*
  * Copyright (c) 2011 Denis Bardadym
- * This project like github.
- * Distributed under Apache Licence.
+ * Distributed under Apache License.
  */
 
 package com.twitter.querulous.evaluator
@@ -12,7 +11,7 @@ import com.twitter.querulous.database.ApachePoolingDatabaseFactory
 import com.twitter.querulous.query.{QueryClass, Query, SqlQueryFactory}
 import com.twitter.querulous.config.Connection
 
-object QueryEvaluator  {
+object QueryEvaluator extends QueryEvaluatorFactory {
   private def createEvaluatorFactory = {
     val queryFactory = new SqlQueryFactory
     val databaseFactory = new ApachePoolingDatabaseFactory(10, 10, 1.second, 10.millis, false, 0.seconds)

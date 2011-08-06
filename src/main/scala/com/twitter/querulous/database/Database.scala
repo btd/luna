@@ -1,7 +1,6 @@
 /*
  * Copyright (c) 2011 Denis Bardadym
- * This project like github.
- * Distributed under Apache Licence.
+ * Distributed under Apache License.
  */
 
 package com.twitter.querulous.database

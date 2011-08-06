@@ -1,15 +1,14 @@
 /*
  * Copyright (c) 2011 Denis Bardadym
- * This project like github.
- * Distributed under Apache Licence.
+ * Distributed under Apache License.
  */
 
 package com.twitter.querulous.database
 
 import java.sql.{SQLException, Connection}
-import org.apache.commons.dbcp.PoolingDataSource
 import org.apache.commons.pool.impl.GenericObjectPool
 import com.twitter.util.Duration
+import org.apache.commons.dbcp.{PoolableConnectionFactory, DriverManagerConnectionFactory, PoolingDataSource}
 
 class ApachePoolingDatabaseFactory(
                                     val minOpenConnections: Int,
@@ -65,14 +64,14 @@ class ApachePoolingDatabase(
   config.lifo = false
 
   private val connectionPool = new GenericObjectPool(null, config)
-  // private val connectionFactory = new DriverManagerConnectionFactory(url, username, password)
-  /*private val poolableConnectionFactory = new PoolableConnectionFactory(
+  private val connectionFactory = new DriverManagerConnectionFactory(url, username, password)
+  private val poolableConnectionFactory = new PoolableConnectionFactory(
     connectionFactory,
     connectionPool,
     null,
     "/* ping */ SELECT 1",
     false,
-    true)  */
+    true)
   private val poolingDataSource = new PoolingDataSource(connectionPool)
   poolingDataSource.setAccessToUnderlyingConnectionAllowed(true)
 
