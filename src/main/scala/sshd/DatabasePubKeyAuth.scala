@@ -28,8 +28,6 @@ class DatabasePubKeyAuth extends PublickeyAuthenticator {
    */
   def authenticate(username: String, key: PublicKey, session: ServerSession): Boolean = {
     //TODO в первую очередь
-    println("User: " + username)
-    println("Key: " + key.getAlgorithm)
     true
   }
 

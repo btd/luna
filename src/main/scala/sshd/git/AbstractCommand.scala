@@ -13,6 +13,7 @@ import org.eclipse.jgit.util.FS
 import org.eclipse.jgit.lib.{Repository, RepositoryCache}
 import java.io.{File, OutputStream, InputStream}
 import com.twitter.logging.Logger
+import java.lang.Thread
 
 /**
  * Created by IntelliJ IDEA.
@@ -41,7 +42,24 @@ abstract sealed class AbstractCommand extends Command {
     this.callback = callback
   }
 
-  def start(env: Environment)
+  def start(env: Environment) = {
+    new Thread(
+      new Runnable {
+        def run() {
+          try {
+            runImpl(env)
+          } finally {
+            in.close();
+            out.close();
+            err.close();
+            callback.onExit(127);
+          }
+        }
+      }
+    ).start();
+  }
+
+  def runImpl(env: Environment)
 
   def setErrorStream(err: OutputStream) {
     this.err = err
@@ -55,17 +73,16 @@ abstract sealed class AbstractCommand extends Command {
 }
 
 case class Upload(repoPath: String) extends AbstractCommand {
-  def start(env: Environment) = {
-    log.info("Repo path %s", repoPath)
-    val repo : Repository = RepositoryCache.open(
-      FileKey.lenient(new File(Server.baseDir + repoPath) , FS.DETECTED))
+  def runImpl(env: Environment) = {
+    val repo: Repository = RepositoryCache.open(
+      FileKey.lenient(new File(Server.repoDir + repoPath), FS.DETECTED))
     val up = new UploadPack(repo)
     up.upload(in, out, err)
   }
 }
 
 case class Receive(repoPath: String) extends AbstractCommand {
-  def start(env: Environment) = {
+  def runImpl(env: Environment) = {
     //UploadPack up = new UploadPack()
   }
 }

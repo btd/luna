@@ -8,7 +8,12 @@ package sshd
 import org.apache.sshd.SshServer
 import org.apache.sshd.server.auth.UserAuthPublicKey
 import org.apache.sshd.server.keyprovider.SimpleGeneratorHostKeyProvider
-import java.util.Arrays
+import org.apache.sshd.common.compression.CompressionNone
+import org.apache.sshd.server.channel.{ChannelDirectTcpip, ChannelSession}
+import java.util.{Collections, Arrays}
+import org.apache.mina.core.session.IoSession
+import org.apache.sshd.server.session.SessionFactory
+import org.apache.mina.transport.socket.SocketSessionConfig
 
 /**
  * Created by IntelliJ IDEA.
@@ -29,6 +34,19 @@ object SshDaemon {
   sshd.setPublickeyAuthenticator(new DatabasePubKeyAuth())
   sshd.setCommandFactory(new GitoChtoToCommandFactory())
   sshd.setShellFactory(new NoShell())
+  sshd.setCompressionFactories(Arrays.asList(new CompressionNone.Factory()));
+  sshd.setChannelFactories(Arrays.asList(new ChannelSession.Factory(), new ChannelDirectTcpip.Factory()));
+  sshd.setSubsystemFactories(Collections.emptyList());
+  sshd.setSessionFactory(new SessionFactory() {
+    override def createSession(ioSession: IoSession) = {
+      if (ioSession.getConfig().isInstanceOf[SocketSessionConfig]) {
+        val c = ioSession.getConfig().asInstanceOf[SocketSessionConfig];
+        c.setKeepAlive(true);
+      }
+
+      super.createSession(ioSession)
+    }
+  })
 
   def start() = sshd.start()
 

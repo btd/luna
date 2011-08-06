@@ -17,5 +17,5 @@ import org.eclipse.jgit.lib.RepositoryCache
 
 object Server {
 //load from configuration
-   val baseDir = "./"
+   val repoDir = "../"
 }
