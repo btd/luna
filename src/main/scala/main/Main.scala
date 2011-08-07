@@ -18,20 +18,6 @@ object Main extends Application {
 
   //evaluator.insert("insert into tb_test(i) values (1)");
 
-  val i = evaluator.selectOne("select i from tb_test") { r => r.getInt("i") } match {
-    case Some(e) => e
-    case None => -1
-  }
-
-  println("Data from table " + i) */
- /* val eval = new Eval
-  val connection = eval[Connection](new File("config/db.scala"))
-  val evaluator = QueryEvaluator( connection)
-  val i = evaluator.selectOne("select i from tb_test") { r => r.getInt("i") } match {
-    case Some(e) => e
-    case None => -1
-  }
-
   println("Data from table " + i)*/
   SshDaemon.start()
 }

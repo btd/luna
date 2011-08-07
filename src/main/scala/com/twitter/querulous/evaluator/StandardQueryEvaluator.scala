@@ -42,7 +42,7 @@ class StandardQueryEvaluator(protected val database: Database, queryFactory: Que
     withTransaction(_.executeBatch(queryClass, query)(f))
   }
 
-  def nextId(tableName: String) = withTransaction(_.nextId(tableName))
+
 
   def insert(queryClass: QueryClass, query: String, params: Any*) = {
     withTransaction(_.insert(queryClass, query, params: _*))

@@ -28,7 +28,6 @@ object SshDaemon {
   private val sshd = SshServer.setUpDefaultServer()
 
   sshd.setPort(port)
-  //TODO sshd.setKeyPairProvider(new FileKeyPairProvider(List("./ssh_host_rsa_key", "./ssh_host_dsa_key").toArray))
   sshd.setKeyPairProvider(new SimpleGeneratorHostKeyProvider("keycert"))
   sshd.setUserAuthFactories(Arrays.asList(new UserAuthPublicKey.Factory))
   sshd.setPublickeyAuthenticator(new DatabasePubKeyAuth())

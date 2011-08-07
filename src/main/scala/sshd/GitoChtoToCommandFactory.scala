@@ -8,6 +8,7 @@ package sshd
 import git.{Receive, Upload}
 import org.apache.sshd.server.{Command, CommandFactory}
 import com.twitter.logging.Logger
+import java.lang.Exception
 
 /**
  * Created by IntelliJ IDEA.
@@ -35,7 +36,7 @@ class GitoChtoToCommandFactory extends CommandFactory {
       case "git-receive-pack" :: repoPath :: Nil => Receive(preparePath(repoPath))
       //case "git upload-pack" => UploadCommand()
       //case "git receive-pack" => ReceiveCommand()
-      case _ => log.warning("Not recognized command"); throw new NoSuchCommandException(command + " doesn't supported by this server")
+      case _ => throw new NoSuchCommand("Not recognized command: " + command) //может быть лучше сделать DoNothing команду
     }
   }
 
@@ -44,4 +45,8 @@ class GitoChtoToCommandFactory extends CommandFactory {
       path substring (1, path.length - 1)
     else path
 
+}
+
+class NoSuchCommand(msg: String) extends Exception {
+  override def getMessage = msg
 }

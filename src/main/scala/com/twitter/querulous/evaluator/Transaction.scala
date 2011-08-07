@@ -31,20 +31,10 @@ class Transaction(queryFactory: QueryFactory, connection: Connection) extends Qu
     query.execute()
   }
 
-  def nextId(tableName: String) = {
-    execute("UPDATE " + tableName + " SET id=LAST_INSERT_ID(id+1)")
-    selectOne("SELECT LAST_INSERT_ID()") {
-      _.getLong("LAST_INSERT_ID()")
-    } getOrElse 0L
-  }
 
-  def insert(queryClass: QueryClass, query: String, params: Any*): Long = {
+
+  def insert(queryClass: QueryClass, query: String, params: Any*) {
     execute(queryClass, query, params: _*)
-    selectOne("SELECT LAST_INSERT_ID()") {
-      _.getLong("LAST_INSERT_ID()")
-    } getOrElse {
-      throw new SQLIntegrityConstraintViolationException
-    }
   }
 
   def begin() = {

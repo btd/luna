@@ -18,4 +18,14 @@ class SshKey(
               var value: String
               )
 
-//TODO добавить companion object для доступа
+object SshKey {
+  def all = DAO.select("SELECT owner_id, value FROM ssh_keys") {
+    row =>
+      new SshKey(row.getInt("owner_id"), row.getString("value"))
+  }
+
+  def byOwnerId(id: Int) = DAO.selectOne("SELECT owner_id, value FROM ssh_keys WHERE owner_id = ?", id) {
+    row =>
+      new SshKey(row.getInt("owner_id"), row.getString("value"))
+  }
+}

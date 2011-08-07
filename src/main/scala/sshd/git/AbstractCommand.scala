@@ -69,9 +69,8 @@ abstract sealed class AbstractCommand extends Command {
   def setOutputStream(out: OutputStream) {
     this.out = out
   }
-
-
 }
+
 
 case class Upload(repoPath: String) extends AbstractCommand {
   def run(env: Environment) = {

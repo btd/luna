@@ -59,11 +59,9 @@ trait QueryEvaluator {
   def executeBatch(query: String)(f: ParamsApplier => Unit): Int =
     executeBatch(QueryClass.Execute, query)(f)
 
-  def nextId(tableName: String): Long
+  def insert(queryClass: QueryClass, query: String, params: Any*): Unit
 
-  def insert(queryClass: QueryClass, query: String, params: Any*): Long
-
-  def insert(query: String, params: Any*): Long =
+  def insert(query: String, params: Any*): Unit =
     insert(QueryClass.Execute, query, params: _*)
 
   def transaction[T](f: Transaction => T): T
