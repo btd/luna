@@ -8,6 +8,9 @@ package sshd
 import org.apache.sshd.server.PublickeyAuthenticator
 import org.apache.sshd.server.session.ServerSession
 import java.security.PublicKey
+import sun.rmi.runtime.Log
+import com.twitter.logging.Logger
+import entity.{SshKey, Account}
 
 /**
  * Created by IntelliJ IDEA.
@@ -18,6 +21,7 @@ import java.security.PublicKey
  */
 
 class DatabasePubKeyAuth extends PublickeyAuthenticator {
+  private val log = Logger.get(this.getClass)
   /**
    * Check the validity of a public key.
    *
@@ -27,8 +31,10 @@ class DatabasePubKeyAuth extends PublickeyAuthenticator {
    * @return a boolean indicating if authentication succeeded or not
    */
   def authenticate(username: String, key: PublicKey, session: ServerSession): Boolean = {
-    //TODO в первую очередь
-    true
+    log.info("User %s tried to authentificate", username)
+    val keys = SshKey.byOwnerName(username)
+    log.info("Founded %d keys", keys.length)
+    keys.count(SshUtil.parse((_:SshKey)) == key) > 0
   }
 
 }

@@ -43,7 +43,6 @@ class StandardQueryEvaluator(protected val database: Database, queryFactory: Que
   }
 
 
-
   def insert(queryClass: QueryClass, query: String, params: Any*) = {
     withTransaction(_.insert(queryClass, query, params: _*))
   }

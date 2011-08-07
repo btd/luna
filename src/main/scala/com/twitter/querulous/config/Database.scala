@@ -40,6 +40,7 @@ class Database {
   def pool_=(p: PoolingDatabase) {
     pool = Some(p)
   }
+
   var name: Option[String] = None
 
   def name_=(s: String) {

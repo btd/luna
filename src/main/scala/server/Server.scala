@@ -5,8 +5,6 @@
 
 package server
 
-import org.eclipse.jgit.lib.RepositoryCache
-
 /**
  * Created by IntelliJ IDEA.
  * User: den
@@ -16,6 +14,6 @@ import org.eclipse.jgit.lib.RepositoryCache
  */
 
 object Server {
-//load from configuration
-   val repoDir = "../"
+  //load from configuration
+  val repoDir = "../"
 }

@@ -5,7 +5,7 @@
 
 package com.twitter.querulous.evaluator
 
-import java.sql.{ResultSet, SQLException, SQLIntegrityConstraintViolationException, Connection}
+import java.sql.{ResultSet, SQLException, Connection}
 import com.twitter.querulous.query.{QueryClass, QueryFactory}
 
 class Transaction(queryFactory: QueryFactory, connection: Connection) extends QueryEvaluator {
@@ -30,7 +30,6 @@ class Transaction(queryFactory: QueryFactory, connection: Connection) extends Qu
     f(new ParamsApplier(query))
     query.execute()
   }
-
 
 
   def insert(queryClass: QueryClass, query: String, params: Any*) {

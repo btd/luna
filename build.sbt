@@ -18,6 +18,7 @@ libraryDependencies ++= Seq (
   "com.twitter"         % "util-core"         % "1.11.1",
   "com.twitter"         % "util-logging"      % "1.11.1",
   "com.twitter"         % "util-eval"         % "1.11.1",
+  "commons-codec"       % "commons-codec"     % "1.5",
   "commons-dbcp"        % "commons-dbcp"      % "1.4",
   "commons-pool"        % "commons-pool"      % "1.5.4",
   "com.h2database"      % "h2"                % "1.3.158",
