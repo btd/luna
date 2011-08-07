@@ -6,7 +6,6 @@
 package sshd.git
 
 import org.apache.sshd.server.{Environment, ExitCallback, Command}
-import org.eclipse.jgit.transport.UploadPack
 import org.eclipse.jgit.lib.RepositoryCache.FileKey
 import server.Server
 import org.eclipse.jgit.util.FS
@@ -14,6 +13,7 @@ import org.eclipse.jgit.lib.{Repository, RepositoryCache}
 import java.io.{File, OutputStream, InputStream}
 import com.twitter.logging.Logger
 import actors.Actor
+import org.eclipse.jgit.transport.{ReceivePack, UploadPack}
 
 /**
  * Created by IntelliJ IDEA.
@@ -84,6 +84,15 @@ case class Upload(repoPath: String) extends AbstractCommand {
 
 case class Receive(repoPath: String) extends AbstractCommand {
   def run(env: Environment) = {
-    //UploadPack up = new UploadPack()
+    val repo: Repository = RepositoryCache.open(
+      FileKey.lenient(new File(Server.repoDir + repoPath), FS.DETECTED))
+    val rp = new ReceivePack(repo)
+
+    rp.setAllowCreates(true)
+    rp.setAllowDeletes(true)
+    rp.setAllowNonFastForwards(true)
+    rp.setCheckReceivedObjects(true)
+
+    rp.receive(in, out, err)
   }
 }

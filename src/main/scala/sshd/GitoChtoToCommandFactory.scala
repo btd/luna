@@ -7,6 +7,7 @@ package sshd
 
 import git.{Receive, Upload}
 import org.apache.sshd.server.{Command, CommandFactory}
+import com.twitter.logging.Logger
 
 /**
  * Created by IntelliJ IDEA.
@@ -17,6 +18,7 @@ import org.apache.sshd.server.{Command, CommandFactory}
  */
 
 class GitoChtoToCommandFactory extends CommandFactory {
+  private val log = Logger.get(this.getClass)
   /**
    * Create a command with the given name.
    * If the command is not known, a dummy command should be returned to allow
@@ -27,13 +29,13 @@ class GitoChtoToCommandFactory extends CommandFactory {
    */
   def createCommand(command: String): Command = {
     val args: List[String] = command.split(' ').toList
-
+    log.debug("Receive command: %s", command)
     args match {
       case "git-upload-pack" :: repoPath :: Nil => Upload(preparePath(repoPath))
-      case "git-receive-pack" :: repoPath :: Nil => Receive(repoPath)
+      case "git-receive-pack" :: repoPath :: Nil => Receive(preparePath(repoPath))
       //case "git upload-pack" => UploadCommand()
       //case "git receive-pack" => ReceiveCommand()
-      case _ => throw new NoSuchCommandException(command + " doesn't supported by this server")
+      case _ => log.warning("Not recognized command"); throw new NoSuchCommandException(command + " doesn't supported by this server")
     }
   }
 
