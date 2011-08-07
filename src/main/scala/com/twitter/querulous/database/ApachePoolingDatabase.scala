@@ -75,13 +75,7 @@ class ApachePoolingDatabase(
   private val poolingDataSource = new PoolingDataSource(connectionPool)
   poolingDataSource.setAccessToUnderlyingConnectionAllowed(true)
 
-  def close(connection: Connection) {
-    try {
-      connection.close()
-    } catch {
-      case _: SQLException =>
-    }
-  }
+
 
   def open() = poolingDataSource.getConnection()
 

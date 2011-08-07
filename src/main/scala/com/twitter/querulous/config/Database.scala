@@ -13,7 +13,7 @@ package com.twitter.querulous.config
 
 import com.twitter.util.Duration
 import com.twitter.conversions.time._
-import com.twitter.querulous.database.{DatabaseFactory, ApachePoolingDatabaseFactory}
+import com.twitter.querulous.database.{BoneCPPoolingDatabaseFactory, DatabaseFactory, ApachePoolingDatabaseFactory}
 
 trait PoolingDatabase {
   def apply(): DatabaseFactory
@@ -33,20 +33,18 @@ class ApachePoolingDatabase extends PoolingDatabase {
   }
 }
 
+class BoneCPPoolingDatabase extends PoolingDatabase {
+  var partitionCount: Int = 2
+  var maxConnectionsPerPartition: Int = 5
+  var minConnectionsPerPartition: Int = 1
+  var acquireIncrement: Int = 2
 
-class Database {
-  var pool: Option[PoolingDatabase] = None
-
-  def pool_=(p: PoolingDatabase) {
-    pool = Some(p)
-  }
-
-  var name: Option[String] = None
-
-  def name_=(s: String) {
-    name = Some(s)
+  def apply() = {
+    new BoneCPPoolingDatabaseFactory(
+      partitionCount, maxConnectionsPerPartition, minConnectionsPerPartition, acquireIncrement)
   }
 }
+
 
 trait Connection {
   def url: String
