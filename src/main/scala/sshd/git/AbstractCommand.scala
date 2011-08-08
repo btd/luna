@@ -52,7 +52,7 @@ abstract sealed class AbstractCommand extends Command {
           in.close();
           out.close();
           err.close();
-          callback.onExit(127);
+          callback.onExit(0);
         }
       }
 
