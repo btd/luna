@@ -8,9 +8,10 @@ package entity
 import com.twitter.util.Eval
 import com.twitter.querulous.config.Connection
 import java.io.File
-import com.twitter.querulous.query.QueryClass
 import java.sql.ResultSet
-import com.twitter.querulous.evaluator.{Transaction, ParamsApplier, QueryEvaluator}
+import main.Main
+import com.twitter.querulous.evaluator.{StandardQueryEvaluatorFactory, Transaction, ParamsApplier, QueryEvaluator}
+import com.twitter.querulous.query.{SqlQueryFactory, QueryClass}
 
 /**
  * Created by IntelliJ IDEA.
@@ -22,9 +23,8 @@ import com.twitter.querulous.evaluator.{Transaction, ParamsApplier, QueryEvaluat
 
 //this object will read db properties from 'config/db.scala'
 object DAO extends QueryEvaluator {
-  private val eval = new Eval
-  private val connection = eval[Connection](new File("config/db.scala"))
-  private val evaluator = QueryEvaluator(connection)
+
+  private val evaluator = (new StandardQueryEvaluatorFactory(Main.pool(), new SqlQueryFactory))(Main.connection)
 
   def transaction[T](f: (Transaction) => T) = evaluator.transaction[T](f)
 

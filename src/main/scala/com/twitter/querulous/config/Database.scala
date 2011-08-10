@@ -39,10 +39,10 @@ class BoneCPPoolingDatabase extends PoolingDatabase {
   var minConnectionsPerPartition: Int = 1
   var acquireIncrement: Int = 2
 
-  def apply() = {
+  def apply() =
     new BoneCPPoolingDatabaseFactory(
       partitionCount, maxConnectionsPerPartition, minConnectionsPerPartition, acquireIncrement)
-  }
+
 }
 
 

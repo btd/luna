@@ -34,16 +34,17 @@ class GitoChtoToCommandFactory extends CommandFactory {
     args match {
       case "git-upload-pack" :: repoPath :: Nil => Upload(preparePath(repoPath))
       case "git-receive-pack" :: repoPath :: Nil => Receive(preparePath(repoPath))
-      //case "git upload-pack" => UploadCommand()
-      //case "git receive-pack" => ReceiveCommand()
       case _ => throw new NoSuchCommand("Not recognized command: " + command) //может быть лучше сделать DoNothing команду
     }
   }
 
-  def preparePath(path: String) =
-    if ((path startsWith "'") && (path endsWith "'"))
+  def preparePath(path: String) = {
+    val resultedPath = if ((path startsWith "'") && (path endsWith "'"))
       path substring (1, path.length - 1)
     else path
+    if (resultedPath startsWith "/") resultedPath substring 1
+    else resultedPath
+  }
 
 }
 

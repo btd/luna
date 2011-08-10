@@ -3,17 +3,16 @@
  * Distributed under Apache License.
  */
 
-package server
+package config
 
 /**
  * Created by IntelliJ IDEA.
  * User: den
- * Date: 06.08.11
- * Time: 14:20
+ * Date: 10.08.11
+ * Time: 22:02
  * To change this template use File | Settings | File Templates.
  */
 
-object Server {
-  //load from configuration
-  val repoDir = "../"
+trait Server {
+  val repoDir = "./repo/"
 }

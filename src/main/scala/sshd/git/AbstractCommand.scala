@@ -7,13 +7,14 @@ package sshd.git
 
 import org.apache.sshd.server.{Environment, ExitCallback, Command}
 import org.eclipse.jgit.lib.RepositoryCache.FileKey
-import server.Server
+import config.Server
 import org.eclipse.jgit.util.FS
 import org.eclipse.jgit.lib.{Repository, RepositoryCache}
 import java.io.{File, OutputStream, InputStream}
 import com.twitter.logging.Logger
 import actors.Actor
 import org.eclipse.jgit.transport.{ReceivePack, UploadPack}
+import main.Main
 
 /**
  * Created by IntelliJ IDEA.
@@ -75,7 +76,7 @@ abstract sealed class AbstractCommand extends Command {
 case class Upload(repoPath: String) extends AbstractCommand {
   def run(env: Environment) = {
     val repo: Repository = RepositoryCache.open(
-      FileKey.lenient(new File(Server.repoDir + repoPath), FS.DETECTED))
+      FileKey.lenient(new File(Main.server.repoDir + repoPath), FS.DETECTED))
     val up = new UploadPack(repo)
     up.upload(in, out, err)
   }
@@ -84,7 +85,7 @@ case class Upload(repoPath: String) extends AbstractCommand {
 case class Receive(repoPath: String) extends AbstractCommand {
   def run(env: Environment) = {
     val repo: Repository = RepositoryCache.open(
-      FileKey.lenient(new File(Server.repoDir + repoPath), FS.DETECTED))
+      FileKey.lenient(new File(Main.server.repoDir + repoPath), FS.DETECTED))
     val rp = new ReceivePack(repo)
 
     rp.setAllowCreates(true)

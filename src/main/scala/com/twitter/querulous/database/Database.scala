@@ -5,11 +5,12 @@
 
 package com.twitter.querulous.database
 
-import com.twitter.util.Duration
 import java.sql.{SQLException, Connection}
+
 
 trait DatabaseFactory {
   def apply(driver: String, url: String, username: String, password: String): Database
+
 }
 
 trait Database {
