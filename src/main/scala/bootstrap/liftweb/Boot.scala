@@ -23,8 +23,10 @@ class Boot extends Loggable {
     logger.warn("JNDI connection available (manyally) ? " + (((new InitialContext).lookup("java:/comp/env/jdbc/db").asInstanceOf[DataSource]) != null))
     logger.warn("JNDI connection available (lift) ? " + DB.jndiJdbcConnAvailable_?)
 
-    if (!DB.jndiJdbcConnAvailable_?)
+    if (!DB.jndiJdbcConnAvailable_?) {
       DB.defineConnectionManager(DefaultConnectionIdentifier, DefaultConnectionManager)
+      LiftRules.unloadHooks.append(DefaultConnectionManager.close _)
+    }
 
     new Actor {
       def act() {
@@ -32,7 +34,9 @@ class Boot extends Loggable {
       }
     }.start()
 
-
+    ResourceServer.allow {
+      case "css" :: _ => true
+    }
 
     // where to search snippet
     LiftRules.addToPackages("code")
