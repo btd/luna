@@ -7,19 +7,10 @@ package sshd
 
 import git.{Receive, Upload}
 import org.apache.sshd.server.{Command, CommandFactory}
-import com.twitter.logging.Logger
 import java.lang.Exception
+import net.liftweb.common.Loggable
 
-/**
- * Created by IntelliJ IDEA.
- * User: denis.bardadym
- * Date: 8/4/11
- * Time: 12:17 PM
- * To change this template use File | Settings | File Templates.
- */
-
-class GitoChtoToCommandFactory extends CommandFactory {
-  private val log = Logger.get(this.getClass)
+class GitoChtoToCommandFactory extends CommandFactory with Loggable {
   /**
    * Create a command with the given name.
    * If the command is not known, a dummy command should be returned to allow
@@ -30,7 +21,7 @@ class GitoChtoToCommandFactory extends CommandFactory {
    */
   def createCommand(command: String): Command = {
     val args: List[String] = command.split(' ').toList
-    log.debug("Receive command: %s", command)
+    logger.debug("Receive command: " + command)
     args match {
       case "git-upload-pack" :: repoPath :: Nil => Upload(preparePath(repoPath))
       case "git-receive-pack" :: repoPath :: Nil => Receive(preparePath(repoPath))

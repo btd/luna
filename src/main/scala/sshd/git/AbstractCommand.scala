@@ -7,25 +7,15 @@ package sshd.git
 
 import org.apache.sshd.server.{Environment, ExitCallback, Command}
 import org.eclipse.jgit.lib.RepositoryCache.FileKey
-import config.Server
 import org.eclipse.jgit.util.FS
 import org.eclipse.jgit.lib.{Repository, RepositoryCache}
 import java.io.{File, OutputStream, InputStream}
-import com.twitter.logging.Logger
 import actors.Actor
 import org.eclipse.jgit.transport.{ReceivePack, UploadPack}
 import main.Main
+import net.liftweb.common.Loggable
 
-/**
- * Created by IntelliJ IDEA.
- * User: den
- * Date: 06.08.11
- * Time: 12:58
- * To change this template use File | Settings | File Templates.
- */
-
-abstract sealed class AbstractCommand extends Command {
-  protected val log = Logger.get(this.getClass)
+abstract sealed class AbstractCommand extends Command with Loggable {
 
   protected var in: InputStream = null
   protected var out: OutputStream = null
@@ -76,7 +66,7 @@ abstract sealed class AbstractCommand extends Command {
 case class Upload(repoPath: String) extends AbstractCommand {
   def run(env: Environment) = {
     val repo: Repository = RepositoryCache.open(
-      FileKey.lenient(new File(Main.server.repoDir + repoPath), FS.DETECTED))
+      FileKey.lenient(new File(Main.repoDir + repoPath), FS.DETECTED))
     val up = new UploadPack(repo)
     up.upload(in, out, err)
   }
@@ -85,7 +75,7 @@ case class Upload(repoPath: String) extends AbstractCommand {
 case class Receive(repoPath: String) extends AbstractCommand {
   def run(env: Environment) = {
     val repo: Repository = RepositoryCache.open(
-      FileKey.lenient(new File(Main.server.repoDir + repoPath), FS.DETECTED))
+      FileKey.lenient(new File(Main.repoDir + repoPath), FS.DETECTED))
     val rp = new ReceivePack(repo)
 
     rp.setAllowCreates(true)

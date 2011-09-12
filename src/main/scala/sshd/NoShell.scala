@@ -37,7 +37,7 @@ class NoShell extends Factory[Command] {
     }
 
     def start(env: Environment) {
-      val message = "Test message\n"
+      val message = "Sorry but this server doesnot support ssh connections\n"
       err.write(Constants.encode(message));
       err.flush();
 

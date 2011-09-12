@@ -5,40 +5,63 @@
 
 package entity
 
-import com.twitter.util.Eval
-import com.twitter.querulous.config.Connection
-import java.io.File
-import java.sql.ResultSet
-import main.Main
-import com.twitter.querulous.evaluator.{StandardQueryEvaluatorFactory, Transaction, ParamsApplier, QueryEvaluator}
-import com.twitter.querulous.query.{SqlQueryFactory, QueryClass}
+import java.sql.{ResultSet, Types, PreparedStatement}
+import net.liftweb.db.{DefaultConnectionIdentifier, DB}
+import collection.mutable.ArrayBuffer
+import net.liftweb.common.Loggable
+import javax.naming.{Context, InitialContext}
+import javax.sql.DataSource
 
 /**
- * Created by IntelliJ IDEA.
- * User: den
- * Date: 07.08.11
- * Time: 13:02
- * To change this template use File | Settings | File Templates.
+ * User: denis.bardadym
+ * Date: 9/9/11
+ * Time: 11:48 AM
  */
 
-//this object will read db properties from 'config/db.scala'
-object DAO extends QueryEvaluator {
+object DAO extends Loggable {
+  private def setPreparedParams(ps: PreparedStatement, params: List[Any]): PreparedStatement = {
+    params.zipWithIndex.foreach {
+      case (null, idx) => ps.setNull(idx + 1, Types.VARCHAR)
+      case (i: Int, idx) => ps.setInt(idx + 1, i)
+      case (l: Long, idx) => ps.setLong(idx + 1, l)
+      case (d: Double, idx) => ps.setDouble(idx + 1, d)
+      case (f: Float, idx) => ps.setFloat(idx + 1, f)
+      // Allow the user to specify how they want the Date handled based on the input type
+      case (t: java.sql.Timestamp, idx) => ps.setTimestamp(idx + 1, t)
+      case (d: java.sql.Date, idx) => ps.setDate(idx + 1, d)
+      case (t: java.sql.Time, idx) => ps.setTime(idx + 1, t)
+      /* java.util.Date has to go last, since the java.sql date/time classes subclass it. By default we
+       * assume a Timestamp value */
+      case (d: java.util.Date, idx) => ps.setTimestamp(idx + 1, new java.sql.Timestamp(d.getTime))
+      case (b: Boolean, idx) => ps.setBoolean(idx + 1, b)
+      case (s: String, idx) => ps.setString(idx + 1, s)
+      case (bn: java.math.BigDecimal, idx) => ps.setBigDecimal(idx + 1, bn)
+      case (obj, idx) => ps.setObject(idx + 1, obj)
+    }
+    ps
+  }
 
-  private val evaluator = (new StandardQueryEvaluatorFactory(Main.pool(), new SqlQueryFactory))(Main.connection)
+  def select[A](query: String, params: Any*)(f: ResultSet => A): Seq[A] = {
+    DB.use(DefaultConnectionIdentifier) {
+      DB.prepareStatement(query, _) {
+        ps =>
+          val rs = setPreparedParams(ps, params.toList).executeQuery()
 
-  def transaction[T](f: (Transaction) => T) = evaluator.transaction[T](f)
+          try {
+            val finalResult = new ArrayBuffer[A]
+            while (rs.next()) {
+              finalResult += f(rs)
+            }
+            finalResult
+          } finally {
+            rs.close()
+          }
+      }
+    }
+  }
 
-  def insert(queryClass: QueryClass, query: String, params: Any*) = evaluator.insert(queryClass, query, params)
+  def selectOne[A](query: String, params: Any*)(f: ResultSet => A) = {
+    select(query, params: _*)(f).headOption
+  }
 
-  def executeBatch(queryClass: QueryClass, query: String)(f: (ParamsApplier) => Unit) = evaluator.executeBatch(queryClass, query)(f)
-
-  def execute(queryClass: QueryClass, query: String, params: Any*) = evaluator.execute(queryClass, query, params)
-
-  def count(queryClass: QueryClass, query: String, params: Any*) = evaluator.count(queryClass, query, params)
-
-  def selectOne[A](queryClass: QueryClass, query: String, params: Any*)(f: (ResultSet) => A) =
-    evaluator.selectOne[A](queryClass, query, params)(f)
-
-  def select[A](queryClass: QueryClass, query: String, params: Any*)(f: (ResultSet) => A) =
-    evaluator.select[A](queryClass, query, params)(f)
 }

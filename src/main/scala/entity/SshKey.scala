@@ -5,8 +5,6 @@
 
 package entity
 
-import java.security.PublicKey
-
 /**
  * Created by IntelliJ IDEA.
  * User: denis.bardadym
@@ -19,14 +17,15 @@ class SshKey(
               val ownerId: String,
               var value: String
               ) {
-  lazy val encodedKey  = value.split(" ")(1)
+  lazy val encodedKey = value.split(" ")(1)
 }
 
 object SshKey {
-  def all = DAO.select("SELECT owner_id, value FROM ssh_keys") {
-    row =>
-      new SshKey(row.getString("owner_id"), row.getString("value"))
-  }
+  def all =
+    DAO.select("SELECT owner_id, value FROM ssh_keys") {
+      row =>
+        new SshKey(row.getString("owner_id"), row.getString("value"))
+    }
 
   def byOwnerId(id: String) = DAO.select("SELECT owner_id, value FROM ssh_keys WHERE owner_id = ?", id) {
     row =>

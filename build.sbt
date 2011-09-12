@@ -1,32 +1,26 @@
 name := "GitoChtoTo"
 
-version := "0.1-SNAPHOT"
+version := "0.1-SNAPSHOT"
 
 seq(webSettings :_*)
 
-scalaVersion := "2.8.1"
+scalaVersion := "2.9.1"
 
 
 resolvers ++= Seq (
-  "jgit-repository" at "http://download.eclipse.org/jgit/maven",
-  "twitter.com"     at "http://maven.twttr.com/",
-  "java.net"        at "http://download.java.net/maven/2"
+  "jgit-repository" at "http://download.eclipse.org/jgit/maven"
   )
 
 
 libraryDependencies ++= Seq (
   "org.apache.sshd"     % "sshd-core" 	      % "0.5.0",
   "org.eclipse.jgit"    % "org.eclipse.jgit"  % "1.0.0.201106090707-r",
-  "com.twitter"         % "util-core"         % "1.11.1",
-  "com.twitter"         % "util-logging"      % "1.11.1",
-  "com.twitter"         % "util-eval"         % "1.11.1",
   "commons-codec"       % "commons-codec"     % "1.5",
-  "commons-dbcp"        % "commons-dbcp"      % "1.4",
-  "commons-pool"        % "commons-pool"      % "1.5.4",
   "com.jolbox"          % "bonecp"            % "0.7.1.RELEASE",
-  "com.h2database"      % "h2"                % "1.3.158",
+  "com.h2database"      % "h2"                % "1.3.160",
   "junit"               % "junit"             % "4.8"                   % "test",
-  "net.liftweb"         %% "lift-webkit"      % "2.4-M3"                % "compile",
-  "org.eclipse.jetty"   % "jetty-webapp"      % "7.3.0.v20110203"       % "jetty",
+  "net.liftweb"         %% "lift-webkit"      % "2.4-M4"                % "compile",
+  "net.liftweb"         %% "lift-db"          % "2.4-M4"                % "compile",
+  "org.eclipse.jetty"   % "jetty-webapp"      % "8.0.0.v20110901"       % "jetty",
   "ch.qos.logback"      % "logback-classic"   % "0.9.26"
   )
