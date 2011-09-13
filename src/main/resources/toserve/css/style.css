@@ -400,8 +400,7 @@ form {
 
     min-width: 72px;
 
-    padding-top: 7px;
-    padding-bottom: 7px;
+    padding: 1em;
 
     font-family: 'Open Sans', sans-serif;
 
@@ -416,7 +415,6 @@ form {
     text-align: center;
     vertical-align: middle;
     white-space: nowrap;
-
     outline: none;
 
     position: relative;

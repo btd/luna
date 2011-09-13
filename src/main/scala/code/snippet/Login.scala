@@ -32,7 +32,8 @@ class Login extends StatefulSnippet with Loggable {
       value: String =>
         email = value.trim
         if (email.isEmpty) S.error("Email field are empty")
-    }, "placeholder" -> "email@example.com") &
+    },
+    "placeholder" -> "email@example.com") &
       "name=password" #>
         SHtml.password(password, {
           value: String =>
@@ -40,6 +41,9 @@ class Login extends StatefulSnippet with Loggable {
             if (password.isEmpty) S.error("Password field are empty")
         }, "placeholder" -> "password") &
       "type=button" #> SHtml.button("Enter", process)
+
+
+  //TODO заменить обработку на аякс и убрать кнопку она тут нафиг не сдалась
 
   private def process() = {
     User.byEmail(email) match {

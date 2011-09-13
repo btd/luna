@@ -5,12 +5,10 @@
 
 package entity
 
-import java.sql.{ResultSet, Types, PreparedStatement}
-import net.liftweb.db.{DefaultConnectionIdentifier, DB}
 import collection.mutable.ArrayBuffer
 import net.liftweb.common.Loggable
-import javax.naming.{Context, InitialContext}
-import javax.sql.DataSource
+import java.sql._
+import net.liftweb.db.{SuperConnection, DefaultConnectionIdentifier, DB}
 
 /**
  * User: denis.bardadym
@@ -18,8 +16,15 @@ import javax.sql.DataSource
  * Time: 11:48 AM
  */
 
-object DAO extends Loggable {
-  private def setPreparedParams(ps: PreparedStatement, params: List[Any]): PreparedStatement = {
+object DAO extends QueryEvaluator with Loggable {
+
+  def atomic[T](f: Transaction => T) = {
+    transaction {  t =>
+       f(t)
+    }
+  }
+
+  private[entity] def setPreparedParams(ps: PreparedStatement, params: List[Any]): PreparedStatement = {
     params.zipWithIndex.foreach {
       case (null, idx) => ps.setNull(idx + 1, Types.VARCHAR)
       case (i: Int, idx) => ps.setInt(idx + 1, i)
@@ -64,4 +69,74 @@ object DAO extends Loggable {
     select(query, params: _*)(f).headOption
   }
 
+  def execute(query: String, params: Any*) = {
+    DB.use(DefaultConnectionIdentifier) {
+      DB.prepareStatement(query, _) {
+        ps => setPreparedParams(ps, params.toList).executeUpdate()
+
+      }
+    }
+  }
+
+  def transaction[T](f: Transaction => T) = {
+    DB.use(DefaultConnectionIdentifier) {
+      conn =>
+        try {
+          val result = f(new Transaction(conn))
+          conn.commit
+          result
+        } catch {
+          case e: Throwable =>
+            try {
+              conn.rollback
+            } catch {
+              case _ => ()
+            }
+            throw e
+        }
+    }
+  }
+}
+
+trait QueryEvaluator {
+  def select[A](query: String, params: Any*)(f: ResultSet => A): Seq[A]
+
+  def selectOne[A](query: String, params: Any*)(f: ResultSet => A): Option[A]
+
+  def execute(query: String, params: Any*): Int
+
+  def transaction[T](f: Transaction => T): T
+}
+
+class Transaction(connection: SuperConnection) extends QueryEvaluator {
+  def select[A](query: String, params: Any*)(f: ResultSet => A) = {
+    DB.prepareStatement(query, connection) {
+      ps =>
+        val rs = DAO.setPreparedParams(ps, params.toList).executeQuery()
+
+        try {
+          val finalResult = new ArrayBuffer[A]
+          while (rs.next()) {
+            finalResult += f(rs)
+          }
+          finalResult
+        } finally {
+          rs.close()
+        }
+    }
+
+  }
+
+  def selectOne[A](query: String, params: Any*)(f: ResultSet => A) = {
+    select(query, params: _*)(f).headOption
+  }
+
+  def execute(query: String, params: Any*) = {
+    DB.prepareStatement(query, connection) {
+      ps => DAO.setPreparedParams(ps, params.toList).executeUpdate()
+
+    }
+  }
+
+  def transaction[T](f: Transaction => T) = f(this)
 }

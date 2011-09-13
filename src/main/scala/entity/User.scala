@@ -10,19 +10,25 @@ class User(
             val email: String, //уникальный и not null может надо будет добавить хоть какую то валидацию (н-р что там есть @)
             val name: String,
             val passwd: String // not null TODO в будущем это будет хешированный пароль
-            )
+            ) {
+  def +:(trn : Transaction) = {
+    trn.execute("insert into account(email, name, passwd) values (?, ?, ?)", email, name, passwd)
+  }
+}
 
 object User {
-  def all = DAO.select("SELECT  email, name, passwd FROM accounts") {
+  def all = DAO.select("SELECT  email, name, passwd FROM account") {
     row =>
       new User(row.getString("email"), row.getString("name"), row.getString("passwd"))
   }
 
 
-  def byEmail(email: String) = DAO.selectOne("SELECT  email, name, passwd FROM accounts WHERE email = ?", email) {
+  def byEmail(email: String) = DAO.selectOne("SELECT  email, name, passwd FROM account WHERE email = ?", email) {
     row =>
       new User(row.getString("email"), row.getString("name"), row.getString("passwd"))
   }
+
+
 
   var currentUser: Option[User] = None
 

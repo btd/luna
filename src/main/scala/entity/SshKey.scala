@@ -18,16 +18,20 @@ class SshKey(
               var value: String
               ) {
   lazy val encodedKey = value.split(" ")(1)
+
+  def +:(trn : Transaction) = {
+    trn.execute("insert into ssh_keys(owner_id, value) values (?, ?)", ownerId, value)
+  }
 }
 
 object SshKey {
   def all =
-    DAO.select("SELECT owner_id, value FROM ssh_keys") {
+    DAO.select("SELECT owner_id, value FROM ssh_key") {
       row =>
         new SshKey(row.getString("owner_id"), row.getString("value"))
     }
 
-  def byOwnerId(id: String) = DAO.select("SELECT owner_id, value FROM ssh_keys WHERE owner_id = ?", id) {
+  def byOwnerId(id: String) = DAO.select("SELECT owner_id, value FROM ssh_key WHERE owner_id = ?", id) {
     row =>
       new SshKey(row.getString("owner_id"), row.getString("value"))
   }
@@ -36,4 +40,6 @@ object SshKey {
     row =>
       new SshKey(row.getString("owner_id"), row.getString("value"))
   }
+
+
 }
