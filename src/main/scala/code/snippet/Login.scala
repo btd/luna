@@ -51,9 +51,9 @@ class Login extends StatefulSnippet with Loggable {
         S.error("User with such email doesn't exists")
 
       case Some(u) =>
-        if (u.passwd != password) S.error("Password are wrong")
+        if (u.password != password) S.error("Password are wrong")
         else {
-          User.currentUser = Some(u)
+          User.current = Some(u)
           S.redirectTo("/")
         }
 

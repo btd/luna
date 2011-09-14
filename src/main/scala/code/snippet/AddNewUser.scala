@@ -73,10 +73,10 @@ object AddNewUser extends Loggable {
           t +: new SshKey(email, ssh_key)
       }
       logger.debug("User added to DB")
-      User.currentUser = Some(u)
+      User.current = Some(u)
       S.redirectTo("/")
     } catch {
-      case e if !e.instanceOf[net.liftweb.http.ResponseShortcutException] => {
+      case e : Throwable if !e.isInstanceOf[net.liftweb.http.ResponseShortcutException] => {
         logger.debug("%s %s".format(e.getClass.getName,e.getMessage))
         S.error("Cannot add this user")
       }

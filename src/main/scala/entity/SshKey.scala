@@ -14,31 +14,26 @@ package entity
  */
 
 class SshKey(
-              val ownerId: String,
-              var value: String
+              val ownerLogin: String,
+              var rawValue: String
               ) {
-  lazy val encodedKey = value.split(" ")(1)
+  lazy val encodedKey = rawValue.split(" ")(1)
 
   def +:(trn : Transaction) = {
-    trn.execute("insert into ssh_key(owner_id, value) values (?, ?)", ownerId, value)
+    trn.execute("insert into ssh_keys(owner_login, raw_value) values (?, ?)", ownerLogin, rawValue)
   }
 }
 
 object SshKey {
   def all =
-    DAO.select("SELECT owner_id, value FROM ssh_key") {
+    DAO.select("SELECT owner_login, raw_value FROM ssh_keys") {
       row =>
-        new SshKey(row.getString("owner_id"), row.getString("value"))
+        new SshKey(row.getString("owner_login"), row.getString("raw_value"))
     }
 
-  def byOwnerId(id: String) = DAO.select("SELECT owner_id, value FROM ssh_key WHERE owner_id = ?", id) {
+  def byOwnerLogin(login: String) = DAO.select("select owner_login, raw_value from ssh_keys where owner_login = ?", login) {
     row =>
-      new SshKey(row.getString("owner_id"), row.getString("value"))
-  }
-
-  def byOwnerName(name: String) = DAO.select("select s.owner_id, s.value from ssh_key s inner join account a  on s.owner_id = a.email where a.name = ?", name) {
-    row =>
-      new SshKey(row.getString("owner_id"), row.getString("value"))
+      new SshKey(row.getString("owner_login"), row.getString("raw_value"))
   }
 
 

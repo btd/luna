@@ -11,6 +11,16 @@ package entity
  * Time: 10:06 AM
  */
 
-class Repository {
+class Repository (val fsName: String, //имя папки репозитория not null unique primary key хеш наверно SHA-1
+                   val name: String,    //имя репозитория для пользователя not null
+                   //val clonnedFrom: String, //id того репозитория откуда был склонирован
+                   //val isOpen: Boolean, //открытый или закрытый репозиторий
+                   val ownerId: String //email владельца репозитория not null
+                    ) {
+  //  ownerId + name уникальны  ?
+
+}
+
+object Repository {
 
 }
