@@ -14,6 +14,8 @@ class User(
   def +:(trn : Transaction) = {
     trn.execute("insert into account(email, name, passwd) values (?, ?, ?)", email, name, passwd)
   }
+
+  def keys = SshKey.byOwnerId(email)
 }
 
 object User {
@@ -23,12 +25,10 @@ object User {
   }
 
 
-  def byEmail(email: String) = DAO.selectOne("SELECT  email, name, passwd FROM account WHERE email = ?", email) {
+  def withEmail(email: String) = DAO.selectOne("SELECT  email, name, passwd FROM account WHERE email = ?", email) {
     row =>
       new User(row.getString("email"), row.getString("name"), row.getString("passwd"))
   }
-
-
 
   var currentUser: Option[User] = None
 

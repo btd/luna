@@ -36,6 +36,7 @@ class Boot extends Loggable {
 
     ResourceServer.allow {
       case "css" :: _ => true
+      case "js" :: _ => true
     }
 
     // where to search snippet

@@ -46,7 +46,7 @@ class Login extends StatefulSnippet with Loggable {
   //TODO заменить обработку на аякс и убрать кнопку она тут нафиг не сдалась
 
   private def process() = {
-    User.byEmail(email) match {
+    User.withEmail(email) match {
       case None =>
         S.error("User with such email doesn't exists")
 

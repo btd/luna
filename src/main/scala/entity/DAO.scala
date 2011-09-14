@@ -19,8 +19,9 @@ import net.liftweb.db.{SuperConnection, DefaultConnectionIdentifier, DB}
 object DAO extends QueryEvaluator with Loggable {
 
   def atomic[T](f: Transaction => T) = {
-    transaction {  t =>
-       f(t)
+    transaction {
+      t =>
+        f(t)
     }
   }
 
@@ -47,53 +48,27 @@ object DAO extends QueryEvaluator with Loggable {
   }
 
   def select[A](query: String, params: Any*)(f: ResultSet => A): Seq[A] = {
-    DB.use(DefaultConnectionIdentifier) {
-      DB.prepareStatement(query, _) {
-        ps =>
-          val rs = setPreparedParams(ps, params.toList).executeQuery()
-
-          try {
-            val finalResult = new ArrayBuffer[A]
-            while (rs.next()) {
-              finalResult += f(rs)
-            }
-            finalResult
-          } finally {
-            rs.close()
-          }
-      }
+    transaction {
+      _.select(query, params: _*)(f)
     }
   }
 
   def selectOne[A](query: String, params: Any*)(f: ResultSet => A) = {
-    select(query, params: _*)(f).headOption
+    transaction {
+      _.selectOne(query, params: _*)(f)
+    }
+
   }
 
   def execute(query: String, params: Any*) = {
-    DB.use(DefaultConnectionIdentifier) {
-      DB.prepareStatement(query, _) {
-        ps => setPreparedParams(ps, params.toList).executeUpdate()
-
-      }
+    transaction {
+      _.execute(query, params : _*)
     }
   }
 
   def transaction[T](f: Transaction => T) = {
-    DB.use(DefaultConnectionIdentifier) {
-      conn =>
-        try {
-          val result = f(new Transaction(conn))
-          conn.commit
-          result
-        } catch {
-          case e: Throwable =>
-            try {
-              conn.rollback
-            } catch {
-              case _ => ()
-            }
-            throw e
-        }
+    DB.use(DefaultConnectionIdentifier) { conn =>
+        f(new Transaction(conn))
     }
   }
 }

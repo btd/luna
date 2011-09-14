@@ -20,7 +20,7 @@ class SshKey(
   lazy val encodedKey = value.split(" ")(1)
 
   def +:(trn : Transaction) = {
-    trn.execute("insert into ssh_keys(owner_id, value) values (?, ?)", ownerId, value)
+    trn.execute("insert into ssh_key(owner_id, value) values (?, ?)", ownerId, value)
   }
 }
 
