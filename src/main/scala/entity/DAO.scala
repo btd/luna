@@ -25,7 +25,7 @@ object DAO extends QueryEvaluator with Loggable {
     }
   }
 
-  private[this] def setPreparedParams(ps: PreparedStatement, params: List[Any]): PreparedStatement = {
+  private[entity] def setPreparedParams(ps: PreparedStatement, params: List[Any]): PreparedStatement = {
     params.zipWithIndex.foreach {
       case (null, idx) => ps.setNull(idx + 1, Types.VARCHAR)
       case (i: Int, idx) => ps.setInt(idx + 1, i)

@@ -31,7 +31,7 @@ object SshKey {
         new SshKey(row.getString("owner_login"), row.getString("raw_value"))
     }
 
-  def byOwnerLogin(login: String) = DAO.select("select owner_login, raw_value from ssh_keys where owner_login = ?", login) {
+  def ownerBy(login: String) = DAO.select("select owner_login, raw_value from ssh_keys where owner_login = ?", login) {
     row =>
       new SshKey(row.getString("owner_login"), row.getString("raw_value"))
   }

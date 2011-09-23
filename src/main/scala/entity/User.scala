@@ -11,6 +11,14 @@ import common._
 import util._
 import http._
 
+/*
+TODO
+Подумать о трайтах
+Entity -> all
+Compisition -> ownedBy[T]
+Atomic -> +:
+ */
+
 class User(
             // val id: Int, //уникальный и not null   (нахера нужех id?)
             val email: String, //уникальный и not null может надо будет добавить хоть какую то валидацию (н-р что там есть @)
@@ -21,7 +29,9 @@ class User(
     trn.execute("insert into users(email, login, password) values (?, ?, ?)", email, login, password)
   }
 
-  def keys = SshKey.byOwnerLogin(login)
+  def keys = SshKey.ownerBy(login)
+
+  def repos = Repository.ownedBy(login)
 }
 
 object User {

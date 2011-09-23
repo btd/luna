@@ -17,6 +17,7 @@ case class UserPage(login: String) {
   lazy val user = User.withLogin(login)
 }
 
+// TODO FIXME
 object ValidUser {
   def unapply(login: String): Option[String] =   Full(login)
     //User.withLogin(login) match {

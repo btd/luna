@@ -22,7 +22,7 @@ class Repository (val fsName: String, //имя папки репозитория
 }
 
 object Repository {
-  def allOwnedBy(login : String) =
+  def ownedBy(login : String) =
     DAO.select("select fs_name, name, is_open from repositories where owner_login = ?", login) {
       row => new Repository(row.getString("fs_name"), row.getString("name"), row.getInt("is_open") == 1, login)
     }

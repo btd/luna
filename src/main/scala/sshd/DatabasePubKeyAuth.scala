@@ -22,8 +22,9 @@ class DatabasePubKeyAuth extends PublickeyAuthenticator with Loggable {
    * @return a boolean indicating if authentication succeeded or not
    */
   def authenticate(username: String, key: PublicKey, session: ServerSession): Boolean = {
+    //TODO Починить проыерку доступа
     logger.debug("User " + username + " tried to authentificate")
-    val keys = SshKey.byOwnerLogin(username)
+    val keys = SshKey.ownerBy(username)
     logger.debug("Founded " + keys.length + " keys")
     keys.count(SshUtil.parse((_: SshKey)) == key) > 0
   }
