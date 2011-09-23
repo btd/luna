@@ -14,6 +14,7 @@ create table ssh_keys (
 create table repositories(
   fs_name VARCHAR(100) not null,
   name VARCHAR2(50) not null,
+  is_open NUMBER(1),
   owner_login VARCHAR (50) not null,
    foreign key (owner_login) references users(login),
 );

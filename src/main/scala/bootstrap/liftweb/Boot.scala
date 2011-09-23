@@ -4,14 +4,26 @@ import net.liftweb._
 import common._
 import db._
 import http._
+import provider.HTTPProvider
 import sitemap._
 import Loc._
+import sitemap.LocPath._
 import sshd.SshDaemon
-import javax.naming.InitialContext
-import javax.sql.DataSource
 import actors.Actor
-import entity.DefaultConnectionManager
+import entity.{User, DefaultConnectionManager}
+import xml.{NodeSeq, Text}
 
+case class UserPage(login: String) {
+  lazy val user = User.withLogin(login)
+}
+
+object ValidUser {
+  def unapply(login: String): Option[String] =   Full(login)
+    //User.withLogin(login) match {
+    //  case Full(u) => Full(login)
+    //  case _ => None
+    //}
+}
 
 /**
  * A class that's instantiated early and run.  It allows the application
@@ -20,8 +32,8 @@ import entity.DefaultConnectionManager
 class Boot extends Loggable {
   def boot {
     DefaultConnectionIdentifier.jndiName = "jdbc/db"
-    logger.warn("JNDI connection available (manyally) ? " + (((new InitialContext).lookup("java:/comp/env/jdbc/db").asInstanceOf[DataSource]) != null))
-    logger.warn("JNDI connection available (lift) ? " + DB.jndiJdbcConnAvailable_?)
+    //logger.warn("JNDI connection available (manyally) ? " + (((new InitialContext).lookup("java:/comp/env/jdbc/db").asInstanceOf[DataSource]) != null))
+    //logger.warn("JNDI connection available (lift) ? " + DB.jndiJdbcConnAvailable_?)
 
     if (!DB.jndiJdbcConnAvailable_?) {
       DB.defineConnectionManager(DefaultConnectionIdentifier, DefaultConnectionManager)
@@ -42,14 +54,31 @@ class Boot extends Loggable {
     // where to search snippet
     LiftRules.addToPackages("code")
 
+    val indexPage = Menu.i("Home") / "index"
+   // val listPage = Menu.i("List") / "list"
+
+    val userPage = Menu.param[UserPage]("userPage",
+      new LinkText[UserPage](up => Text("User " + up.login)),
+      login => Full(UserPage(login)),
+      up => up.login) / "list"/ * >> Template(() => Templates("list" :: Nil) openOr NodeSeq.Empty)
+
     // Build SiteMap
-    val entries = List(
-      Menu.i("Home") / "index", // the simple way to declare a menu
-      Menu.i("New User") / "new",
-      // more complex because this menu allows anything in the
-      // /static path to be visible
-      Menu(Loc("Static", Link(List("static"), true, "/static/index"),
-        "Static Content")))
+    val entries = List(indexPage, userPage)
+    //Menu.i("Home") / "index", // the simple way to declare a menu
+    //Menu.i("New User") / "new",
+
+    //)
+
+
+    LiftRules.statelessRewrite.append {
+      case RewriteRequest(ParsePath( Nil, _, _, true), _, _) =>
+
+        RewriteResponse("index" :: Nil, Map[String, String]())
+      case RewriteRequest(ParsePath(ValidUser(user) :: Nil, _, _, false), _, _) =>
+
+        RewriteResponse("list" :: user :: Nil, Map[String, String]())
+    }
+
 
     // set the sitemap.  Note if you don't want access control for
     // each page, just comment this line out.

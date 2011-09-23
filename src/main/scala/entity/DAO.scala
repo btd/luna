@@ -25,7 +25,7 @@ object DAO extends QueryEvaluator with Loggable {
     }
   }
 
-  private[entity] def setPreparedParams(ps: PreparedStatement, params: List[Any]): PreparedStatement = {
+  private[this] def setPreparedParams(ps: PreparedStatement, params: List[Any]): PreparedStatement = {
     params.zipWithIndex.foreach {
       case (null, idx) => ps.setNull(idx + 1, Types.VARCHAR)
       case (i: Int, idx) => ps.setInt(idx + 1, i)
@@ -62,12 +62,13 @@ object DAO extends QueryEvaluator with Loggable {
 
   def execute(query: String, params: Any*) = {
     transaction {
-      _.execute(query, params : _*)
+      _.execute(query, params: _*)
     }
   }
 
   def transaction[T](f: Transaction => T) = {
-    DB.use(DefaultConnectionIdentifier) { conn =>
+    DB.use(DefaultConnectionIdentifier) {
+      conn =>
         f(new Transaction(conn))
     }
   }
@@ -84,6 +85,8 @@ trait QueryEvaluator {
 }
 
 class Transaction(connection: SuperConnection) extends QueryEvaluator {
+  val driverType = connection.driverType
+
   def select[A](query: String, params: Any*)(f: ResultSet => A) = {
     DB.prepareStatement(query, connection) {
       ps =>
@@ -112,6 +115,8 @@ class Transaction(connection: SuperConnection) extends QueryEvaluator {
 
     }
   }
+
+
 
   def transaction[T](f: Transaction => T) = f(this)
 }

@@ -40,7 +40,7 @@ $(function() {
         ul.siblings("input.textfield").val(a.attr("href"));
         return false;
     });
-})
+});
 
 
 

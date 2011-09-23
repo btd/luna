@@ -73,7 +73,7 @@ object AddNewUser extends Loggable {
           t +: new SshKey(email, ssh_key)
       }
       logger.debug("User added to DB")
-      User.current = Some(u)
+     // User.current = Some(u)
       S.redirectTo("/")
     } catch {
       case e : Throwable if !e.isInstanceOf[net.liftweb.http.ResponseShortcutException] => {

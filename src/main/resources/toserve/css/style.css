@@ -309,6 +309,12 @@ input[type="search"] {
     -moz-box-sizing: content-box;
     -webkit-box-sizing: content-box;
     box-sizing: content-box;
+	-webkit-appearance: none;
+}
+
+input[type="search"]::-webkit-search-decoration,
+input[type="search"]::-webkit-search-cancel-button {
+	display: none;
 }
 
 /* 
@@ -385,7 +391,7 @@ form {
     font-size: 3em;
 }
 
-.textfield.not_active {
+.placeholder {
     color: gray;
 }
 
@@ -441,8 +447,7 @@ form {
 }
 
 .repo_block {
-    border: 1px solid rgba(0, 0, 0, 0.4);;
-    border-radius: 10px;
+    border-top: 1px solid rgba(0, 0, 0, 0.4);
     margin: 10px 0;
     padding: 1em;
     max-width: 1000px;

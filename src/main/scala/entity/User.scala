@@ -5,6 +5,12 @@
 
 package entity
 
+import net.liftweb._
+
+import common._
+import util._
+import http._
+
 class User(
             // val id: Int, //уникальный и not null   (нахера нужех id?)
             val email: String, //уникальный и not null может надо будет добавить хоть какую то валидацию (н-р что там есть @)
@@ -30,12 +36,61 @@ object User {
       new User(row.getString("email"), row.getString("login"), row.getString("password"))
   }
 
-  var current: Option[User] = None
-
-  def loggedIn_? = current match {
-    case None => false
-    case _ => true
+  def withLogin(login: String) = DAO.selectOne("SELECT  email, login, password FROM users WHERE login = ?", login) {
+    row =>
+      new User(row.getString("email"), row.getString("login"), row.getString("password"))
   }
+
+  def loggedIn_? = {
+    currentUserId.isDefined
+  }
+
+  def logUserIdIn(id: String) {
+    curUser.remove()
+    curUserId(Full(id))
+  }
+
+  val destroySessionOnLogin = true
+
+  def logUserIn(who: User, postLogin: () => Nothing): Nothing = {
+    if (destroySessionOnLogin) {
+      S.session.open_!.destroySessionAndContinueInNewSession(() => {
+        logUserIn(who)
+        postLogin()
+      })
+    } else {
+      logUserIn(who)
+      postLogin()
+    }
+  }
+
+  def logUserIn(who: User) {
+    curUserId.remove()
+    curUser.remove()
+    curUserId(Full(who.login))
+    curUser(Full(who))
+  }
+
+  def logoutCurrentUser = logUserOut()
+
+  def logUserOut() {
+    curUserId.remove()
+    curUser.remove()
+    S.session.foreach(_.destroySession())
+  }
+
+  private object curUserId extends SessionVar[Box[String]](Empty) {
+    override lazy val __nameSalt = Helpers.nextFuncName
+  }
+
+
+  def currentUserId: Box[String] = curUserId.is
+
+  private object curUser extends RequestVar[Box[User]](currentUserId.flatMap(withLogin))  with CleanRequestVarOnSessionTransition  {
+    override lazy val __nameSalt = Helpers.nextFuncName
+  }
+
+  def currentUser: Box[User] = curUser.is
 }
 
 

@@ -6,9 +6,10 @@
 package code.snippet
 
 import net.liftweb._
+import common.{Box, Empty, Full, Loggable}
 import http._
+import util.Helpers
 import util.Helpers._
-import common.Loggable
 import entity.User
 
 /**
@@ -43,19 +44,30 @@ class Login extends StatefulSnippet with Loggable {
       "type=button" #> SHtml.button("Enter", process)
 
 
-  //TODO заменить обработку на аякс и убрать кнопку она тут нафиг не сдалась
+  object loginRedirect extends SessionVar[Box[String]](Empty) {
+    override lazy val __nameSalt = Helpers.nextFuncName
+  }
+
+  def homePage = "/"
 
   private def process() = {
     User.withEmail(email) match {
       case None =>
         S.error("User with such email doesn't exists")
 
-      case Some(u) =>
-        if (u.password != password) S.error("Password are wrong")
-        else {
-          User.current = Some(u)
-          S.redirectTo("/")
+      case Some(u) if (u.password != password) => S.error("Password are wrong")
+      case Some(u) => {
+        val redir = loginRedirect.is match {
+          case Full(url) =>
+            loginRedirect(Empty)
+            url
+          case _ =>  homePage
         }
+
+        User.logUserIn(u, () => {
+          S.redirectTo("/" + u.login)
+        })
+      }
 
     }
   }
