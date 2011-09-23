@@ -37,7 +37,7 @@ $(function() {
         var a = $(this);
         var ul = a.parent().parent();
         ul.children().toggleClass("selected")
-        ul.siblings("input.textfield").val(a.attr("href"));
+        ul.siblings("input").val(a.attr("href"));
         return false;
     });
 });
