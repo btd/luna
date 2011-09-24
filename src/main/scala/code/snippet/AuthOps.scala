@@ -1,7 +1,7 @@
 package code.snippet
 
 import net.liftweb._
-import common.Loggable
+import common.{Empty, Full, Loggable}
 import util.Helpers._
 import http._
 import entity.{SshKey, DAO, User}
@@ -70,6 +70,39 @@ object AuthOps extends Loggable{
         logger.debug("%s %s".format(e.getClass.getName, e.getMessage))
         S.error("Cannot add this user")
       }
+    }
+  }
+
+  def loginUser = {
+      "name=email" #> SHtml.text(email, {
+      value: String =>
+        email = value.trim
+        if (email.isEmpty) S.error("Email field are empty")
+    },
+    "placeholder" -> "email@example.com") &
+      "name=password" #>
+        SHtml.password(password, {
+          value: String =>
+            password = value.trim
+            if (password.isEmpty) S.error("Password field are empty")
+        }, "placeholder" -> "password") &
+      "type=button" #> SHtml.button("Enter", logUserIn)
+
+
+  }
+
+  def logUserIn()= {
+     User.withEmail(email) match {
+      case None =>
+        S.error("User with such email doesn't exists")
+
+      case Some(u) if (u.password != password) => S.error("Password are wrong")
+      case Some(u) => {
+        User.logUserIn(u, () => {
+          S.redirectTo(u.homePageUrl)
+        })
+      }
+
     }
   }
 }

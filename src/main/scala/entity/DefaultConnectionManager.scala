@@ -24,7 +24,7 @@ object DefaultConnectionManager extends ConnectionManager with Loggable {
   private val config = new BoneCPConfig
   config.setJdbcUrl(Props.get("db.url", "jdbc:h2:~/test"))
   config.setUsername(Props.get("db.username", "sa"))
-  config.setPassword(Props.get("db.password", "sa"))
+  config.setPassword(Props.get("db.password", ""))
   config.setPartitionCount(2)
   config.setMaxConnectionsPerPartition(5)
   config.setMinConnectionsPerPartition(1)

@@ -13,7 +13,7 @@ import xml.{Text, NodeSeq}
  * To change this template use File | Settings | File Templates.
  */
 
-class MyMenu {
+object MyMenu {
   def your = {
     "*" #> (User.currentUserId match {
       case Full(u) => <a href={"/list/" + u}>Your page</a>
