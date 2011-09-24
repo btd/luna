@@ -1,30 +1,28 @@
-/*
- * Copyright (c) 2011 Denis Bardadym
- * Distributed under Apache License.
- */
-
 package code.snippet
 
 import net.liftweb._
-import common.{Loggable, Empty}
-import http._
+import common.Loggable
 import util.Helpers._
+import http._
 import entity.{SshKey, DAO, User}
+import util.LiftFlowOfControlException
+
 
 /**
- * User: denis.bardadym
- * Date: 9/13/11
- * Time: 11:48 AM
+ * Created by IntelliJ IDEA.
+ * User: den
+ * Date: 24.09.11
+ * Time: 17:34
+ * To change this template use File | Settings | File Templates.
  */
 
-object AddNewUser extends Loggable {
+object AuthOps extends Loggable{
   private var email = ""
   private var password = ""
-  private var repeat_password = ""
   private var login = ""
   private var ssh_key = ""
 
-  def render() = {
+  def newUser = {
     "name=email" #> SHtml.text(email, {
       value: String =>
         email = value.trim
@@ -37,13 +35,6 @@ object AddNewUser extends Loggable {
             password = value.trim
             if (password.isEmpty) S.error("Password field are empty")
         }, "placeholder" -> "password", "class" -> "textfield large") &
-      "name=repeat_password" #>
-        SHtml.password(repeat_password, {
-          value: String =>
-            repeat_password = value.trim
-            if (repeat_password.isEmpty) S.error("Repeated Password field are empty")
-            if (repeat_password != password) S.error("Passwords are not equal")
-        }, "placeholder" -> "repeat password", "class" -> "textfield large") &
       "name=login" #>
         SHtml.text(login, {
           value: String =>
@@ -60,27 +51,25 @@ object AddNewUser extends Loggable {
         "cols" -> "40", "rows" -> "20") ++
             <br/>
           ++
-          SHtml.button("Register", process, "class" -> "button"))
+          SHtml.button("Register", addNewUser, "class" -> "button"))
   }
 
-  private def process() = {
+  private def addNewUser() = {
     logger.debug("Trying to add new user %s %s %s with key %s".format(email, login, password, ssh_key))
     try {
       val u = new User(email, login, password)
       DAO.atomic {
         t =>
           t +: u
-          t +: new SshKey(email, ssh_key)
+          t +: new SshKey(login, ssh_key)
       }
       logger.debug("User added to DB")
-     // User.current = Some(u)
-      S.redirectTo("/")
+      User.logUserIn(u, () => S.redirectTo(u.homePageUrl))
     } catch {
-      case e : Throwable if !e.isInstanceOf[net.liftweb.http.ResponseShortcutException] => {
-        logger.debug("%s %s".format(e.getClass.getName,e.getMessage))
+      case e: Exception if !e.isInstanceOf[LiftFlowOfControlException] => {
+        logger.debug("%s %s".format(e.getClass.getName, e.getMessage))
         S.error("Cannot add this user")
       }
     }
   }
-
 }

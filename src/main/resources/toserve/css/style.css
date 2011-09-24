@@ -387,8 +387,12 @@ form {
     width: 100%;
 }
 
-.textfield.large {
+.large {
     font-size: 3em;
+}
+
+.font {
+   font-family: 'Open Sans', sans-serif;
 }
 
 .placeholder {
@@ -549,6 +553,31 @@ ul.clone-urls li.selected>a {
 
 
     border-radius: 0 3px 3px 0;
+}
+
+.top_menu {
+    position: absolute;
+    top: 0;
+    right: 0;
+
+    font-family: 'Open Sans', sans-serif;
+}
+
+.columns {
+    display: -webkit-box;
+    -webkit-box-orient: horizontal;
+
+    display: -moz-box;
+    -moz-box-orient: horizontal;
+
+    display: box;
+    box-orient: horizontal;
+}
+
+.columns div {
+    -webkit-box-flex: 1;
+    -moz-box-flex: 1;
+    box-flex: 1;
 }
 
 /* =============================================================================

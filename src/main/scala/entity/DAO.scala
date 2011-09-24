@@ -84,7 +84,7 @@ trait QueryEvaluator {
   def transaction[T](f: Transaction => T): T
 }
 
-class Transaction(connection: SuperConnection) extends QueryEvaluator {
+class Transaction(connection: SuperConnection) extends QueryEvaluator with Loggable {
   val driverType = connection.driverType
 
   def select[A](query: String, params: Any*)(f: ResultSet => A) = {
@@ -110,6 +110,7 @@ class Transaction(connection: SuperConnection) extends QueryEvaluator {
   }
 
   def execute(query: String, params: Any*) = {
+    logger.debug("Executing query " + query)
     DB.prepareStatement(query, connection) {
       ps => DAO.setPreparedParams(ps, params.toList).executeUpdate()
 

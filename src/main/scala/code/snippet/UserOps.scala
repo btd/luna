@@ -6,10 +6,12 @@
 package code.snippet
 
 import bootstrap.liftweb.UserPage
-import net.liftweb.util.Helpers._
-import entity.{Repository, User}
-import xml.{Attribute, Text}
-import net.liftweb.common.{Full, Empty, Box}
+import xml.Text
+import net.liftweb._
+import util.Helpers._
+import http._
+import common._
+import entity.{SshKey, DAO, Repository, User}
 
 /**
  * User: denis.bardadym
@@ -17,16 +19,18 @@ import net.liftweb.common.{Full, Empty, Box}
  * Time: 2:16 PM
  */
 
-class UserOps(up: UserPage) {
+class UserOps(up: UserPage) extends Loggable {
+
+
 
   def pageOwner_?(user: Box[User]) : Boolean = user match {
     case Full(u) if u.login == up.login => true
     case _ => false
   }
 
-  def render = {
+  def userPage = {
     ".sub_menu" #> (if (pageOwner_?(User.currentUser))
-      <button class="button" type="button" value="New">New repository</button>
+      SHtml.button("New repository", createRepository, "class"->"button")
     else Text("User " + up.login)) &
       ".repo_list" #> (Repository.ownedBy(up.login).flatMap(repo =>
         <div class="repo_block">
@@ -37,11 +41,19 @@ class UserOps(up: UserPage) {
               <li class="public_clone_url selected"><a href={repo.publicGitUrl}>Git</a></li>
             </ul>
             <input type="text" class="textfield" readonly="" value={repo.publicGitUrl}/>
-
           </div>
-
-
         </div>
       ))
   }
+  //TODO сделать так чтобы она заработала
+  private def createRepository() = {
+
+  }
+
+
 }
+
+/*TODO
+Добавить нормальные формы авторизации
+
+*/

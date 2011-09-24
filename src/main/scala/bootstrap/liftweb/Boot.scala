@@ -4,7 +4,6 @@ import net.liftweb._
 import common._
 import db._
 import http._
-import provider.HTTPProvider
 import sitemap._
 import Loc._
 import sitemap.LocPath._
@@ -19,11 +18,12 @@ case class UserPage(login: String) {
 
 // TODO FIXME
 object ValidUser {
-  def unapply(login: String): Option[String] =   Full(login)
-    //User.withLogin(login) match {
-    //  case Full(u) => Full(login)
-    //  case _ => None
-    //}
+  def unapply(login: String): Option[String] = Full(login)
+
+  //User.withLogin(login) match {
+  //  case Full(u) => Full(login)
+  //  case _ => None
+  //}
 }
 
 /**
@@ -55,31 +55,38 @@ class Boot extends Loggable {
     // where to search snippet
     LiftRules.addToPackages("code")
 
-    val indexPage = Menu.i("Home") / "index"
-   // val listPage = Menu.i("List") / "list"
+    val indexPage = Menu.i("Home") / "index" >> If(() => !User.loggedIn_?, () => RedirectResponse("/list/" + User.currentUserId.open_!))
+    // val listPage = Menu.i("List") / "list"
 
     val userPage = Menu.param[UserPage]("userPage",
       new LinkText[UserPage](up => Text("User " + up.login)),
       login => Full(UserPage(login)),
-      up => up.login) / "list"/ * >> Template(() => Templates("list" :: Nil) openOr NodeSeq.Empty)
+      up => up.login) / "list" / * >> Template(() => Templates("list" :: Nil) openOr NodeSeq.Empty)
+
+    val signInPage = Menu.i("Sign In") / "user" / "signin"
+
+    val loginPage = Menu.i("Log In") / "user" / "login"
+
+    val newUserPage = Menu.i("Registration") / "user" / "new"
 
     // Build SiteMap
-    val entries = List(indexPage, userPage)
+    val entries = List(indexPage, userPage, signInPage, loginPage, newUserPage)
     //Menu.i("Home") / "index", // the simple way to declare a menu
     //Menu.i("New User") / "new",
 
     //)
 
-
+    /*
+     TODO
     LiftRules.statelessRewrite.append {
-      case RewriteRequest(ParsePath( Nil, _, _, true), _, _) =>
+      case RewriteRequest(ParsePath(Nil, _, _, true), _, _) =>
 
         RewriteResponse("index" :: Nil, Map[String, String]())
       case RewriteRequest(ParsePath(ValidUser(user) :: Nil, _, _, false), _, _) =>
 
         RewriteResponse("list" :: user :: Nil, Map[String, String]())
     }
-
+       */
 
     // set the sitemap.  Note if you don't want access control for
     // each page, just comment this line out.

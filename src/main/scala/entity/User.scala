@@ -32,6 +32,8 @@ class User(
   def keys = SshKey.ownerBy(login)
 
   def repos = Repository.ownedBy(login)
+
+  def homePageUrl = "/" + login
 }
 
 object User {
@@ -92,6 +94,10 @@ object User {
   private object curUserId extends SessionVar[Box[String]](Empty) {
     override lazy val __nameSalt = Helpers.nextFuncName
   }
+   /*
+  private object curUserId extends SessionVar[Box[String]](Full("btd")) {
+    override lazy val __nameSalt = Helpers.nextFuncName
+  }*/ //TODO только для тестов
 
 
   def currentUserId: Box[String] = curUserId.is
@@ -101,6 +107,7 @@ object User {
   }
 
   def currentUser: Box[User] = curUser.is
+
 }
 
 
