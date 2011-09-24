@@ -21,18 +21,23 @@ import entity.{SshKey, DAO, Repository, User}
 
 class UserOps(up: UserPage) extends Loggable {
 
-
+  private var newRepositoryName = ""
 
   def pageOwner_?(user: Box[User]) : Boolean = user match {
     case Full(u) if u.login == up.login => true
     case _ => false
   }
 
+  /*
+  TODO при нажатии на кнопку создания вызывать диалог с формочкой
+   */
+
   def userPage = {
-    ".sub_menu" #> (if (pageOwner_?(User.currentUser))
-      SHtml.button("New repository", createRepository, "class"->"button")
+    ".sub_menu *" #> (if (pageOwner_?(User.currentUser))
+      //SHtml.text(newRepositoryName, value => value)
+      SHtml.button("New repository", createRepository, "class"->"button", "id" -> "create_repo_button")
     else Text("User " + up.login)) &
-      ".repo_list" #> (Repository.ownedBy(up.login).flatMap(repo =>
+      ".repo_list *" #> (Repository.ownedBy(up.login).flatMap(repo =>
         <div class="repo_block">
           <h3>{repo.name}</h3>
           <div class="url-box">
@@ -45,15 +50,12 @@ class UserOps(up: UserPage) extends Loggable {
         </div>
       ))
   }
-  //TODO сделать так чтобы она заработала
   private def createRepository() = {
+       logger.debug("try to add new repository")
+
+    //TODO сделаю сейчас по тупому, потом заменю на CometActor
 
   }
 
 
 }
-
-/*TODO
-Добавить нормальные формы авторизации
-
-*/
