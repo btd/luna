@@ -10,6 +10,7 @@ import org.apache.sshd.server.session.ServerSession
 import java.security.PublicKey
 import entity.SshKey
 import net.liftweb.common.Loggable
+import actors.Actor
 
 class DatabasePubKeyAuth extends PublickeyAuthenticator with Loggable {
 
@@ -29,4 +30,7 @@ class DatabasePubKeyAuth extends PublickeyAuthenticator with Loggable {
     keys.count(SshUtil.parse((_: SshKey)) == key) > 0
   }
 
+
+
 }
+

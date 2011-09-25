@@ -5,10 +5,11 @@
 
 package sshd
 
-import git.{Receive, Upload}
+import git.{UnRecognizedCommand, Receive, Upload}
 import org.apache.sshd.server.{Command, CommandFactory}
 import java.lang.Exception
 import net.liftweb.common.Loggable
+import entity.Repository
 
 class GitoChtoToCommandFactory extends CommandFactory with Loggable {
   /**
@@ -25,9 +26,14 @@ class GitoChtoToCommandFactory extends CommandFactory with Loggable {
     args match {
       case "git-upload-pack" :: repoPath :: Nil => Upload(preparePath(repoPath))
       case "git-receive-pack" :: repoPath :: Nil => Receive(preparePath(repoPath))
-      case _ => throw new NoSuchCommand("Not recognized command: " + command) //может быть лучше сделать DoNothing команду
+      case c => {
+        logger.warn("Unrecognized command: %s".format(c))
+        UnRecognizedCommand()
+      }
     }
   }
+
+
 
   def preparePath(path: String) = {
     val resultedPath = if ((path startsWith "'") && (path endsWith "'"))
@@ -37,8 +43,4 @@ class GitoChtoToCommandFactory extends CommandFactory with Loggable {
     else resultedPath
   }
 
-}
-
-class NoSuchCommand(msg: String) extends Exception {
-  override def getMessage = msg
 }

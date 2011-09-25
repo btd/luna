@@ -11,8 +11,8 @@ import org.eclipse.jgit.lib.RepositoryCache
 import main.Main
 import org.eclipse.jgit.lib.RepositoryCache.FileKey
 import org.eclipse.jgit.util.FS
-import net.liftweb.common.{Empty, Full, Box}
 import java.io.File
+import net.liftweb.common.{Loggable, Empty, Full, Box}
 
 /**
  * User: denis.bardadym
@@ -25,7 +25,7 @@ class Repository(val fsName: String, //имя папки репозитория 
                  //val clonnedFrom: String, //id того репозитория откуда был склонирован
                  val isOpen: Boolean, //открытый или закрытый репозиторий not null default true
                  val ownerId: String //login владельца репозитория not null
-                  ) {
+                  ) extends Loggable {
   def this(name: String, isOpen: Boolean, ownerId: String) = this (Repository.generateFsName(name, ownerId), name, isOpen, ownerId)
 
   def +:(trn : Transaction) = {
@@ -47,6 +47,7 @@ class Repository(val fsName: String, //имя папки репозитория 
   }
 
   def dir = {
+    //logger.debug("Path is " + fsPath)
     val dir = FileKey.resolve(new File(fsPath), FS.DETECTED)
     if (dir != null) Full(dir) else Empty
   }
@@ -77,7 +78,7 @@ object Repository {
     }
 
 
-  def generateFsName(name: String, ownerId: String) = {
+  private[entity] def generateFsName(name: String, ownerId: String) = {
     DigestUtils.sha(name + ownerId).toString
   }
 }

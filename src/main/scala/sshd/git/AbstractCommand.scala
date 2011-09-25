@@ -6,14 +6,12 @@
 package sshd.git
 
 import org.apache.sshd.server.{Environment, ExitCallback, Command}
-import org.eclipse.jgit.lib.RepositoryCache.FileKey
-import org.eclipse.jgit.util.FS
-import org.eclipse.jgit.lib.{Repository, RepositoryCache}
-import java.io.{File, OutputStream, InputStream}
+import java.io.{OutputStream, InputStream}
 import actors.Actor
 import org.eclipse.jgit.transport.{ReceivePack, UploadPack}
-import main.Main
 import net.liftweb.common.Loggable
+import org.eclipse.jgit.lib.Constants
+import entity.Repository
 
 abstract sealed class AbstractCommand extends Command with Loggable {
 
@@ -22,6 +20,11 @@ abstract sealed class AbstractCommand extends Command with Loggable {
   protected var err: OutputStream = null
 
   protected var callback: ExitCallback = null
+
+  protected var onExit: Int = EXIT_SUCCESS
+
+  val EXIT_SUCCESS = 0
+  val EXIT_ERROR = 127
 
   def setInputStream(in: InputStream) {
     this.in = in
@@ -43,7 +46,7 @@ abstract sealed class AbstractCommand extends Command with Loggable {
           in.close();
           out.close();
           err.close();
-          callback.onExit(0);
+          callback.onExit(onExit);
         }
       }
 
@@ -60,29 +63,53 @@ abstract sealed class AbstractCommand extends Command with Loggable {
   def setOutputStream(out: OutputStream) {
     this.out = out
   }
+
+  protected def error(message: String) {
+    err.write(Constants.encode(message + "\n"));
+    err.flush();
+    onExit = EXIT_ERROR
+  }
 }
 
 
 case class Upload(repoPath: String) extends AbstractCommand {
   def run(env: Environment) = {
-    val repo: Repository = RepositoryCache.open(
-      FileKey.lenient(new File(Main.repoDir + repoPath), FS.DETECTED))
-    val up = new UploadPack(repo)
-    up.upload(in, out, err)
+    val username = env.getEnv.get(Environment.ENV_USER)
+    //TODO может быть это не эффективно?
+    Repository.ownedBy(username).filter(_.name == repoPath).headOption match {
+      case Some(r) => {
+        logger.debug("%s try to upload pack in %s".format(username, repoPath))
+        new UploadPack(r.git).upload(in, out, err)}
+      case None => error("Repository not founded")
+    }
   }
 }
 
 case class Receive(repoPath: String) extends AbstractCommand {
   def run(env: Environment) = {
-    val repo: Repository = RepositoryCache.open(
-      FileKey.lenient(new File(Main.repoDir + repoPath), FS.DETECTED))
-    val rp = new ReceivePack(repo)
+    val username = env.getEnv.get(Environment.ENV_USER)
+    //TODO может быть это не эффективно?
+    Repository.ownedBy(username).filter(_.name == repoPath).headOption match {
+      case Some(r) => {
+        logger.debug("%s try to receive pack in %s".format(username, repoPath))
+        val rp = new ReceivePack(r.git)
 
-    rp.setAllowCreates(true)
-    rp.setAllowDeletes(true)
-    rp.setAllowNonFastForwards(true)
-    rp.setCheckReceivedObjects(true)
+        rp.setAllowCreates(true)
+        rp.setAllowDeletes(true)
+        rp.setAllowNonFastForwards(true)
+        rp.setCheckReceivedObjects(true)
 
-    rp.receive(in, out, err)
+        rp.receive(in, out, err)
+      }
+      case None => error("Repository not founded")
+    }
+
+
+  }
+}
+
+case class UnRecognizedCommand() extends AbstractCommand {
+  def run(env: Environment) = {
+    error("This command doesn't supported by this server");
   }
 }
