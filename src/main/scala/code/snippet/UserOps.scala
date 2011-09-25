@@ -34,7 +34,12 @@ class UserOps(up: UserPage) extends Loggable {
 
   def userPage = {
     ".sub_menu *" #> (if (pageOwner_?(User.currentUser))
-      //SHtml.text(newRepositoryName, value => value)
+       SHtml.text(newRepositoryName, {
+      value: String =>
+        newRepositoryName = value.trim      //TODO добавить проверку, что только валидные символы
+        if (newRepositoryName.isEmpty) S.error("Email field are empty")
+    },
+    "placeholder" -> "Repo name", "class"->"textfield large") ++ <br/> ++
       SHtml.button("New repository", createRepository, "class"->"button", "id" -> "create_repo_button")
     else Text("User " + up.login)) &
       ".repo_list *" #> (Repository.ownedBy(up.login).flatMap(repo =>
@@ -51,9 +56,12 @@ class UserOps(up: UserPage) extends Loggable {
       ))
   }
   private def createRepository() = {
-       logger.debug("try to add new repository")
+      logger.debug("try to add new repository")
 
     //TODO сделаю сейчас по тупому, потом заменю на CometActor
+    DAO.atomic {t=>
+       t +: new Repository(newRepositoryName, true, up.login)
+    }
 
   }
 

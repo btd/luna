@@ -28,7 +28,10 @@ class Repository(val fsName: String, //имя папки репозитория 
                   ) {
   def this(name: String, isOpen: Boolean, ownerId: String) = this (Repository.generateFsName(name, ownerId), name, isOpen, ownerId)
 
-
+  def +:(trn : Transaction) = {
+    trn.execute("insert into repositories(fs_name, name, is_open, owner_login) values (?, ?, ?, ?)",
+      fsName, name, if (isOpen) 1 else 0, ownerId)
+  }
 
   lazy val git = {
     dir match {
