@@ -16,7 +16,7 @@ create table repositories(
   owner_login VARCHAR (50)
 );
 
-create table push_accesses(
+create table collaborators(
   user_login VARCHAR (50),
   owner_login VARCHAR (50),
   repo_name VARCHAR(50)
