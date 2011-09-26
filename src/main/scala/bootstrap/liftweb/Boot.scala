@@ -11,6 +11,7 @@ import sshd.SshDaemon
 import actors.Actor
 import entity.{User, DefaultConnectionManager}
 import xml.{NodeSeq, Text}
+import sshd.git.GitDaemon
 
 case class UserPage(login: String) {
   lazy val user = User.withLogin(login)
@@ -43,7 +44,13 @@ class Boot extends Loggable {
 
     new Actor {
       def act() {
-        SshDaemon.start()
+        SshDaemon.start
+      }
+    }.start()
+
+    new Actor {
+      def act() {
+        GitDaemon.start
       }
     }.start()
 
