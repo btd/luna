@@ -76,17 +76,16 @@ class Boot extends Loggable {
 
     //)
 
-    /*
-     TODO
-    LiftRules.statelessRewrite.append {
-      case RewriteRequest(ParsePath(Nil, _, _, true), _, _) =>
 
-        RewriteResponse("index" :: Nil, Map[String, String]())
+    LiftRules.statelessRewrite.append {
+      case RewriteRequest(ParsePath("index" :: Nil, _, _, true), _, _) =>
+
+        RewriteResponse("index" :: Nil, true)
       case RewriteRequest(ParsePath(ValidUser(user) :: Nil, _, _, false), _, _) =>
 
         RewriteResponse("list" :: user :: Nil, Map[String, String]())
     }
-       */
+
 
     // set the sitemap.  Note if you don't want access control for
     // each page, just comment this line out.
