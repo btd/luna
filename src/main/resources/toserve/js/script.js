@@ -40,6 +40,19 @@ $(function() {
         ul.siblings("input").val(a.attr("href"));
         return false;
     });
+    if ($("form.sub_menu").children("input").length != 0) {
+        var dialog_add_repo = $("form.sub_menu").dialog({ autoOpen: false, modal: true, width: "600px" });
+
+        $("#sub_menu_holder").append("<button class='button'>Add repository</button>");
+        $("#sub_menu_holder > button").click(function() {
+            dialog_add_repo.dialog("open");
+            $("#create_repo_button").click(function() {
+                dialog_add_repo.dialog("close");
+                return true;
+            })
+            return false;
+        });
+    }
 });
 
 

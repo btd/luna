@@ -455,6 +455,24 @@ form {
     margin: 10px 0;
     padding: 1em;
     max-width: 1000px;
+    position: relative;
+}
+
+.repo_block .admin_button {
+   position: absolute;
+    top: 10px;
+    right: 10px;
+    border-radius: 3px;
+    display: block;
+
+   text-decoration: none;
+    padding: 2px 3px 3px 2px;
+
+    border: 1px solid #d4d4d4;
+    background: #f4f4f4;
+    filter: progid:DXImageTransform.Microsoft.gradient(GradientType = 0, startColorstr = '#f4f4f4', endColorstr = '#ececec');
+    background: -webkit-gradient(linear, left top, left bottom, from(#f4f4f4), to(#ececec));
+    background: -moz-linear-gradient(top, #f4f4f4, #ececec);
 }
 
 .repo_block h3 {

@@ -16,7 +16,14 @@ import xml.{Text, NodeSeq}
 object MyMenu {
   def your = {
     "*" #> (User.currentUserId match {
-      case Full(u) => <a href={"/list/" + u}>Your page</a>
+      case Full(u) => <a href={"/" + u}>Your page</a>
+      case _ => Text("")
+    })
+  }
+
+  def admin = {
+    "*" #> (User.currentUserId match {
+      case Full(u) => <a href={"/admin/" + u}>Admin</a>
       case _ => Text("")
     })
   }

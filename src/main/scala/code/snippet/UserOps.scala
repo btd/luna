@@ -52,6 +52,7 @@ class UserOps(up: UserPage) extends Loggable {
             </ul>
             <input type="text" class="textfield" readonly="" value={repo.publicGitUrl}/>
           </div>
+          {if (pageOwner_?(User.currentUser)) <a href={"/admin/" + up.login + "/" + repo.name}  class="admin_button"><span class="ui-icon ui-icon-gear "/></a> }
         </div>
       ))
   }

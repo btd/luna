@@ -53,7 +53,7 @@ object DAO extends QueryEvaluator with Loggable {
     }
   }
 
-  def selectOne[A](query: String, params: Any*)(f: ResultSet => A) = {
+  def selectOne[A](query: String, params: Any*)(f: ResultSet => A)= {
     transaction {
       _.selectOne(query, params: _*)(f)
     }

@@ -6,6 +6,7 @@ import db._
 import http._
 import sitemap._
 import Loc._
+import util.Helpers._
 import sitemap.LocPath._
 import sshd.SshDaemon
 import actors.Actor
@@ -16,6 +17,14 @@ import sshd.git.GitDaemon
 case class UserPage(login: String) {
   lazy val user = User.withLogin(login)
 }
+
+case class UserRepoPage(userName: String, repoName: String) extends UserPage(userName) {
+  lazy val repo = user match {
+    case Some(u) => tryo { u.repos.filter(_.name == repoName).head } or { Empty }
+    case _ => Empty
+  }
+}
+
 
 // TODO FIXME
 object ValidUser {
@@ -70,6 +79,23 @@ class Boot extends Loggable {
       login => Full(UserPage(login)),
       up => up.login) / "list" / * >> Template(() => Templates("list" :: Nil) openOr NodeSeq.Empty)
 
+    val userAdminPage = Menu.param[UserPage]("userAdminPage",
+      new LinkText[UserPage](up => Text("User " + up.login)),
+      login => Full(UserPage(login)),
+      up => up.login) / "admin" / * >> Template(() => Templates("adminUser" :: Nil) openOr NodeSeq.Empty)
+
+    val userRepoAdminPage = Menu.params[UserRepoPage]("userRepoAdminPage",
+      new LinkText[UserRepoPage](urp => Text("Repo " + urp.repoName)),
+      list => list match {
+        case login :: repo :: Nil => Full(UserRepoPage(login, repo))
+        case _ => Empty },
+      urp => urp.login :: urp.repoName :: Nil) / "admin" / * / * >> Template(() => Templates("admin" :: "adminRepo" :: Nil) openOr NodeSeq.Empty)
+
+    //val userRepoPage = Menu.param[UserPage]("userPage",
+    //  new LinkText[UserPage](up => Text("User " + up.login)),
+    //  login => Full(UserPage(login)),
+     // up => up.login) / "list" / * >> Template(() => Templates("list" :: Nil) openOr NodeSeq.Empty)
+
     val signInPage = Menu.i("Sign In") / "user" / "signin"
 
     val loginPage = Menu.i("Log In") / "user" / "login"
@@ -77,7 +103,14 @@ class Boot extends Loggable {
     val newUserPage = Menu.i("Registration") / "user" / "new"
 
     // Build SiteMap
-    val entries = List(indexPage, userPage, signInPage, loginPage, newUserPage)
+    val entries = List(
+      indexPage,
+      userPage,
+      signInPage,
+      loginPage,
+      newUserPage,
+      userAdminPage,
+      userRepoAdminPage)
     //Menu.i("Home") / "index", // the simple way to declare a menu
     //Menu.i("New User") / "new",
 
