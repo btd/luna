@@ -25,7 +25,7 @@ class User(
             val login: String,
             val password: String // not null TODO в будущем это будет хешированный пароль
             ) {
-  def +:(trn : Transaction) = {
+  def +:(trn: Transaction) = {
     trn.execute("insert into users(email, login, password) values (?, ?, ?)", email, login, password)
   }
 
@@ -34,6 +34,8 @@ class User(
   def repos = Repository.ownedBy(login)
 
   def homePageUrl = "/" + login
+
+  def :=(user: User) = DAO.execute("UPDATE users set email=?, login=?, password=? WHERE login = ?", user.email, user.login, user.password, login)
 }
 
 object User {
@@ -52,6 +54,7 @@ object User {
     row =>
       new User(row.getString("email"), row.getString("login"), row.getString("password"))
   }
+
 
   def loggedIn_? = {
     currentUserId.isDefined
@@ -94,15 +97,17 @@ object User {
   private object curUserId extends SessionVar[Box[String]](Empty) {
     override lazy val __nameSalt = Helpers.nextFuncName
   }
-   /*
+
+  /*
   private object curUserId extends SessionVar[Box[String]](Full("btd")) {
     override lazy val __nameSalt = Helpers.nextFuncName
-  }*/ //TODO только для тестов
+  }*/
+  //TODO только для тестов
 
 
   def currentUserId: Box[String] = curUserId.is
 
-  private object curUser extends RequestVar[Box[User]](currentUserId.flatMap(withLogin))  with CleanRequestVarOnSessionTransition  {
+  private object curUser extends RequestVar[Box[User]](currentUserId.flatMap(withLogin)) with CleanRequestVarOnSessionTransition {
     override lazy val __nameSalt = Helpers.nextFuncName
   }
 

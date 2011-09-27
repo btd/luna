@@ -82,7 +82,7 @@ class Boot extends Loggable {
     val userAdminPage = Menu.param[UserPage]("userAdminPage",
       new LinkText[UserPage](up => Text("User " + up.login)),
       login => Full(UserPage(login)),
-      up => up.login) / "admin" / * >> Template(() => Templates("adminUser" :: Nil) openOr NodeSeq.Empty)
+      up => up.login) / "admin" / * >> Template(() => Templates("admin"::"adminUser" :: Nil) openOr NodeSeq.Empty)
 
     val userRepoAdminPage = Menu.params[UserRepoPage]("userRepoAdminPage",
       new LinkText[UserRepoPage](urp => Text("Repo " + urp.repoName)),
