@@ -9,11 +9,11 @@ import java.io.{OutputStream, InputStream}
 import actors.Actor
 import org.eclipse.jgit.transport.{ReceivePack, UploadPack}
 import net.liftweb.common.Loggable
-import org.eclipse.jgit.lib.Constants
 import org.apache.sshd.server.{SessionAware, Environment, ExitCallback, Command}
 import org.apache.sshd.server.session.ServerSession
-import entity.{SshKey, User}
 import sshd.DatabasePubKeyAuth
+import org.eclipse.jgit.lib.{Repository => JRepository, Constants}
+import entity.{Repository, SshKey, User}
 
 abstract sealed class AbstractCommand extends Command with SessionAware with Loggable {
 
@@ -82,53 +82,100 @@ abstract sealed class AbstractCommand extends Command with SessionAware with Log
   }
 }
 
-
-case class Upload(repoPath: String) extends AbstractCommand {
-  def run(env: Environment) = {
-
-    user.repos.filter(_.name == repoPath).headOption match {
-      case Some(r) => {
-        keys.filter(key => key.for_user_? || key.for_repo_?(r.name)) match {
-          case Seq() => error("You have no permisson")
-          case _ => {
-            logger.debug("%s try to upload pack in %s".format(user.login, repoPath))
-            new UploadPack(r.git).upload(in, out, err)
-          }
-        }
-
-      }
+trait WithRepo extends AbstractCommand {
+  def withRepo[A](repo: Option[Repository])(f: Repository => A) {
+    repo match {
+      case Some(r) => f(r)
       case None => error("Repository not founded")
     }
+  }
 
+  def doIfHavePermission_?[A](condition: Boolean, repo: JRepository)(f: JRepository => A) =
+    if (condition)
+      f(repo)
+    else
+      error("You have no permisson")
+}
+
+
+case class Upload(repoPath: String) extends WithRepo {
+
+
+  def run(env: Environment) = {
+    repoPath.split("/").toList match {
+      case repoName :: Nil => {
+        withRepo(user.repos.filter(_.name == repoName).headOption) {
+          r =>
+            doIfHavePermission_?(!keys.filter(key => key.for_user_? || key.for_repo_?(r.name)).isEmpty, r.git) {
+              repo => createUploadPack(repo)
+            }
+        }
+      }
+      case userName :: repoName :: Nil => {
+        User.withLogin(userName) match {
+          case Some(u) => {
+            withRepo(u.repos.filter(_.name == repoName).headOption) {
+              r =>
+                doIfHavePermission_?(!r.collaborators.filter(_.login == user.login).isEmpty, r.git) {
+                  repo => createUploadPack(repo)
+                }
+            }
+          }
+          case None => error("User not founded")
+        }
+      }
+      case _ => error("Invalid repo address")
+    }
+
+
+  }
+
+  def createUploadPack(repo: JRepository) = {
+    new UploadPack(repo).upload(in, out, err)
   }
 
 }
 
 
-case class Receive(repoPath: String) extends AbstractCommand {
+case class Receive(repoPath: String) extends WithRepo {
   def run(env: Environment) = {
-    user.repos.filter(_.name == repoPath).headOption match {
-      case Some(r) => {
-        keys.filter(key => key.for_user_? || key.for_repo_?(r.name)) match {
-          case Seq() => error("You have no permisson")
-          case _ => {
-            logger.debug("%s try to receive pack in %s".format(user.login, repoPath))
-            val rp = new ReceivePack(r.git)
-
-            rp.setAllowCreates(true)
-            rp.setAllowDeletes(true)
-            rp.setAllowNonFastForwards(true)
-            rp.setCheckReceivedObjects(true)
-
-            rp.receive(in, out, err)
-          }
+    repoPath.split("/").toList match {
+      case repoName :: Nil => {
+        withRepo(user.repos.filter(_.name == repoName).headOption) {
+          r =>
+            doIfHavePermission_?(!keys.filter(key => key.for_user_? || key.for_repo_?(r.name)).isEmpty, r.git) {
+              repo => createReceivePack(repo)
+            }
         }
-
       }
-      case None => error("Repository not founded")
+      case userName :: repoName :: Nil => {
+        User.withLogin(userName) match {
+          case Some(u) => {
+            withRepo(u.repos.filter(_.name == repoName).headOption) {
+              r =>
+                doIfHavePermission_?(!r.collaborators.filter(_.login == user.login).isEmpty, r.git) {
+                  repo => createReceivePack(repo)
+                }
+            }
+          }
+          case None => error("User not founded")
+        }
+      }
+      case _ => error("Invalid repo address")
     }
 
 
+  }
+
+  def createReceivePack(repo: JRepository) = {
+    val rp = new ReceivePack(repo)
+
+    rp.setAllowCreates(true)
+    rp.setAllowDeletes(true)
+    rp.setAllowNonFastForwards(true)
+    rp.setCheckReceivedObjects(true)
+
+    rp.receive(in, out, err)
   }
 }
 
