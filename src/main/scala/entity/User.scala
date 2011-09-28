@@ -29,9 +29,9 @@ class User(
     trn.execute("insert into users(email, login, password) values (?, ?, ?)", email, login, password)
   }
 
-  def keys = SshKey.ownerBy(login)
+  def keys = SshKey.of(this)
 
-  def repos = Repository.ownedBy(login)
+  def repos = Repository.of(this)
 
   def homePageUrl = "/" + login
 

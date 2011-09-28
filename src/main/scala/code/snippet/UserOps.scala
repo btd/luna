@@ -42,7 +42,9 @@ class UserOps(up: UserPage) extends Loggable {
     "placeholder" -> "Repo name", "class"->"textfield large") ++ <br/> ++
       SHtml.button("New repository", createRepository, "class"->"button", "id" -> "create_repo_button")
     else Text("User " + up.login)) &
-      ".repo_list *" #> (Repository.ownedBy(up.login).flatMap(repo =>
+      ".repo_list *" #> (up.user match {
+      case Some(user) =>
+      {Repository.of(user).flatMap(repo =>
         <div class="repo_block">
           <h3>{repo.name}</h3>
           <div class="url-box">
@@ -54,7 +56,9 @@ class UserOps(up: UserPage) extends Loggable {
           </div>
           {if (pageOwner_?(User.currentUser)) <a href={"/admin/" + up.login + "/" + repo.name}  class="admin_button"><span class="ui-icon ui-icon-gear "/></a> }
         </div>
-      ))
+      )}
+      case _ => Text("Invalid user")
+    } )
   }
   private def createRepository() = {
       logger.debug("try to add new repository")

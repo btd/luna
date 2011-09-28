@@ -1,6 +1,32 @@
 <div id="main" role="main" class="lift:surround?with=def;at=content">
     <div class="lift:embed?what=menu"></div>
 
-    <div class="lift:AdminRepoOps.collaborators"></div>
 
+    <div class="options_holder">
+        <h2 class="font large">Collaborators</h2>
+
+        <div class="lift:AdminRepoOps.collaborators"></div>
+
+        <div id="add_collaborator_holder">
+            <form class="lift:AdminRepoOps.addCollaborator?form=post add_collaborator_form">
+                <input class="textfield large font" name="login" type="text"/>
+                <br/>
+                <button class="button">Add</button>
+            </form>
+        </div>
+    </div>
+    <hr/>
+    <div class="options_holder">
+        <h2 class="font large">Ssh Keys</h2>
+
+        <div class="lift:AdminRepoOps.keys"></div>
+        <div id="add_key_holder">
+            <form class="lift:AdminRepoOps.addKey?form=post add_key_form">
+                <textarea class="textfield" name="ssh_key" cols="40" rows="20" placeholder="Your public ssh key"
+                          title="Enter ssh public key"></textarea>
+                <br/>
+                <button class="button">Add</button>
+            </form>
+        </div>
+    </div>
 </div>

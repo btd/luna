@@ -6,7 +6,8 @@ create table users(
 
 create table ssh_keys (
   owner_login VARCHAR (50),
-  raw_value VARCHAR (2000) -- is this enough ?
+  raw_value VARCHAR (2000), -- is this enough ?
+  repo_name VARCHAR(50)
 );
 
 create table repositories(

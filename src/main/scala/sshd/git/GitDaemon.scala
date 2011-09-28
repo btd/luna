@@ -9,12 +9,10 @@ import net.liftweb._
 import util._
 import Helpers._
 import common._
-import actors.Actor
-import java.net.{Socket, InetSocketAddress, ServerSocket}
-import java.io.{IOException, InterruptedIOException}
+import java.net.InetSocketAddress
 import org.eclipse.jgit.transport.{Daemon, DaemonClient}
 import org.eclipse.jgit.transport.resolver.RepositoryResolver
-import entity.Repository
+import entity.{User, Repository}
 
 /**
  * User: denis.bardadym
@@ -40,7 +38,11 @@ object MyRepositoryResolver extends RepositoryResolver[DaemonClient] with Loggab
     logger.debug("Get anonymous request %s %s".format(req.toString, name))
     name.split("/").toList match {
       case user :: repoName :: Nil => {
-        tryo { Repository.ownedBy(user).filter(_.name == repoName).head.git } openOr { null }
+        tryo {
+          Repository.of(User.withLogin(user).get).filter(_.name == repoName).head.git
+        } openOr {
+          null
+        }
       }
       case _ => null
     }

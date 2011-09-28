@@ -10,8 +10,7 @@ import net.liftweb._
 import common.Loggable
 import util.Helpers._
 import http._
-import entity.User
-import util.PassThru
+import entity.{SshKey, DAO, User}
 
 /**
  * User: denis.bardadym
@@ -23,6 +22,7 @@ class AdminUserOps(up: UserPage) extends Loggable {
   private var login = ""
   private var email = ""
   private var password = ""
+  private var ssh_key = ""
 
   def person = {
     up.user match {
@@ -65,7 +65,50 @@ class AdminUserOps(up: UserPage) extends Loggable {
   }
 
   def keys = {
-    PassThru
+
+    up.user match {
+      case Some(user) => {
+        "*" #> <table class="keys_table font table">
+          {user.keys.flatMap(key => {
+            <tr>
+              {<td>
+              {key.comment}
+            </td> <td>X</td>}
+            </tr>
+          })}
+        </table>
+
+      }
+      case None => "*" #> "Invalid username"
+    }
+
+  }
+
+  def addKey = {
+    "name=ssh_key" #>
+      SHtml.textarea(ssh_key, {
+        value: String =>
+          ssh_key = value.replaceAll("^\\s+", "")
+          if (ssh_key.isEmpty) S.error("Ssh Key are empty")
+      }, "placeholder" -> "Enter your ssh key",
+      "class" -> "textfield",
+      "cols" -> "40", "rows" -> "20") &
+      "button" #> SHtml.button("Add key", addNewKey, "class" -> "button", "id" -> "add_key_button")
+
+  }
+
+  private def addNewKey() = {
+    up.user match {
+      case Some(user) => {
+        DAO.atomic {
+          t =>
+            t +: new SshKey(user.login, ssh_key, None)
+        }
+
+      }
+      case None => S.error("Invalid user") //TODO надо спросить у ребят как лучше такие вещи делать
+    }
+
 
   }
 }

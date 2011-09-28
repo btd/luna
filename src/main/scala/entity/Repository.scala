@@ -33,6 +33,20 @@ class Repository(val fsName: String, //имя папки репозитория 
       fsName, name, if (isOpen) 1 else 0, ownerId)
   }
 
+  lazy val collaborators = Collaborator.of(this)
+
+  lazy val keys = SshKey.of(this)
+
+  def addCollaborator(user: User) =  {
+     Collaborator.add(user, this)
+
+  }
+
+  def addKey(key: SshKey) = {
+    SshKey.add(key, this)
+  }
+
+
   lazy val git = {
     dir match {
       case Full(dir) => {
@@ -72,9 +86,10 @@ class Repository(val fsName: String, //имя папки репозитория 
 }
 
 object Repository {
-  def ownedBy(login: String) =
-    DAO.select("select fs_name, name, is_open from repositories where owner_login = ?", login) {
-      row => new Repository(row.getString("fs_name"), row.getString("name"), row.getInt("is_open") == 1, login)
+
+  def of(user: User) =
+    DAO.select("select fs_name, name, is_open from repositories where owner_login = ?", user.login) {
+      row => new Repository(row.getString("fs_name"), row.getString("name"), row.getInt("is_open") == 1, user.login)
     }
 
 

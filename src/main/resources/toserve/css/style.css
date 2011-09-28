@@ -581,21 +581,22 @@ ul.clone-urls li.selected>a {
     font-family: 'Open Sans', sans-serif;
 }
 
-.columns {
-    display: -webkit-box;
-    -webkit-box-orient: horizontal;
-
-    display: -moz-box;
-    -moz-box-orient: horizontal;
-
-    display: box;
-    box-orient: horizontal;
+.table {
+    width: 100%;
+    margin: 10px 0;
 }
 
-.columns div {
-    -webkit-box-flex: 1;
-    -moz-box-flex: 1;
-    box-flex: 1;
+.keys_table {
+
+}
+
+.table td {
+   padding:  10px 0;
+
+}
+
+.table tr {
+   border-top:  1px solid gray;
 }
 
 /* =============================================================================

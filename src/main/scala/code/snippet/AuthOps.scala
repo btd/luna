@@ -61,7 +61,7 @@ object AuthOps extends Loggable{
       DAO.atomic {
         t =>
           t +: u
-          t +: new SshKey(login, ssh_key)
+          t +: new SshKey(login, ssh_key, None)
       }
       logger.debug("User added to DB")
       User.logUserIn(u, () => S.redirectTo(u.homePageUrl))

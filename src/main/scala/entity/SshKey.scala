@@ -15,26 +15,44 @@ package entity
 
 class SshKey(
               val ownerLogin: String,
-              var rawValue: String
+              var rawValue: String,
+              val repoName: Option[String]
               ) {
-  lazy val encodedKey = rawValue.split(" ")(1)
+  private lazy val splited_key = rawValue.split(" ")
 
-  def +:(trn : Transaction) = {
-    trn.execute("insert into ssh_keys(owner_login, raw_value) values (?, ?)", ownerLogin, rawValue)
+  lazy val encodedKey = splited_key(1)
+  lazy val comment = splited_key(2)
+
+  def for_user_? = repoName match {
+    case None => false
+    case _ => true
+  }
+
+  def for_repo_?(name: String) = repoName match {
+    case None => false
+    case Some(n) if (n == name) => true
+  }
+
+  def +:(trn: Transaction) = {
+    trn.execute("insert into ssh_keys(owner_login, raw_value) values (?, ?)", ownerLogin, rawValue) //TODO
   }
 }
 
 object SshKey {
-  def all =
-    DAO.select("SELECT owner_login, raw_value FROM ssh_keys") {
-      row =>
-        new SshKey(row.getString("owner_login"), row.getString("raw_value"))
-    }
 
-  def ownerBy(login: String) = DAO.select("select owner_login, raw_value from ssh_keys where owner_login = ?", login) {
+  def of(user: User) = DAO.select("select owner_login, raw_value, repo_name from ssh_keys where owner_login = ?", user.login) {
+    //TODO
     row =>
-      new SshKey(row.getString("owner_login"), row.getString("raw_value"))
+      new SshKey(row.getString("owner_login"), row.getString("raw_value"), if (row.getString("repo_name") == null) None else Some(row.getString("repo_name")))
   }
 
+  def of(repo: Repository) = DAO.select("SELECT owner_login, raw_value, repo_name FROM ssh_keys WHERE owner_login = ? and repo_name = ?", repo.ownerId, repo.name) {
+    row =>
+      new SshKey(row.getString("owner_login"), row.getString("raw_value"), Some(row.getString("repo_name")))
+  }
+
+  def add(key: SshKey, repo: Repository) = {
+    DAO.execute("insert into ssh_keys(owner_login, raw_value, repo_name) values (?, ?, ?)", repo.ownerId, key.rawValue, repo.name)
+  }
 
 }

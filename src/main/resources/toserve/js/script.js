@@ -53,6 +53,30 @@ $(function() {
             return false;
         });
     }
+
+     var dialog_add_key= $("form.add_key_form").dialog({ autoOpen: false, modal: true, width: "600px" });
+
+        $("#add_key_holder").append("<button class='button'>Add key</button>");
+        $("#add_key_holder > button").click(function() {
+            dialog_add_key.dialog("open");
+            $("#add_key_button").click(function() {
+                dialog_add_key.dialog("close");
+                return true;
+            })
+            return false;
+        });
+
+    var dialog_add_collaborator= $("form.add_collaborator_form").dialog({ autoOpen: false, modal: true, width: "600px" });
+
+        $("#add_collaborator_holder").append("<button class='button'>Add collaborator</button>");
+        $("#add_collaborator_holder > button").click(function() {
+            dialog_add_collaborator.dialog("open");
+            $("#add_collaborator_holder").click(function() {
+                dialog_add_collaborator.dialog("close");
+                return true;
+            })
+            return false;
+        });
 });
 
 
