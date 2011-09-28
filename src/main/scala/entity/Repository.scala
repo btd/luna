@@ -76,6 +76,8 @@ class Repository(val fsName: String, //имя папки репозитория 
 
   lazy val privateSshUrl = ownerId + "@" + S.hostName + ":" + name
 
+  def privateSshUrl(user: User) = user.login + "@" + S.hostName + ":" + ownerId + "/" + name
+
   def canPush_?(user: Box[User]) = {
     user match {
       case Full(u) if u.login == ownerId => true  //владелец

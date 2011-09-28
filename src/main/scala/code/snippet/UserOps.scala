@@ -72,7 +72,7 @@ class UserOps(up: UserPage) extends Loggable {
                 <div class="url-box">
                   <ul class="clone-urls">
                     <li class="private_clone_url">
-                      <a href={repo.privateSshUrl}>Ssh</a>
+                      <a href={repo.privateSshUrl(user)}>Ssh</a>
                     </li>
                     <li class="public_clone_url selected">
                       <a href={repo.publicGitUrl}>Git</a>
