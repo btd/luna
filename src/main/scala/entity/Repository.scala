@@ -78,7 +78,7 @@ class Repository(val fsName: String, //имя папки репозитория 
 
   def canPush_?(user: Box[User]) = {
     user match {
-      case Full(u) if u.login == ownerId => true //TODO когда будет добавлен множественный доступ будет весело
+      case Full(u) if u.login == ownerId => true  //владелец
       case _ => false
     }
   }
@@ -91,6 +91,8 @@ object Repository {
     DAO.select("select fs_name, name, is_open from repositories where owner_login = ?", user.login) {
       row => new Repository(row.getString("fs_name"), row.getString("name"), row.getInt("is_open") == 1, user.login)
     }
+
+  def collaborated(user: User) = Collaborator.collaborator(user).flatMap(_.repo)
 
 
   private[entity] def generateFsName(name: String, ownerId: String) = {
