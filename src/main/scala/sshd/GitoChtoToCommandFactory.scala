@@ -9,7 +9,7 @@ import git.{UnRecognizedCommand, Receive, Upload}
 import org.apache.sshd.server.{Command, CommandFactory}
 import java.lang.Exception
 import net.liftweb.common.Loggable
-import entity.Repository
+
 
 class GitoChtoToCommandFactory extends CommandFactory with Loggable {
   /**

@@ -5,10 +5,10 @@
 
 package code.model
 
-import net.liftweb.mongodb.record.field.ObjectIdPk
 import net.liftweb.mongodb.record.{MongoMetaRecord, MongoRecord}
 import net.liftweb.record.field.{StringField, TextareaField}
 import net.liftweb.common.{Full}
+import net.liftweb.mongodb.record.field.{ObjectIdRefField, ObjectIdPk}
 
 /**
  * User: denis.bardadym
@@ -20,23 +20,15 @@ class SshKeyDoc private() extends MongoRecord[SshKeyDoc] with ObjectIdPk[SshKeyD
 
   object rawValue extends TextareaField(this, 4000)
 
-  object ownerLogin extends StringField(this, 50)
+  object ownerId extends ObjectIdRefField(this, UserDoc)
 
-  object ownerRepoName extends StringField(this, 50) {
+  object ownerRepoId extends ObjectIdRefField(this, RepositoryDoc) {
     override def optional_? = true
   }
 
-
-
-  //TODO заменить на один метод получающий все
-  def for_user_? = ownerRepoName.valueBox match {
-    case Full(_) => false
-    case _ => true
-  }
-
-  def for_repo_?(repoName: String) = ownerRepoName.valueBox match {
-    case Full(name) => repoName == name
-    case _ => false
+  def acceptableFor_?(repo: RepositoryDoc) = ownerRepoId.obj match {
+    case Full(r) => r.name == repo.name //ключ репозитория    TODO надо здесь get??
+    case _ => true //ключ пользователя
   }
 
   private lazy val splitedRawValue = rawValue.get.split(" ")

@@ -1,9 +1,9 @@
 package code.snippet
 
-import entity.User
 import net.liftweb.common.Full
 import net.liftweb.util.Helpers._
 import xml.{Text, NodeSeq}
+import code.model.UserDoc
 
 /**
  * Created by IntelliJ IDEA.
@@ -15,21 +15,21 @@ import xml.{Text, NodeSeq}
 
 object MyMenu {
   def your = {
-    "*" #> (User.currentUserId match {
-      case Full(u) => <a href={"/" + u}>Your page</a>
+    "*" #> (UserDoc.currentUser match {
+      case Full(u) => <a href={"/" + u.login.get}>Your page</a>
       case _ => Text("")
     })
   }
 
   def admin = {
-    "*" #> (User.currentUserId match {
-      case Full(u) => <a href={"/admin/" + u}>Admin</a>
+    "*" #> (UserDoc.currentUser match {
+      case Full(u) => <a href={"/admin/" + u.login.get}>Admin</a>
       case _ => Text("")
     })
   }
 
   def signIn = {
-    "*" #> (User.currentUserId match {
+    "*" #> (UserDoc.currentUser match {
       case Full(u) => Text("")
       case _ => <a href="/user/signin">Sign In</a>
     })

@@ -11,18 +11,19 @@ import util.Helpers._
 import sitemap.LocPath._
 import sshd.SshDaemon
 import actors.Actor
-import entity.{User, DefaultConnectionManager}
+import entity.{DefaultConnectionManager}
 import xml.{NodeSeq, Text}
 import sshd.git.GitDaemon
 import com.mongodb.Mongo
+import code.model.UserDoc
 
 case class UserPage(login: String) {
-  lazy val user = User.withLogin(login)
+  lazy val user = UserDoc.find("login", login)
 }
 
 case class UserRepoPage(userName: String, repoName: String) extends UserPage(userName) {
   lazy val repo = user match {
-    case Some(u) => tryo { u.repos.filter(_.name == repoName).head } or { Empty }
+    case Full(u) => tryo { u.repos.filter(_.name.get == repoName).head } or { Empty }
     case _ => Empty
   }
 }
@@ -74,7 +75,7 @@ class Boot extends Loggable {
     // where to search snippet
     LiftRules.addToPackages("code")
 
-    val indexPage = Menu.i("Home") / "index" >> If(() => !User.loggedIn_?, () => RedirectResponse("/list/" + User.currentUserId.open_!))
+    val indexPage = Menu.i("Home") / "index" >> If(() => !UserDoc.loggedIn_?, () => RedirectResponse("/list/" + UserDoc.currentUserId.open_!))
     // val listPage = Menu.i("List") / "list"
 
     val userPage = Menu.param[UserPage]("userPage",

@@ -10,8 +10,8 @@ import net.liftweb._
 import http._
 import util.Helpers._
 import common._
-import entity.{User, Collaborator, DAO}
-import code.model.SshKeyDoc
+import entity.{Collaborator, DAO}
+import code.model.{UserDoc, SshKeyDoc}
 
 /**
  * User: denis.bardadym
@@ -86,7 +86,7 @@ class AdminRepoOps(urp: UserRepoPage) extends Loggable {
   private def addNewKey() = {
     urp.repo match {
       case Full(r) => {
-        SshKeyDoc.createRecord.ownerLogin(r.ownerId).rawValue(ssh_key).ownerRepoName(r.name).save
+        SshKeyDoc.createRecord.ownerId(r.ownerId.is).rawValue(ssh_key).ownerRepoId(r.id.is).save
       }
       case _ => S.error("Invaid repo name") //TODO надо спросить у ребят как лучше такие вещи делать
     }
@@ -97,8 +97,8 @@ class AdminRepoOps(urp: UserRepoPage) extends Loggable {
   private def addNewCollaborator() = {
      urp.repo match {
       case Full(r) => {
-        User.withLogin(collaborator_login) match {
-          case Some(u) => r.addCollaborator(u)
+        UserDoc.find("login", collaborator_login) match {
+          case Full(u) => Collaborator.add(u, r)
           case _ => S.error("Invaid collaborator name")
         }
 

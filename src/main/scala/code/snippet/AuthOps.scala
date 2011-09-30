@@ -1,13 +1,12 @@
 package code.snippet
 
 import net.liftweb._
-import common.{Empty, Full, Loggable}
+import common.{Full, Loggable}
 import util.Helpers._
 import http._
-import entity.{ DAO, User}
+import entity.{DAO}
 import util.LiftFlowOfControlException
-import code.model.SshKeyDoc
-
+import code.model.{UserDoc, SshKeyDoc}
 
 /**
  * Created by IntelliJ IDEA.
@@ -17,7 +16,7 @@ import code.model.SshKeyDoc
  * To change this template use File | Settings | File Templates.
  */
 
-object AuthOps extends Loggable{
+object AuthOps extends Loggable {
   private var email = ""
   private var password = ""
   private var login = ""
@@ -57,25 +56,15 @@ object AuthOps extends Loggable{
 
   private def addNewUser() = {
     logger.debug("Trying to add new user %s %s %s with key %s".format(email, login, password, ssh_key))
-    try {
-      val u = new User(email, login, password)
-      DAO.atomic {
-        t =>
-          t +: u
-      }
-      SshKeyDoc.createRecord.ownerLogin(login).rawValue(ssh_key).save
+    val u = UserDoc.createRecord.email(email).login(login).password(password).save
+      SshKeyDoc.createRecord.ownerId(u.id.is).rawValue(ssh_key).save
       logger.debug("User added to DB")
-      User.logUserIn(u, () => S.redirectTo(u.homePageUrl))
-    } catch {
-      case e: Exception if !e.isInstanceOf[LiftFlowOfControlException] => {
-        logger.debug("%s %s".format(e.getClass.getName, e.getMessage))
-        S.error("Cannot add this user")
-      }
-    }
+      UserDoc.logUserIn(u, () => S.redirectTo(u.homePageUrl))
+
   }
 
   def loginUser = {
-      "name=email" #> SHtml.text(email, {
+    "name=email" #> SHtml.text(email, {
       value: String =>
         email = value.trim
         if (email.isEmpty) S.error("Email field are empty")
@@ -92,17 +81,17 @@ object AuthOps extends Loggable{
 
   }
 
-  def logUserIn()= {
-     User.withEmail(email) match {
-      case None =>
-        S.error("User with such email doesn't exists")
-
-      case Some(u) if (u.password != password) => S.error("Password are wrong")
-      case Some(u) => {
-        User.logUserIn(u, () => {
+  def logUserIn() = {
+    UserDoc.find("email", email) match {
+      case Full(u) if (u.password.get == password) => {
+        UserDoc.logUserIn(u, () => {
           S.redirectTo(u.homePageUrl)
         })
       }
+      case Full(u) => S.error("Password are wrong")
+      case _ =>
+        S.error("User with such email doesn't exists")
+
 
     }
   }

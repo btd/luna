@@ -12,7 +12,8 @@ import common._
 import java.net.InetSocketAddress
 import org.eclipse.jgit.transport.{Daemon, DaemonClient}
 import org.eclipse.jgit.transport.resolver.RepositoryResolver
-import entity.{User, Repository}
+import code.model.{RepositoryDoc, UserDoc }
+import json.JsonDSL._
 
 /**
  * User: denis.bardadym
@@ -39,7 +40,7 @@ object MyRepositoryResolver extends RepositoryResolver[DaemonClient] with Loggab
     name.split("/").toList match {
       case user :: repoName :: Nil => {
         tryo {
-          Repository.of(User.withLogin(user).get).filter(_.name == repoName).head.git
+          UserDoc.find("login", user).get.repos.filter(_.name.get == repoName).head.git
         } openOr {
           null
         }

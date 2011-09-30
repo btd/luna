@@ -8,13 +8,13 @@ package sshd.git
 import java.io.{OutputStream, InputStream}
 import actors.Actor
 import org.eclipse.jgit.transport.{ReceivePack, UploadPack}
-import net.liftweb.common.Loggable
+import net.liftweb.common._
 import org.apache.sshd.server.{SessionAware, Environment, ExitCallback, Command}
 import org.apache.sshd.server.session.ServerSession
 import sshd.DatabasePubKeyAuth
 import org.eclipse.jgit.lib.{Repository => JRepository, Constants}
-import entity.{Repository, User}
-import code.model.SshKeyDoc
+import code.model.{UserDoc, RepositoryDoc, SshKeyDoc}
+import net.liftweb.json.FullTypeHints
 
 abstract sealed class AbstractCommand extends Command with SessionAware with Loggable {
 
@@ -26,7 +26,7 @@ abstract sealed class AbstractCommand extends Command with SessionAware with Log
 
   protected var onExit: Int = EXIT_SUCCESS
 
-  protected var user: User = null
+  protected var user: UserDoc = null
   protected var keys: Seq[SshKeyDoc] = null
 
   val EXIT_SUCCESS = 0
@@ -84,7 +84,7 @@ abstract sealed class AbstractCommand extends Command with SessionAware with Log
 }
 
 trait WithRepo extends AbstractCommand {
-  def withRepo[A](repo: Option[Repository])(f: Repository => A) {
+  def withRepo[A](repo: Option[RepositoryDoc])(f: RepositoryDoc => A) {
     repo match {
       case Some(r) => f(r)
       case None => error("Repository not founded")
@@ -105,24 +105,24 @@ case class Upload(repoPath: String) extends WithRepo {
   def run(env: Environment) = {
     repoPath.split("/").toList match {
       case repoName :: Nil => {
-        withRepo(user.repos.filter(_.name == repoName).headOption) {
+        withRepo(user.repos.filter(_.name.get == repoName).headOption) {
           r =>
-            doIfHavePermission_?(!keys.filter(key => key.for_user_? || key.for_repo_?(r.name)).isEmpty, r.git) {
+            doIfHavePermission_?(!keys.filter(_.acceptableFor_?(r)).isEmpty, r.git) {
               repo => createUploadPack(repo)
             }
         }
       }
       case userName :: repoName :: Nil => {
-        User.withLogin(userName) match {
-          case Some(u) => {
-            withRepo(u.repos.filter(_.name == repoName).headOption) {
+        UserDoc.find("login", userName) match {
+          case Full(u) => {
+            withRepo(u.repos.filter(_.name.get == repoName).headOption) {
               r =>
-                doIfHavePermission_?(!r.collaborators.filter(_.login == user.login).isEmpty, r.git) {
+                doIfHavePermission_?(!r.collaborators.filter(_.login == user.login.get).isEmpty, r.git) {
                   repo => createUploadPack(repo)
                 }
             }
           }
-          case None => error("User not founded")
+          case _ => error("User not founded")
         }
       }
       case _ => error("Invalid repo address")
@@ -142,24 +142,24 @@ case class Receive(repoPath: String) extends WithRepo {
   def run(env: Environment) = {
     repoPath.split("/").toList match {
       case repoName :: Nil => {
-        withRepo(user.repos.filter(_.name == repoName).headOption) {
+        withRepo(user.repos.filter(_.name.get == repoName).headOption) {
           r =>
-            doIfHavePermission_?(!keys.filter(key => key.for_user_? || key.for_repo_?(r.name)).isEmpty, r.git) {
+            doIfHavePermission_?(!keys.filter(_.acceptableFor_?(r)).isEmpty, r.git) {
               repo => createReceivePack(repo)
             }
         }
       }
       case userName :: repoName :: Nil => {
-        User.withLogin(userName) match {
-          case Some(u) => {
-            withRepo(u.repos.filter(_.name == repoName).headOption) {
+        UserDoc.find("login", userName) match {
+          case Full(u) => {
+            withRepo(u.repos.filter(_.name.get == repoName).headOption) {
               r =>
-                doIfHavePermission_?(!r.collaborators.filter(_.login == user.login).isEmpty, r.git) {
+                doIfHavePermission_?(!r.collaborators.filter(_.login == user.login.get).isEmpty, r.git) {
                   repo => createReceivePack(repo)
                 }
             }
           }
-          case None => error("User not founded")
+          case _ => error("User not founded")
         }
       }
       case _ => error("Invalid repo address")

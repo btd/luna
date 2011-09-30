@@ -7,10 +7,10 @@ package code.snippet
 
 import bootstrap.liftweb.UserPage
 import net.liftweb._
-import common.Loggable
+import common._
 import util.Helpers._
 import http._
-import entity.{DAO, User}
+import entity.{DAO}
 import code.model.SshKeyDoc
 
 /**
@@ -27,21 +27,21 @@ class AdminUserOps(up: UserPage) extends Loggable {
 
   def person = {
     up.user match {
-      case Some(user) => {
-        "name=email" #> SHtml.text(user.email, {
+      case Full(user) => {
+        "name=email" #> SHtml.text(user.email.get, {
           value: String =>
             email = value.trim
             if (email.isEmpty) S.error("Email field are empty")
         },
         "placeholder" -> "email@example.com", "class" -> "textfield large") &
           "name=password" #>
-            SHtml.password(user.password, {
+            SHtml.password(user.password.get, {
               value: String =>
                 password = value.trim
                 if (password.isEmpty) S.error("Password field are empty")
             }, "placeholder" -> "password", "class" -> "textfield large") &
           "name=login" #>
-            SHtml.text(user.login, {
+            SHtml.text(user.login.get, {
               value: String =>
                 login = value.trim
                 if (login.isEmpty) S.error("Login field are empty")
@@ -49,7 +49,7 @@ class AdminUserOps(up: UserPage) extends Loggable {
           "button" #>
             SHtml.button("Update", updateUser, "class" -> "button")
       }
-      case None => "*" #> "Invalid username"
+      case _ => "*" #> "Invalid username"
     }
 
 
@@ -57,18 +57,18 @@ class AdminUserOps(up: UserPage) extends Loggable {
 
   private def updateUser() = {
     up.user match {
-      case Some(user) => {
-        user := new User(email, login, password)
+      case Full(user) => {
+        user.email(email).login(login).password(password).save
         S.redirectTo("/admin/" + login)
       }
-      case None => S.error("Invalid user") //TODO надо спросить у ребят как лучше такие вещи делать
+      case _ => S.error("Invalid user") //TODO надо спросить у ребят как лучше такие вещи делать
     }
   }
 
   def keys = {
 
     up.user match {
-      case Some(user) => {
+      case Full(user) => {
         "*" #> <table class="keys_table font table">
           {user.keys.flatMap(key => {
             <tr>
@@ -80,7 +80,7 @@ class AdminUserOps(up: UserPage) extends Loggable {
         </table>
 
       }
-      case None => "*" #> "Invalid username"
+      case _ => "*" #> "Invalid username"
     }
 
   }
@@ -100,10 +100,10 @@ class AdminUserOps(up: UserPage) extends Loggable {
 
   private def addNewKey() = {
     up.user match {
-      case Some(user) => {
-        SshKeyDoc.createRecord.ownerLogin(user.login).rawValue(ssh_key).save
+      case Full(user) => {
+        SshKeyDoc.createRecord.ownerId(user.id.is).rawValue(ssh_key).save
       }
-      case None => S.error("Invalid user") //TODO надо спросить у ребят как лучше такие вещи делать
+      case _ => S.error("Invalid user") //TODO надо спросить у ребят как лучше такие вещи делать
     }
 
 
