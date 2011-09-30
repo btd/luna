@@ -13,7 +13,8 @@ import org.apache.sshd.server.{SessionAware, Environment, ExitCallback, Command}
 import org.apache.sshd.server.session.ServerSession
 import sshd.DatabasePubKeyAuth
 import org.eclipse.jgit.lib.{Repository => JRepository, Constants}
-import entity.{Repository, SshKey, User}
+import entity.{Repository, User}
+import code.model.SshKeyDoc
 
 abstract sealed class AbstractCommand extends Command with SessionAware with Loggable {
 
@@ -26,7 +27,7 @@ abstract sealed class AbstractCommand extends Command with SessionAware with Log
   protected var onExit: Int = EXIT_SUCCESS
 
   protected var user: User = null
-  protected var keys: Seq[SshKey] = null
+  protected var keys: Seq[SshKeyDoc] = null
 
   val EXIT_SUCCESS = 0
   val EXIT_ERROR = 127

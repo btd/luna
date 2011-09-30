@@ -4,8 +4,9 @@ import net.liftweb._
 import common.{Empty, Full, Loggable}
 import util.Helpers._
 import http._
-import entity.{SshKey, DAO, User}
+import entity.{ DAO, User}
 import util.LiftFlowOfControlException
+import code.model.SshKeyDoc
 
 
 /**
@@ -61,8 +62,8 @@ object AuthOps extends Loggable{
       DAO.atomic {
         t =>
           t +: u
-          t +: new SshKey(login, ssh_key, None)
       }
+      SshKeyDoc.createRecord.ownerLogin(login).rawValue(ssh_key).save
       logger.debug("User added to DB")
       User.logUserIn(u, () => S.redirectTo(u.homePageUrl))
     } catch {

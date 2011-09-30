@@ -13,6 +13,8 @@ import org.eclipse.jgit.lib.RepositoryCache.FileKey
 import org.eclipse.jgit.util.FS
 import java.io.File
 import net.liftweb.common.{Loggable, Empty, Full, Box}
+import net.liftweb.json.JsonDSL._
+import code.model.SshKeyDoc
 
 /**
  * User: denis.bardadym
@@ -35,17 +37,12 @@ class Repository(val fsName: String, //имя папки репозитория 
 
   lazy val collaborators = Collaborator.of(this)
 
-  lazy val keys = SshKey.of(this)
+  lazy val keys = SshKeyDoc.findAll(("ownerLogin" -> ownerId) ~ ("ownerRepoName" -> name))
 
   def addCollaborator(user: User) =  {
      Collaborator.add(user, this)
 
   }
-
-  def addKey(key: SshKey) = {
-    SshKey.add(key, this)
-  }
-
 
   lazy val git = {
     dir match {

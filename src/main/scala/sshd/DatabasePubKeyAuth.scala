@@ -10,8 +10,9 @@ import org.apache.sshd.server.session.ServerSession
 import java.security.PublicKey
 import net.liftweb.common.Loggable
 import net.liftweb.util.Helpers._
-import entity.{User, SshKey}
+import entity.{User}
 import org.apache.sshd.common.Session.AttributeKey
+import code.model.SshKeyDoc
 
 class DatabasePubKeyAuth extends PublickeyAuthenticator with Loggable {
 
@@ -29,7 +30,7 @@ class DatabasePubKeyAuth extends PublickeyAuthenticator with Loggable {
     User.withLogin(username) match {
       case Some(u) => {
         tryo {
-          val keys = u.keys.filter(SshUtil.parse((_: SshKey)) == key)
+          val keys = u.keys.filter(SshUtil.parse((_: SshKeyDoc)) == key)
           session.setAttribute(DatabasePubKeyAuth.SSH_KEYS_KEY, keys)
           session.setAttribute(DatabasePubKeyAuth.USER_KEY, u)
 
@@ -46,7 +47,7 @@ class DatabasePubKeyAuth extends PublickeyAuthenticator with Loggable {
 }
 
 object DatabasePubKeyAuth {
-  val SSH_KEYS_KEY = new AttributeKey[Seq[SshKey]]
+  val SSH_KEYS_KEY = new AttributeKey[Seq[SshKeyDoc]]
   val USER_KEY = new AttributeKey[User]
 }
 

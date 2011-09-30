@@ -10,6 +10,8 @@ import net.liftweb._
 import common._
 import util._
 import http._
+import code.model.SshKeyDoc
+import json.JsonDSL._
 
 /*
 TODO
@@ -29,7 +31,7 @@ class User(
     trn.execute("insert into users(email, login, password) values (?, ?, ?)", email, login, password)
   }
 
-  def keys = SshKey.of(this)
+  def keys = SshKeyDoc.findAll("ownerLogin" -> login)
 
   def repos = Repository.of(this)
 

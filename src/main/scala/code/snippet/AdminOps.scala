@@ -10,7 +10,8 @@ import net.liftweb._
 import common.Loggable
 import util.Helpers._
 import http._
-import entity.{SshKey, DAO, User}
+import entity.{DAO, User}
+import code.model.SshKeyDoc
 
 /**
  * User: denis.bardadym
@@ -100,11 +101,7 @@ class AdminUserOps(up: UserPage) extends Loggable {
   private def addNewKey() = {
     up.user match {
       case Some(user) => {
-        DAO.atomic {
-          t =>
-            t +: new SshKey(user.login, ssh_key, None)
-        }
-
+        SshKeyDoc.createRecord.ownerLogin(user.login).rawValue(ssh_key).save
       }
       case None => S.error("Invalid user") //TODO надо спросить у ребят как лучше такие вещи делать
     }

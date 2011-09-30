@@ -10,7 +10,8 @@ import net.liftweb._
 import http._
 import util.Helpers._
 import common._
-import entity.{User, Collaborator, SshKey, DAO}
+import entity.{User, Collaborator, DAO}
+import code.model.SshKeyDoc
 
 /**
  * User: denis.bardadym
@@ -85,7 +86,7 @@ class AdminRepoOps(urp: UserRepoPage) extends Loggable {
   private def addNewKey() = {
     urp.repo match {
       case Full(r) => {
-        r.addKey(new SshKey(r.ownerId, ssh_key, Some(r.name)))
+        SshKeyDoc.createRecord.ownerLogin(r.ownerId).rawValue(ssh_key).ownerRepoName(r.name).save
       }
       case _ => S.error("Invaid repo name") //TODO надо спросить у ребят как лучше такие вещи делать
     }

@@ -4,6 +4,7 @@ import net.liftweb._
 import common._
 import db._
 import http._
+import mongodb.{DefaultMongoIdentifier, MongoDB}
 import sitemap._
 import Loc._
 import util.Helpers._
@@ -13,6 +14,7 @@ import actors.Actor
 import entity.{User, DefaultConnectionManager}
 import xml.{NodeSeq, Text}
 import sshd.git.GitDaemon
+import com.mongodb.Mongo
 
 case class UserPage(login: String) {
   lazy val user = User.withLogin(login)
@@ -43,13 +45,14 @@ object ValidUser {
 class Boot extends Loggable {
   def boot {
     DefaultConnectionIdentifier.jndiName = "jdbc/db"
-    //logger.warn("JNDI connection available (manyally) ? " + (((new InitialContext).lookup("java:/comp/env/jdbc/db").asInstanceOf[DataSource]) != null))
-    //logger.warn("JNDI connection available (lift) ? " + DB.jndiJdbcConnAvailable_?)
+
 
     if (!DB.jndiJdbcConnAvailable_?) {
       DB.defineConnectionManager(DefaultConnectionIdentifier, DefaultConnectionManager)
       LiftRules.unloadHooks.append(DefaultConnectionManager.close _)
     }
+
+    MongoDB.defineDb(DefaultMongoIdentifier, new Mongo, "grt")
 
     new Actor {
       def act() {
