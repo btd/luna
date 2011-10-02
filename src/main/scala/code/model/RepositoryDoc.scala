@@ -25,7 +25,7 @@ import net.liftweb.mongodb.record.field.{ObjectIdRefField, ObjectIdPk}
  */
 
 class RepositoryDoc  private() extends MongoRecord[RepositoryDoc] with ObjectIdPk[RepositoryDoc]  {
-  object fsName extends StringField(this, 50, DigestUtils.sha(id.get).toString) //имя папки репозитория not null unique primary key хеш наверно SHA-1
+  object fsName extends StringField(this, 50, DigestUtils.sha(id.get.toString).toString) //имя папки репозитория not null unique primary key хеш наверно SHA-1
   object name extends StringField(this, 50) //имя репозитория для пользователя not null
   object open_? extends BooleanField(this, true)//открытый или закрытый репозиторий not null default true
                    //val clonnedFrom: String, //id того репозитория откуда был склонирован

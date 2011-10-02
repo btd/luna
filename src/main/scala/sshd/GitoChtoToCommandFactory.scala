@@ -5,9 +5,8 @@
 
 package sshd
 
-import git.{UnRecognizedCommand, Receive, Upload}
-import org.apache.sshd.server.{Command, CommandFactory}
-import java.lang.Exception
+import git.{Command, UnRecognizedCommand, Receive, Upload}
+import org.apache.sshd.server.{Command => SshCommand, CommandFactory}
 import net.liftweb.common.Loggable
 
 
@@ -20,19 +19,18 @@ class GitoChtoToCommandFactory extends CommandFactory with Loggable {
    * @param command
    * @return a non null <code>Command</code>
    */
-  def createCommand(command: String): Command = {
+  def createCommand(command: String): SshCommand = {
     val args: List[String] = command.split(' ').toList
     logger.debug("Receive command: " + command)
     args match {
-      case "git-upload-pack" :: repoPath :: Nil => Upload(preparePath(repoPath))
-      case "git-receive-pack" :: repoPath :: Nil => Receive(preparePath(repoPath))
+      case "git-upload-pack" :: repoPath :: Nil => Command(Upload.createPack, preparePath(repoPath))
+      case "git-receive-pack" :: repoPath :: Nil => Command(Receive.createPack, preparePath(repoPath))
       case c => {
         logger.warn("Unrecognized command: %s".format(c))
         UnRecognizedCommand()
       }
     }
   }
-
 
 
   def preparePath(path: String) = {
