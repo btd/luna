@@ -117,7 +117,7 @@ case class Upload(repoPath: String) extends WithRepo {
           case Full(u) => {
             withRepo(u.repos.filter(_.name.get == repoName).headOption) {
               r =>
-                doIfHavePermission_?(!r.collaborators.filter(_.login == user.login.get).isEmpty, r.git) {
+                doIfHavePermission_?(!r.collaborators.filter(_.login.get == user.login.get).isEmpty, r.git) {
                   repo => createUploadPack(repo)
                 }
             }
@@ -154,7 +154,7 @@ case class Receive(repoPath: String) extends WithRepo {
           case Full(u) => {
             withRepo(u.repos.filter(_.name.get == repoName).headOption) {
               r =>
-                doIfHavePermission_?(!r.collaborators.filter(_.login == user.login.get).isEmpty, r.git) {
+                doIfHavePermission_?(!r.collaborators.filter(_.login.get == user.login.get).isEmpty, r.git) {
                   repo => createReceivePack(repo)
                 }
             }

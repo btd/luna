@@ -10,8 +10,7 @@ import net.liftweb._
 import http._
 import util.Helpers._
 import common._
-import entity.{Collaborator, DAO}
-import code.model.{UserDoc, SshKeyDoc}
+import code.model.{CollaboratorDoc, UserDoc, SshKeyDoc}
 
 /**
  * User: denis.bardadym
@@ -31,9 +30,8 @@ class AdminRepoOps(urp: UserRepoPage) extends Loggable {
           <table class="collaborators_table font table">
             {r.collaborators.flatMap(c => {
             <tr>
-              {<td>
-              {c.login}
-            </td> <td>X</td>}
+              <td>{c.login.get}</td>
+              <td>X</td>
             </tr>
           })}
           </table>
@@ -98,7 +96,7 @@ class AdminRepoOps(urp: UserRepoPage) extends Loggable {
      urp.repo match {
       case Full(r) => {
         UserDoc.find("login", collaborator_login) match {
-          case Full(u) => Collaborator.add(u, r)
+          case Full(u) => CollaboratorDoc.createRecord.userId(u.id.get).repoId(r.id.get).save
           case _ => S.error("Invaid collaborator name")
         }
 

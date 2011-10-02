@@ -11,8 +11,7 @@ import net.liftweb._
 import util.Helpers._
 import http._
 import common._
-import entity.{Collaborator}
-import code.model.{UserDoc, RepositoryDoc}
+import code.model.{CollaboratorDoc, UserDoc, RepositoryDoc}
 
 /**
  * User: denis.bardadym
@@ -61,10 +60,10 @@ class UserOps(up: UserPage) extends Loggable {
             </div>
           ) ++
             (if (pageOwner_?(UserDoc.currentUser))
-              Collaborator.collaborator(user).flatMap(_.repo).flatMap(repo =>
+              CollaboratorDoc.findAll("userId", user.id.get).flatMap(_.repoId.obj).flatMap(repo =>
                 <div class="repo_block">
                   <h3>
-                    {repo.name}
+                    {repo.name.get}
                     (collaborator)</h3>
                   <div class="url-box">
                     <ul class="clone-urls">
@@ -77,7 +76,7 @@ class UserOps(up: UserPage) extends Loggable {
                     </ul>
                       <input type="text" class="textfield" readonly=" " value={repo.publicGitUrl}/>
                   </div>
-                  <a href={"/admin/" + up.login + "/" + repo.name} class="admin_button">
+                  <a href={"/admin/" + up.login + "/" + repo.name.get} class="admin_button">
                       <span class="ui-icon ui-icon-gear "/>
                   </a>
                 </div>

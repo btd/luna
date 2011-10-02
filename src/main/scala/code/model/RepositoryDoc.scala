@@ -7,7 +7,6 @@ package code.model
 
 import net.liftweb.mongodb.record.{MongoMetaRecord, MongoRecord}
 import net.liftweb.record.field.{BooleanField, StringField}
-import entity.{Collaborator}
 import org.eclipse.jgit.lib.RepositoryCache
 import org.eclipse.jgit.lib.RepositoryCache.FileKey
 import java.io.File
@@ -26,13 +25,13 @@ import net.liftweb.mongodb.record.field.{ObjectIdRefField, ObjectIdPk}
  */
 
 class RepositoryDoc  private() extends MongoRecord[RepositoryDoc] with ObjectIdPk[RepositoryDoc]  {
-  object fsName extends StringField(this, 50, DigestUtils.sha(name.get).toString) //имя папки репозитория not null unique primary key хеш наверно SHA-1
+  object fsName extends StringField(this, 50, DigestUtils.sha(id.get).toString) //имя папки репозитория not null unique primary key хеш наверно SHA-1
   object name extends StringField(this, 50) //имя репозитория для пользователя not null
   object open_? extends BooleanField(this, true)//открытый или закрытый репозиторий not null default true
                    //val clonnedFrom: String, //id того репозитория откуда был склонирован
   object ownerId extends ObjectIdRefField(this, UserDoc) // владельц репозитория not null
 
-  lazy val collaborators = Collaborator.of(this)
+  lazy val collaborators = CollaboratorDoc.findAll("repoId", id.get).flatMap(c => c.userId.obj)
 
   lazy val keys = SshKeyDoc.findAll("ownerRepoId", id.is)
 

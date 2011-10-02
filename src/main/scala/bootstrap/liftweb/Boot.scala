@@ -11,7 +11,6 @@ import util.Helpers._
 import sitemap.LocPath._
 import sshd.SshDaemon
 import actors.Actor
-import entity.{DefaultConnectionManager}
 import xml.{NodeSeq, Text}
 import sshd.git.GitDaemon
 import com.mongodb.Mongo
@@ -45,14 +44,6 @@ object ValidUser {
  */
 class Boot extends Loggable {
   def boot {
-    DefaultConnectionIdentifier.jndiName = "jdbc/db"
-
-
-    if (!DB.jndiJdbcConnAvailable_?) {
-      DB.defineConnectionManager(DefaultConnectionIdentifier, DefaultConnectionManager)
-      LiftRules.unloadHooks.append(DefaultConnectionManager.close _)
-    }
-
     MongoDB.defineDb(DefaultMongoIdentifier, new Mongo, "grt")
 
     new Actor {

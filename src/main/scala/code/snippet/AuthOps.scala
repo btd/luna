@@ -4,7 +4,6 @@ import net.liftweb._
 import common.{Full, Loggable}
 import util.Helpers._
 import http._
-import entity.{DAO}
 import util.LiftFlowOfControlException
 import code.model.{UserDoc, SshKeyDoc}
 

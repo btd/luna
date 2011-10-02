@@ -10,7 +10,6 @@ import net.liftweb._
 import common._
 import util.Helpers._
 import http._
-import entity.{DAO}
 import code.model.SshKeyDoc
 
 /**
