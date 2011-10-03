@@ -11,6 +11,7 @@ import common._
 import util.Helpers._
 import code.model._
 import util._
+import xml.Text
 
 /**
  * User: denis.bardadym
@@ -50,7 +51,7 @@ class SourceTreeOps(stp: SourceTreePage) extends Loggable {
   }
 
   def renderTree = {
-    logger.debug(stp.path.mkString("/"))
+
     stp.repo match {
 
       case Full(repo) => {
@@ -86,6 +87,20 @@ class SourceTreeOps(stp: SourceTreePage) extends Loggable {
 
       case _ => PassThru
     }
+
+  }
+
+  def renderBreadcrumbs = {
+    stp.repo match {
+
+          case Full(repo) => {
+            "#breadcrumbs *" #> (<a href={repo.homePage}>{repo.name.get}</a> ++ stp.path.zipWithIndex.flatMap(a =>
+      Text("/") ++ (if (stp.path.size -2 == a._2) <a href={repo.homePage + "/" + stp.path.dropRight(stp.path.size - a._2 - 1).mkString("/")}>{a._1}</a> else Text(a._1))) )
+          }
+
+          case _ => PassThru
+        }
+
 
   }
 }
