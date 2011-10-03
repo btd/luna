@@ -2,7 +2,6 @@ package bootstrap.liftweb
 
 import net.liftweb._
 import common._
-import db._
 import http._
 import mongodb.{DefaultMongoIdentifier, MongoDB}
 import sitemap._
@@ -15,14 +14,25 @@ import xml.{NodeSeq, Text}
 import sshd.git.GitDaemon
 import com.mongodb.Mongo
 import code.model.UserDoc
-
 case class UserPage(login: String) {
   lazy val user = UserDoc.find("login", login)
 }
 
 case class UserRepoPage(userName: String, repoName: String) extends UserPage(userName) {
   lazy val repo = user match {
-    case Full(u) => tryo { u.repos.filter(_.name.get == repoName).head } or { Empty }
+    case Full(u) => tryo {
+      u.repos.filter(_.name.get == repoName).head
+    } or {
+      Empty
+    }
+    case _ => Empty
+  }
+}
+
+case class SourceTreePage(userName: String, repoName: String, path: List[String]) {
+  lazy val user = UserDoc.find(UserDoc.login.name, userName)
+  lazy val repo = user match {
+    case Full(uu) => tryo { uu.repos.filter(_.name.get == repoName).head } or { Empty }
     case _ => Empty
   }
 }
@@ -44,7 +54,7 @@ object ValidUser {
  */
 class Boot extends Loggable {
   def boot {
-    MongoDB.defineDb(DefaultMongoIdentifier, new Mongo, "grt")
+    MongoDB.defineDb(DefaultMongoIdentifier, new Mongo, "grt") //TODO както секюрно надо это делать
 
     new Actor {
       def act() {
@@ -77,19 +87,27 @@ class Boot extends Loggable {
     val userAdminPage = Menu.param[UserPage]("userAdminPage",
       new LinkText[UserPage](up => Text("User " + up.login)),
       login => Full(UserPage(login)),
-      up => up.login) / "admin" / * >> Template(() => Templates("admin"::"adminUser" :: Nil) openOr NodeSeq.Empty)
+      up => up.login) / "admin" / * >> Template(() => Templates("admin" :: "adminUser" :: Nil) openOr NodeSeq.Empty)
 
     val userRepoAdminPage = Menu.params[UserRepoPage]("userRepoAdminPage",
       new LinkText[UserRepoPage](urp => Text("Repo " + urp.repoName)),
       list => list match {
         case login :: repo :: Nil => Full(UserRepoPage(login, repo))
-        case _ => Empty },
+        case _ => Empty
+      },
       urp => urp.login :: urp.repoName :: Nil) / "admin" / * / * >> Template(() => Templates("admin" :: "adminRepo" :: Nil) openOr NodeSeq.Empty)
 
-    //val userRepoPage = Menu.param[UserPage]("userPage",
-    //  new LinkText[UserPage](up => Text("User " + up.login)),
-    //  login => Full(UserPage(login)),
-     // up => up.login) / "list" / * >> Template(() => Templates("list" :: Nil) openOr NodeSeq.Empty)
+    val sourceTreePage = Menu.params[SourceTreePage]("sourceTreePage",
+      new LinkText[SourceTreePage](stp => Text("Repo " + stp.repoName)),
+      list => {
+
+        list match {
+          case login :: repo :: path => Full(SourceTreePage(login, repo, path))
+          case _ => Empty
+        }
+      },
+      stp => (stp.userName :: stp.repoName :: Nil) ::: stp.path) / * / * / "tree" / ** >> Template(() => Templates("repo" :: "tree" :: Nil) openOr NodeSeq.Empty)
+
 
     val signInPage = Menu.i("Sign In") / "user" / "signin"
 
@@ -105,7 +123,8 @@ class Boot extends Loggable {
       loginPage,
       newUserPage,
       userAdminPage,
-      userRepoAdminPage)
+      userRepoAdminPage,
+      sourceTreePage)
     //Menu.i("Home") / "index", // the simple way to declare a menu
     //Menu.i("New User") / "new",
 

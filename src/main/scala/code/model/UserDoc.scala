@@ -92,7 +92,7 @@ def loggedIn_? = {
 
   def currentUserId: Box[ObjectId] = curUserId.is
 
-  private object curUser extends RequestVar[Box[UserDoc]](tryo {UserDoc.find("_id", currentUserId.open_!).open_! } or {Empty}) with CleanRequestVarOnSessionTransition {
+  private object curUser extends RequestVar[Box[UserDoc]](tryo {UserDoc.find("_id", currentUserId.get).get } or {Empty}) with CleanRequestVarOnSessionTransition {
     override lazy val __nameSalt = Helpers.nextFuncName
   }
 

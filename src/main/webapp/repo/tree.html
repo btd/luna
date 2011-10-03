@@ -1,5 +1,5 @@
 <div id="main" role="main" class="lift:surround?with=def;at=content">
-    <div class="repo_block">
+    <div class="lift:SourceTreeOps.renderUrlBox repo_block">
         <h3>Repo 1</h3>
 
         <div class="url-box">
@@ -21,7 +21,15 @@
         </select>
     </form>
 
-    <table id="source_tree">
+    <div id="breadcrumbs">
+        <ul>
+            <li>grt/</li>
+            <li>grt/</li>
+            <li>grt</li>
+        </ul>
+    </div>
+
+    <table id="source_tree" class="lift:SourceTreeOps.renderTree">
         <tr class="tree">
             <td>Dir1/</td>
             <td>Date</td>

@@ -77,6 +77,8 @@ $(function() {
             })
             return false;
         });
+
+    $("#current_branch").selectmenu();
 });
 
 

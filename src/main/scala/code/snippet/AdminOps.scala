@@ -57,7 +57,7 @@ class AdminUserOps(up: UserPage) extends Loggable {
   private def updateUser() = {
     up.user match {
       case Full(user) => {
-        user.email(email).login(login).password(password).save
+        user.email(email).login(login).password(password).save  //TODO проверитть обновляется ли текущий пользователь
         S.redirectTo("/admin/" + login)
       }
       case _ => S.error("Invalid user") //TODO надо спросить у ребят как лучше такие вещи делать
