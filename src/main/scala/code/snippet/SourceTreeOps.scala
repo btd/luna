@@ -58,7 +58,7 @@ class SourceTreeOps(stp: SourceTreePage) extends Loggable {
         val xhtmlSourceEntiries = repo.ls_tree(stp.path).flatMap(se => se match {
                 case Tree(path, _) => {
                   <tr class="tree">
-                    <td><a href={repo.homePage + (stp.path match {
+                    <td><a href={repo.homePage  +"/tree"+ (stp.path match {
                       case Nil => "/"
                       case l => l.mkString("/", "/", "/")
                     }) + path}>{path}/</a></td>
@@ -68,7 +68,10 @@ class SourceTreeOps(stp: SourceTreePage) extends Loggable {
                 }
                 case Blob(path, _) => {
                   <tr class="blob">
-                    <td>{path}</td>
+                    <td><a href={repo.homePage  +"/blob"+ (stp.path match {
+                      case Nil => "/"
+                      case l => l.mkString("/", "/", "/")
+                    }) + path}>{path}</a></td>
                     <td>Date</td>
                     <td>Commit message</td>
                   </tr>
@@ -76,7 +79,10 @@ class SourceTreeOps(stp: SourceTreePage) extends Loggable {
               })
         val parentEntry =
           <tr class="tree">
-            <td><a href={repo.homePage + stp.path.dropRight(1).mkString("/")}>..</a></td>
+            <td><a href={repo.homePage + "/tree" + (stp.path.dropRight(1) match {
+                      case Nil => ""
+                      case l => l.mkString("/", "/", "")
+                    })}>..</a></td>
               <td></td>
                 <td></td>
             </tr>
@@ -94,8 +100,9 @@ class SourceTreeOps(stp: SourceTreePage) extends Loggable {
     stp.repo match {
 
           case Full(repo) => {
-            "#breadcrumbs *" #> (<a href={repo.homePage}>{repo.name.get}</a> ++ stp.path.zipWithIndex.flatMap(a =>
-      Text("/") ++ (if (stp.path.size -2 == a._2) <a href={repo.homePage + "/" + stp.path.dropRight(stp.path.size - a._2 - 1).mkString("/")}>{a._1}</a> else <span>{a._1}</span>)) )
+            "#breadcrumbs *" #> (<a href={repo.homePage + "/tree"}>{repo.name.get}</a> ++
+              stp.path.zipWithIndex.flatMap(a =>
+                  Text("/") ++ (if (stp.path.size  == a._2) <a href={repo.homePage  + "/tree" + "/" + stp.path.dropRight(stp.path.size - a._2 - 1).mkString("/")}>{a._1}</a> else <span>{a._1}</span>)) )
           }
 
           case _ => PassThru

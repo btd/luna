@@ -632,6 +632,15 @@ ul.clone-urls li.selected>a {
 
 }
 
+#source_code_holder {
+    width: 1000px;
+    overflow-x: auto;
+    border: 1px solid #dcdcdc;
+}
+#source_code_holder pre {
+    width: 10000px;
+}
+
 /* =============================================================================
 Non-semantic helper classes
 Please define your styles before this section.

@@ -76,6 +76,8 @@ class Boot extends Loggable {
     // where to search snippet
     LiftRules.addToPackages("code")
 
+    LiftRules.explicitlyParsedSuffixes = Set()
+
     val indexPage = Menu.i("Home") / "index" >> If(() => !UserDoc.loggedIn_?, () => RedirectResponse("/list/" + UserDoc.currentUserId.open_!))
     // val listPage = Menu.i("List") / "list"
 
@@ -107,6 +109,17 @@ class Boot extends Loggable {
         }
       },
       stp => (stp.userName :: stp.repoName :: Nil) ::: stp.path) / * / * / "tree" / ** >> Template(() => Templates("repo" :: "tree" :: Nil) openOr NodeSeq.Empty)
+    val blobPage = Menu.params[SourceTreePage]("blobPage",
+          new LinkText[SourceTreePage](stp => Text("Repo " + stp.repoName)),
+          list => {
+
+            list match {
+              case login :: repo :: path => Full(SourceTreePage(login, repo, path))
+              case _ => Empty
+            }
+          },
+          stp => (stp.userName :: stp.repoName :: Nil) ::: stp.path) / * / * / "blob" / ** >> Template(() => Templates("repo" :: "blob" :: Nil) openOr NodeSeq.Empty)
+
 
 
     val signInPage = Menu.i("Sign In") / "user" / "signin"
@@ -124,7 +137,7 @@ class Boot extends Loggable {
       newUserPage,
       userAdminPage,
       userRepoAdminPage,
-      sourceTreePage)
+      sourceTreePage, blobPage)
     //Menu.i("Home") / "index", // the simple way to declare a menu
     //Menu.i("New User") / "new",
 

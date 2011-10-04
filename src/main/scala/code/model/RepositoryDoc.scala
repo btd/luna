@@ -13,15 +13,15 @@ import org.eclipse.jgit.util.FS
 import net.liftweb.json.JsonDSL._
 import main.Main
 import net.liftweb.http.S
-import net.liftweb.common.{Box, Empty, Full}
 import org.apache.commons.codec.digest.DigestUtils
 import net.liftweb.mongodb.record.field.{ObjectIdRefField, ObjectIdPk}
 import collection.mutable.ArrayBuffer
-import org.eclipse.jgit.lib.{ObjectId, FileMode, RepositoryCache}
 import org.eclipse.jgit.revwalk.RevWalk
 import org.eclipse.jgit.treewalk.{CanonicalTreeParser, TreeWalk}
 import org.eclipse.jgit.treewalk.filter.{PathFilter, TreeFilter}
 import java.lang.String
+import org.eclipse.jgit.lib.{Constants, ObjectId, FileMode, RepositoryCache}
+import net.liftweb.common.{Loggable, Box, Empty, Full}
 
 /**
  * User: denis.bardadym
@@ -39,7 +39,7 @@ case class Tree(path: String, id: ObjectId) extends SourceElement {
 
 }
 
-class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk[RepositoryDoc] {
+class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk[RepositoryDoc] with Loggable {
 
   object fsName extends StringField(this, 50, DigestUtils.sha(id.get.toString).toString)
 
@@ -57,7 +57,8 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
 
   def owner = ownerId.obj.get
 
-  lazy val homePage = "/" + owner.login.get + "/" + name.get + "/tree"
+  lazy val homePage = "/" + owner.login.get + "/" + name.get
+
 
   lazy val collaborators = CollaboratorDoc.findAll("repoId", id.get).flatMap(c => c.userId.obj)
 
@@ -86,11 +87,11 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
     val level = 0
 
     if(!path.isEmpty) {
-       walk = subTree(walk, path)
+       walk = subTree(walk, Nil, path)
     }
 
     def preparePath(rawPath: Array[Byte]) = {
-      val str = new String(rawPath)
+      val str = new String(rawPath, "UTF-8")
        str.substring(str.lastIndexOf("/") + 1)
     }
 
@@ -108,16 +109,50 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
     list.toList
   }
 
-  def subTree(tw: TreeWalk, subPath: List[String]): TreeWalk = {
-     subPath match {
+  private def subTree(tw: TreeWalk, prefix: List[String], suffix: List[String]): TreeWalk = {
+    logger.debug("Try to load source " + suffix + " tw -> " + tw.getFileMode(0).getObjectType)
+     suffix match {
        case subDir :: other => {
-         tw.setFilter(PathFilter.create(subDir))
+         tw.setFilter(PathFilter.create((prefix ::: List[String](subDir)).mkString("/")))
+         logger.debug("Filter: " + (prefix ::: List[String](subDir)).mkString("/"))
          tw.next
-         tw.enterSubtree
-         subTree(tw, other)
+         logger.debug("Now at " +  tw.getFileMode(0).getObjectType)
+         if (tw.getFileMode(0).getObjectType == Constants.OBJ_TREE) tw.enterSubtree
+         subTree(tw, prefix ::: List[String](subDir), other)
        }
        case Nil => tw
      }
+  }
+
+  def ls_cat(path: List[String]) = {
+    //logger.debug("Try to load source " + path)
+     val reader = git.newObjectReader
+    val rev = new RevWalk(reader)
+
+    val c = rev.parseCommit(git.resolve("HEAD"))
+    var walk = new TreeWalk(reader)
+    walk.addTree(c.getTree)
+
+    val level = 0
+
+    walk = subTree(walk, Nil, path)
+
+    var result = ""
+
+    logger.debug("tw -> " + walk.getFileMode(level).getObjectType)
+
+    if (walk.getFileMode(level).getObjectType == Constants.OBJ_BLOB) {
+      logger.debug("Source founded. Try to load")
+      val blobLoader = reader.open(walk.getObjectId(level), Constants.OBJ_BLOB)
+      result = scala.io.Source.fromInputStream(blobLoader.openStream, "UTF-8").mkString
+
+    }
+
+    rev.release
+    walk.release
+    reader.release
+
+    result
   }
 
 

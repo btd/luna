@@ -1,15 +1,34 @@
-<!--
-  ~ Copyright (c) 2011 Denis Bardadym
-  ~ Distributed under Apache License.
-  -->
+<div id="main" role="main" class="lift:surround?with=def-blob;at=content">
+    <div class="lift:SourceTreeOps.renderUrlBox repo_block">
+        <h3>Repo 1</h3>
 
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
-        "http://www.w3.org/TR/html4/loose.dtd">
-<html>
-<head>
-    <title></title>
-</head>
-<body>
+        <div class="url-box">
+            <ul class="clone-urls">
+                <li class="private_clone_url"><a href="git@github.com:btd/querulous.git"
+                        >SSH</a></li>
 
-</body>
-</html>
+                <li class="public_clone_url selected"><a href="git://github.com/btd/querulous.git"
+                        >Git</a></li>
+            </ul>
+            <input type="text" class="textfield" value="git://github.com/btd/querulous.git" readonly/>
+
+        </div>
+    </div>
+    <hr/>
+    <form id="current_branch_select_holder">
+        <select name="current_branch" id="current_branch">
+            <option value="master" selected="selected">master</option>
+        </select>
+    </form>
+
+    <div id="breadcrumbs" class="lift:SourceTreeOps.renderBreadcrumbs">
+
+    </div>
+
+    <div class="lift:BlobOps.renderSourceText" id="source_code_holder">
+    <pre><code>
+        <span class="source_code"></span>
+    </code></pre>
+    </div>
+
+</div>
