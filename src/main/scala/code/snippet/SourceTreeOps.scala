@@ -12,6 +12,7 @@ import util.Helpers._
 import code.model._
 import util._
 import xml.Text
+import org.eclipse.jgit.api._
 
 /**
  * User: denis.bardadym
@@ -112,6 +113,22 @@ class SourceTreeOps(stp: SourceTreePage) extends Loggable {
           case _ => PassThru
         }
 
+
+  }
+
+  def renderBranches = {
+    import scala.collection.JavaConversions._
+       stp.repo match {
+
+          case Full(repo) => {
+            val branches = (new Git(repo.git)).branchList.call
+            "#current_branch *" #> asScalaBuffer(branches).map(ref =>
+              <option>{ ref.getName.substring(ref.getName.lastIndexOf("/") + 1) } </option>
+            )
+          }
+
+          case _ => PassThru
+        }
 
   }
 }
