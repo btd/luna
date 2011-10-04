@@ -86,20 +86,21 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
 
     val level = 0
 
-    if(!path.isEmpty) {
-       walk = subTree(walk, Nil, path)
+    if (!path.isEmpty) {
+      walk = subTree(walk, Nil, path)
     }
 
     def preparePath(rawPath: Array[Byte]) = {
       val str = new String(rawPath, "UTF-8")
-       str.substring(str.lastIndexOf("/") + 1)
+      logger.debug("Path: " + str)
+      str.substring(str.lastIndexOf("/") + 1)
     }
 
     val list = new ArrayBuffer[SourceElement](50)
     while (walk.next) {
       list +=
-      (if (walk.getFileMode(level) == FileMode.TREE) Tree(preparePath(walk.getRawPath), walk.getObjectId(level))
-      else Blob(preparePath(walk.getRawPath), walk.getObjectId(level))  )
+        (if (walk.getFileMode(level) == FileMode.TREE) Tree(preparePath(walk.getRawPath), walk.getObjectId(level))
+        else Blob(preparePath(walk.getRawPath), walk.getObjectId(level)))
     }
 
     rev.release
@@ -111,22 +112,22 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
 
   private def subTree(tw: TreeWalk, prefix: List[String], suffix: List[String]): TreeWalk = {
     logger.debug("Try to load source " + suffix + " tw -> " + tw.getFileMode(0).getObjectType)
-     suffix match {
-       case subDir :: other => {
-         tw.setFilter(PathFilter.create((prefix ::: List[String](subDir)).mkString("/")))
-         logger.debug("Filter: " + (prefix ::: List[String](subDir)).mkString("/"))
-         tw.next
-         logger.debug("Now at " +  tw.getFileMode(0).getObjectType)
-         if (tw.getFileMode(0).getObjectType == Constants.OBJ_TREE) tw.enterSubtree
-         subTree(tw, prefix ::: List[String](subDir), other)
-       }
-       case Nil => tw
-     }
+    suffix match {
+      case subDir :: other => {
+        tw.setFilter(PathFilter.create((prefix ::: List[String](subDir)).mkString("/")))
+        logger.debug("Filter: " + (prefix ::: List[String](subDir)).mkString("/"))
+        tw.next
+        logger.debug("Now at " + tw.getFileMode(0).getObjectType)
+        if (tw.getFileMode(0).getObjectType == Constants.OBJ_TREE) tw.enterSubtree
+        subTree(tw, prefix ::: List[String](subDir), other)
+      }
+      case Nil => tw
+    }
   }
 
   def ls_cat(path: List[String]) = {
     //logger.debug("Try to load source " + path)
-     val reader = git.newObjectReader
+    val reader = git.newObjectReader
     val rev = new RevWalk(reader)
 
     val c = rev.parseCommit(git.resolve("HEAD"))
@@ -144,7 +145,7 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
     if (walk.getFileMode(level).getObjectType == Constants.OBJ_BLOB) {
       logger.debug("Source founded. Try to load")
       val blobLoader = reader.open(walk.getObjectId(level), Constants.OBJ_BLOB)
-      result = scala.io.Source.fromInputStream(blobLoader.openStream, "UTF-8").mkString
+      result = scala.io.Source.fromInputStream(blobLoader.openStream).mkString
 
     }
 

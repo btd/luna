@@ -11,6 +11,7 @@ import common._
 import util.Helpers._
 import util._
 import xml.Text
+import java.net.URLDecoder
 
 /**
  * User: denis.bardadym
@@ -20,8 +21,9 @@ import xml.Text
 
 class BlobOps(stp: SourceTreePage) extends Loggable {
   def renderSourceText = {
+    val decodedUrl: List[String] = stp.path.map(p => URLDecoder.decode(p, "UTF-8"))
     stp.repo match {
-      case Full(repo) => ".source_code" #> Text(repo.ls_cat(stp.path))
+      case Full(repo) => ".source_code" #> Text(repo.ls_cat(decodedUrl))
       case _ => PassThru
     }
   }
