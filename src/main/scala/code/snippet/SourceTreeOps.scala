@@ -95,7 +95,7 @@ class SourceTreeOps(stp: SourceTreePage) extends Loggable {
 
           case Full(repo) => {
             "#breadcrumbs *" #> (<a href={repo.homePage}>{repo.name.get}</a> ++ stp.path.zipWithIndex.flatMap(a =>
-      Text("/") ++ (if (stp.path.size -2 == a._2) <a href={repo.homePage + "/" + stp.path.dropRight(stp.path.size - a._2 - 1).mkString("/")}>{a._1}</a> else Text(a._1))) )
+      Text("/") ++ (if (stp.path.size -2 == a._2) <a href={repo.homePage + "/" + stp.path.dropRight(stp.path.size - a._2 - 1).mkString("/")}>{a._1}</a> else <span>{a._1}</span>)) )
           }
 
           case _ => PassThru

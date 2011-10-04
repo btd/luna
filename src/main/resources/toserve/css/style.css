@@ -623,10 +623,13 @@ ul.clone-urls li.selected>a {
     font-size: 1.3em;
     padding:  10px 0;
 }
-
+ #breadcrumbs {
+     margin: 20px 0;
+ }
 #breadcrumbs * {
      font-family: 'Open Sans', sans-serif;
     font-size: 1.3em;
+
 }
 
 /* =============================================================================

@@ -5,11 +5,11 @@
 
 package code.model
 
-import net.liftweb.mongodb.record.field.{ObjectIdRefField, ObjectIdPk}
 import net.liftweb.mongodb.record.{MongoMetaRecord, MongoRecord}
 import net.liftweb._
 
 import common._
+import mongodb.record.field.{MongoPasswordField, ObjectIdRefField, ObjectIdPk}
 import util.Helpers._
 import http.{CleanRequestVarOnSessionTransition, SessionVar, RequestVar, S}
 import record.field._
@@ -27,7 +27,7 @@ class UserDoc private() extends MongoRecord[UserDoc] with ObjectIdPk[UserDoc] {
 
   object email extends StringField(this, 50) //уникальный и not null может надо будет добавить хоть какую то валидацию (н-р что там есть @)
   object login extends StringField(this, 50) //уникальный и not null
-  object password extends PasswordField(this)
+  object password extends StringField(this, 50)
 
   def meta = UserDoc
 
