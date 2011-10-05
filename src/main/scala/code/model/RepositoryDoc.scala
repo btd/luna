@@ -10,7 +10,7 @@ import net.liftweb.record.field.{BooleanField, StringField}
 import org.eclipse.jgit.lib.RepositoryCache.FileKey
 import java.io.File
 import org.eclipse.jgit.util.FS
-import net.liftweb.json.JsonDSL._
+
 import main.Main
 import net.liftweb.http.S
 import org.apache.commons.codec.digest.DigestUtils
@@ -19,12 +19,12 @@ import collection.mutable.ArrayBuffer
 import org.eclipse.jgit.revwalk.RevWalk
 import org.eclipse.jgit.treewalk.{CanonicalTreeParser, TreeWalk}
 import org.eclipse.jgit.treewalk.filter.{PathFilter, TreeFilter}
-import java.lang.String
+
 import org.eclipse.jgit.lib.{Constants, ObjectId, FileMode, RepositoryCache}
-import net.liftweb.common.{Loggable, Box, Empty, Full}
+import net.liftweb.common._
+import net.liftweb.util.Helpers._
 import org.eclipse.jgit.api.Git
-import concurrent.JavaConversions
-import collection.JavaConverters
+
 
 /**
  * User: denis.bardadym
@@ -60,15 +60,15 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
 
   def owner = ownerId.obj.get
 
-  lazy val homePage = "/" + owner.login.get + "/" + name.get
-
 
   lazy val collaborators = CollaboratorDoc.findAll("repoId", id.get).flatMap(c => c.userId.obj)
 
   lazy val keys = SshKeyDoc.findAll("ownerRepoId", id.is)
 
+  def head = tryo {  git.resolve(currentBranch) } or { Empty }
+
   lazy val git =
-    exists_? match {
+    fs_exists_? match {
       case true => RepositoryCache.open(loc)
       case false => {
         val repo = RepositoryCache.open(loc, false)
@@ -165,18 +165,33 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
     scala.collection.JavaConversions.asScalaBuffer((new Git(git)).branchList.call).map(ref => ref.getName.substring(ref.getName.lastIndexOf("/") + 1))
   }
 
+  private def fs_exists_? = FileKey.resolve(new File(fsPath), FS.DETECTED) != null
 
-  def exists_? = FileKey.resolve(new File(fsPath), FS.DETECTED) != null
+  def inited_? = {
+    val rev = new RevWalk(git)
+    val res = tryo  { rev.parseCommit(git.resolve(currentBranch)) } or { Empty }
+    rev.release
+    res != Empty
+  }
 
   private lazy val loc = FileKey.lenient(new File(fsPath), FS.DETECTED)
 
   lazy val fsPath = Main.repoDir + fsName
 
-  lazy val publicGitUrl = "git://" + S.hostName + "/" + ownerId.obj.open_!.login.get + "/" + name.get
 
-  lazy val privateSshUrl = ownerId.obj.open_!.login.get + "@" + S.hostName + ":" + name.get
 
-  def privateSshUrl(user: UserDoc) = user.login.is + "@" + S.hostName + ":" + ownerId.obj.open_!.login.get + "/" + name.get
+  lazy val homePageUrl = "/" + owner.login.get + "/" + name.get
+
+  lazy val sourceTreeUrl = homePageUrl  +"/tree/" + currentBranch
+
+  def  sourceTreeUrl(commit : String) = homePageUrl  +"/tree/" + commit
+  def  sourceBlobUrl(commit : String) = homePageUrl  +"/blob/" + commit
+
+  lazy val publicGitUrl = "git://" + S.hostName + "/" + owner.login.get + "/" + name.get
+
+  lazy val privateSshUrl = owner.login.get + "@" + S.hostName + ":" + name.get
+
+  def privateSshUrl(user: UserDoc) = user.login.is + "@" + S.hostName + ":" + owner.login.get + "/" + name.get
 
   def canPush_?(user: Box[UserDoc]) = {
     user match {

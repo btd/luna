@@ -135,7 +135,17 @@ class Boot extends Loggable {
         }
       },
       stp => stp.userName :: stp.repoName ::  Nil) / * / * / "tree"  >>
-     Template(() => Templates("repo" :: "default" :: Nil) openOr NodeSeq.Empty)
+     Template(() => Templates("repo" :: "default" :: Nil) openOr NodeSeq.Empty) >>
+      TestValueAccess(sp =>
+       sp match {
+         case Full(ssp) => {
+           ssp.repo match {
+             case Full(repo) if (repo.inited_?) => Full(RedirectResponse(repo.sourceTreeUrl))
+             case _ => Empty
+           }
+         }
+         case _ => Empty
+       })
 
    val sourceTreePage = Menu.params[SourcePage]("sourceTreePage",
       new LinkText[SourcePage](stp => Text("Repo " + stp.repoName)),
@@ -151,8 +161,8 @@ class Boot extends Loggable {
        sp match {
          case Full(ssp) => {
            ssp.repo match {
-             case Full(repo) if (repo.exists_?) => Templates("repo" :: "tree" :: Nil) openOr NodeSeq.Empty
-             case Full(repo) if (!repo.exists_?) => Templates("repo" :: "default" :: Nil) openOr NodeSeq.Empty
+             case Full(repo) if (repo.inited_?) => Templates("repo" :: "tree" :: Nil) openOr NodeSeq.Empty
+             case Full(repo)  => Templates("repo" :: "default" :: Nil) openOr NodeSeq.Empty
              case _ => NodeSeq.Empty
            }
          }

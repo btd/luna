@@ -45,7 +45,7 @@ class SourceTreeOps(stp: SourcePage) extends Loggable {
             </li>
             </ul>
               <input type="text" class="textfield" readonly=" " value={repo.publicGitUrl}/>
-          </div>{if (pageOwner_?(UserDoc.currentUser)) <a href={"/admin" + repo.homePage} class="admin_button">
+          </div>{if (pageOwner_?(UserDoc.currentUser)) <a href={"/admin" + repo.homePageUrl} class="admin_button">
             <span class="ui-icon ui-icon-gear "/>
         </a>}
         </div>
@@ -61,7 +61,7 @@ class SourceTreeOps(stp: SourcePage) extends Loggable {
         val xhtmlSourceEntiries = repo.ls_tree(stp.path, stp.commit).flatMap(se => se match {
                 case Tree(path, _) => {
                   <tr class="tree">
-                    <td><a href={repo.homePage  +"/tree" + "/" + stp.commit + (stp.path match {
+                    <td><a href={repo.sourceTreeUrl(stp.commit) + (stp.path match {
                       case Nil => "/"
                       case l => l.mkString("/", "/", "/")
                     }) + path}>{path}/</a></td>
@@ -71,7 +71,7 @@ class SourceTreeOps(stp: SourcePage) extends Loggable {
                 }
                 case Blob(path, _) => {
                   <tr class="blob">
-                    <td><a href={repo.homePage  +"/blob"+ "/" + stp.commit + (stp.path match {
+                    <td><a href={repo.sourceBlobUrl(stp.commit) + (stp.path match {
                       case Nil => "/"
                       case l => l.mkString("/", "/", "/")
                     }) + path}>{path}</a></td>
@@ -82,7 +82,7 @@ class SourceTreeOps(stp: SourcePage) extends Loggable {
               })
         val parentEntry =
           <tr class="tree">
-            <td><a href={repo.homePage + "/tree" + (stp.path.dropRight(1) match {
+            <td><a href={repo.sourceTreeUrl(stp.commit) + (stp.path.dropRight(1) match {
                       case Nil => ""
                       case l => l.mkString("/", "/", "")
                     })}>..</a></td>
@@ -103,11 +103,11 @@ class SourceTreeOps(stp: SourcePage) extends Loggable {
     stp.repo match {
 
           case Full(repo) => {
-            "#breadcrumbs *" #> (<a href={repo.homePage + "/tree" + "/" + stp.commit}>{repo.name.get}</a> ++
+            "#breadcrumbs *" #> (<a href={repo.sourceTreeUrl(stp.commit)}>{repo.name.get}</a> ++
               stp.path.zipWithIndex.flatMap(a =>
                   Text("/") ++
                     (if (stp.path.size -1  != a._2)
-                      <a href={repo.homePage  + "/tree" + "/" + stp.commit + "/" + stp.path.dropRight(stp.path.size - a._2 - 1).mkString("/")}>{a._1}</a>
+                      <a href={repo.sourceTreeUrl(stp.commit) + stp.path.dropRight(stp.path.size - a._2 - 1).mkString("/","/", "")}>{a._1}</a>
                     else
                       <span>{a._1}</span>)) )
           }
@@ -128,7 +128,7 @@ class SourceTreeOps(stp: SourcePage) extends Loggable {
             "#current_branch" #>
               SHtml.ajaxSelect(repo.branches.zip(repo.branches),
                 Full(stp.commit),
-                value => S.redirectTo(repo.homePage + "/tree/" + value + (stp.path match {
+                value => S.redirectTo(repo.sourceTreeUrl( value) + (stp.path match {
                   case Nil => ""
                   case l => l.mkString("/", "/", "")
                 })))
