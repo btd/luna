@@ -13,7 +13,7 @@ import org.apache.sshd.server.{SessionAware, Environment, ExitCallback, Command 
 import org.apache.sshd.server.session.ServerSession
 import sshd.DatabasePubKeyAuth
 import org.eclipse.jgit.lib.{Repository => JRepository, Constants}
-import code.model.{UserDoc, SshKeyDoc}
+import code.model.{RepositoryDoc, UserDoc, SshKeyDoc}
 
 abstract sealed class AbstractCommand extends SshCommand with SessionAware with Loggable {
 
@@ -82,14 +82,14 @@ abstract sealed class AbstractCommand extends SshCommand with SessionAware with 
   }
 }
 
-case class Command[A](factory: (JRepository, InputStream, OutputStream, OutputStream) => A, repoPath: String) extends AbstractCommand {
+case class Command[A](factory: (RepositoryDoc, InputStream, OutputStream, OutputStream) => A, repoPath: String) extends AbstractCommand {
   def run(env: Environment) = {
     repoPath.split("/").toList match {
       case repoName :: Nil => {
         user.repos.filter(_.name.get == repoName).headOption match {
           case Some(r) => {
             if (!keys.filter(_.acceptableFor_?(r)).isEmpty) {
-              factory(r.git, in, out, err)
+              factory(r, in, out, err)
             } else sendError("You have no permisson")
           }
           case _ => sendError("Repository not founded")
@@ -101,7 +101,7 @@ case class Command[A](factory: (JRepository, InputStream, OutputStream, OutputSt
             u.repos.filter(_.name.get == repoName).headOption match {
               case Some(r) =>
                 if (!r.collaborators.filter(_.login.get == user.login.get).isEmpty) {
-                  factory(r.git, in, out, err)
+                  factory(r, in, out, err)
                 } else sendError("You have no permission")
               case _ => sendError("Repository not founded")
             }
@@ -119,9 +119,9 @@ case class Command[A](factory: (JRepository, InputStream, OutputStream, OutputSt
 
 object Upload {
 
-  def createPack(repo: JRepository, in: InputStream, out: OutputStream,
+  def createPack(repo: RepositoryDoc, in: InputStream, out: OutputStream,
                  err: OutputStream) = {
-    new UploadPack(repo).upload(in, out, err)
+    repo.git.upload_pack.upload(in, out, err)
   }
 
 }
@@ -129,16 +129,9 @@ object Upload {
 
 object Receive {
 
-  def createPack(repo: JRepository, in: InputStream, out: OutputStream,
+  def createPack(repo: RepositoryDoc, in: InputStream, out: OutputStream,
                  err: OutputStream) = {
-    val rp = new ReceivePack(repo)
-
-    rp.setAllowCreates(true)
-    rp.setAllowDeletes(true)
-    rp.setAllowNonFastForwards(true)
-    rp.setCheckReceivedObjects(true)
-
-    rp.receive(in, out, err)
+    repo.git.receive_pack.receive(in, out, err)
   }
 }
 

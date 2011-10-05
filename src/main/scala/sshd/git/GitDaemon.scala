@@ -40,7 +40,7 @@ object MyRepositoryResolver extends RepositoryResolver[DaemonClient] with Loggab
     name.split("/").toList match {
       case user :: repoName :: Nil => {
         tryo {
-          UserDoc.find("login", user).get.repos.filter(_.name.get == repoName).head.git
+          UserDoc.find("login", user).get.repos.filter(_.name.get == repoName).head.git.fs_repo_!
         } openOr {
           null
         }

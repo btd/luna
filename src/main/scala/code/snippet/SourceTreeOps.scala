@@ -58,7 +58,7 @@ class SourceTreeOps(stp: SourcePage) extends Loggable {
     stp.repo match {
 
       case Full(repo) => {
-        val xhtmlSourceEntiries = repo.ls_tree(stp.path, stp.commit).flatMap(se => se match {
+        val xhtmlSourceEntiries = repo.git.ls_tree(stp.path, stp.commit).flatMap(se => se match {
                 case Tree(path, _) => {
                   <tr class="tree">
                     <td><a href={repo.sourceTreeUrl(stp.commit) + (stp.path match {
@@ -126,7 +126,7 @@ class SourceTreeOps(stp: SourcePage) extends Loggable {
             //  <option value={ref.getName.substring(ref.getName.lastIndexOf("/") + 1)} selected={if (stp.commit == ref.getName.substring(ref.getName.lastIndexOf("/") + 1)) "selected" else ""}>{ ref.getName.substring(ref.getName.lastIndexOf("/") + 1) } </option>
             //)
             "#current_branch" #>
-              SHtml.ajaxSelect(repo.branches.zip(repo.branches),
+              SHtml.ajaxSelect(repo.git.branches.zip(repo.git.branches),
                 Full(stp.commit),
                 value => S.redirectTo(repo.sourceTreeUrl( value) + (stp.path match {
                   case Nil => ""

@@ -24,6 +24,7 @@ import org.eclipse.jgit.lib.{Constants, ObjectId, FileMode, RepositoryCache}
 import net.liftweb.common._
 import net.liftweb.util.Helpers._
 import org.eclipse.jgit.api.Git
+import org.eclipse.jgit.transport.{UploadPack, ReceivePack}
 
 
 /**
@@ -65,10 +66,9 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
 
   lazy val keys = SshKeyDoc.findAll("ownerRepoId", id.is)
 
-  def head = tryo {  git.resolve(currentBranch) } or { Empty }
 
-  lazy val git =
-    fs_exists_? match {
+  object git {
+    private lazy val fs_repo = fs_exists_? match {
       case true => RepositoryCache.open(loc)
       case false => {
         val repo = RepositoryCache.open(loc, false)
@@ -77,115 +77,133 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
       }
     }
 
-  lazy val currentBranch = git.getBranch
+    def currentBranch = fs_repo.getBranch
 
-  //TODO может стоит подгрузить все целиков вначале?
-  def ls_tree(path: List[String], commit: String) = {
+    def ls_tree(path: List[String], commit: String) = {
 
-    val reader = git.newObjectReader
-    val rev = new RevWalk(reader)
+      val reader = fs_repo.newObjectReader
+      val rev = new RevWalk(reader)
 
-    val c = rev.parseCommit(git.resolve(commit))
-    var walk = new TreeWalk(reader)
-    walk.addTree(c.getTree)
+      val c = rev.parseCommit(fs_repo.resolve(commit))
+      var walk = new TreeWalk(reader)
+      walk.addTree(c.getTree)
 
-    val level = 0
+      val level = 0
 
-    if (!path.isEmpty) {
-      walk = subTree(walk, Nil, path)
-    }
-
-    def preparePath(rawPath: Array[Byte]) = {
-      val str = new String(rawPath, "UTF-8")
-      logger.debug("Path: " + str)
-      str.substring(str.lastIndexOf("/") + 1)
-    }
-
-    val list = new ArrayBuffer[SourceElement](50)
-    while (walk.next) {
-      list +=
-        (if (walk.getFileMode(level) == FileMode.TREE) Tree(preparePath(walk.getRawPath), walk.getObjectId(level))
-        else Blob(preparePath(walk.getRawPath), walk.getObjectId(level)))
-    }
-
-    rev.release
-    walk.release
-    reader.release
-
-    list.toList
-  }
-
-  private def subTree(tw: TreeWalk, prefix: List[String], suffix: List[String]): TreeWalk = {
-    logger.debug("Try to load source " + suffix + " tw -> " + tw.getFileMode(0).getObjectType)
-    suffix match {
-      case subDir :: other => {
-        tw.setFilter(PathFilter.create((prefix ::: List[String](subDir)).mkString("/")))
-        logger.debug("Filter: " + (prefix ::: List[String](subDir)).mkString("/"))
-        tw.next
-        logger.debug("Now at " + tw.getFileMode(0).getObjectType)
-        if (tw.getFileMode(0).getObjectType == Constants.OBJ_TREE) tw.enterSubtree
-        subTree(tw, prefix ::: List[String](subDir), other)
+      if (!path.isEmpty) {
+        walk = subTree(walk, Nil, path)
       }
-      case Nil => tw
-    }
-  }
 
-  def ls_cat(path: List[String], commit: String) = {
-    //logger.debug("Try to load source " + path)
-    val reader = git.newObjectReader
-    val rev = new RevWalk(reader)
+      def preparePath(rawPath: Array[Byte]) = {
+        val str = new String(rawPath, "UTF-8")
+        logger.debug("Path: " + str)
+        str.substring(str.lastIndexOf("/") + 1)
+      }
 
-    val c = rev.parseCommit(git.resolve(commit))
-    var walk = new TreeWalk(reader)
-    walk.addTree(c.getTree)
+      val list = new ArrayBuffer[SourceElement](50)
+      while (walk.next) {
+        list +=
+          (if (walk.getFileMode(level) == FileMode.TREE) Tree(preparePath(walk.getRawPath), walk.getObjectId(level))
+          else Blob(preparePath(walk.getRawPath), walk.getObjectId(level)))
+      }
 
-    val level = 0
+      rev.release
+      walk.release
+      reader.release
 
-    walk = subTree(walk, Nil, path)
-
-    var result = ""
-
-    logger.debug("tw -> " + walk.getFileMode(level).getObjectType)
-
-    if (walk.getFileMode(level).getObjectType == Constants.OBJ_BLOB) {
-      logger.debug("Source founded. Try to load")
-      val blobLoader = reader.open(walk.getObjectId(level), Constants.OBJ_BLOB)
-      result = scala.io.Source.fromInputStream(blobLoader.openStream).mkString
-
+      list.toList
     }
 
-    rev.release
-    walk.release
-    reader.release
+    private def subTree(tw: TreeWalk, prefix: List[String], suffix: List[String]): TreeWalk = {
+      logger.debug("Try to load source " + suffix + " tw -> " + tw.getFileMode(0).getObjectType)
+      suffix match {
+        case subDir :: other => {
+          tw.setFilter(PathFilter.create((prefix ::: List[String](subDir)).mkString("/")))
+          logger.debug("Filter: " + (prefix ::: List[String](subDir)).mkString("/"))
+          tw.next
+          logger.debug("Now at " + tw.getFileMode(0).getObjectType)
+          if (tw.getFileMode(0).getObjectType == Constants.OBJ_TREE) tw.enterSubtree
+          subTree(tw, prefix ::: List[String](subDir), other)
+        }
+        case Nil => tw
+      }
+    }
 
-    result
+    def ls_cat(path: List[String], commit: String) = {
+      //logger.debug("Try to load source " + path)
+      val reader = fs_repo.newObjectReader
+      val rev = new RevWalk(reader)
+
+      val c = rev.parseCommit(fs_repo.resolve(commit))
+      var walk = new TreeWalk(reader)
+      walk.addTree(c.getTree)
+
+      val level = 0
+
+      walk = subTree(walk, Nil, path)
+
+      var result = ""
+
+      logger.debug("tw -> " + walk.getFileMode(level).getObjectType)
+
+      if (walk.getFileMode(level).getObjectType == Constants.OBJ_BLOB) {
+        logger.debug("Source founded. Try to load")
+        val blobLoader = reader.open(walk.getObjectId(level), Constants.OBJ_BLOB)
+        result = scala.io.Source.fromInputStream(blobLoader.openStream).mkString
+
+      }
+
+      rev.release
+      walk.release
+      reader.release
+
+      result
+    }
+
+    def branches =
+      scala.collection.JavaConversions.asScalaBuffer((new Git(fs_repo)).branchList.call).map(ref => ref.getName.substring(ref.getName.lastIndexOf("/") + 1))
+
+
+    private def fs_exists_? = FileKey.resolve(new File(fsPath), FS.DETECTED) != null
+
+    def inited_? = {
+      val rev = new RevWalk(fs_repo)
+      val res = tryo {
+        rev.parseCommit(fs_repo.resolve(currentBranch))
+      } or {
+        Empty
+      }
+      rev.release
+      res != Empty
+    }
+
+    private lazy val loc = FileKey.lenient(new File(fsPath), FS.DETECTED)
+
+    lazy val fsPath = Main.repoDir + fsName
+
+    def upload_pack = new UploadPack(fs_repo)
+
+    def receive_pack = {
+      val pack = new ReceivePack(fs_repo)
+      pack.setAllowCreates(true)
+      pack.setAllowDeletes(true)
+      pack.setAllowNonFastForwards(true)
+      pack.setCheckReceivedObjects(true)
+
+      pack
+    }
+
+    def fs_repo_! = fs_repo
   }
-
-  def branches = {
-    scala.collection.JavaConversions.asScalaBuffer((new Git(git)).branchList.call).map(ref => ref.getName.substring(ref.getName.lastIndexOf("/") + 1))
-  }
-
-  private def fs_exists_? = FileKey.resolve(new File(fsPath), FS.DETECTED) != null
-
-  def inited_? = {
-    val rev = new RevWalk(git)
-    val res = tryo  { rev.parseCommit(git.resolve(currentBranch)) } or { Empty }
-    rev.release
-    res != Empty
-  }
-
-  private lazy val loc = FileKey.lenient(new File(fsPath), FS.DETECTED)
-
-  lazy val fsPath = Main.repoDir + fsName
-
 
 
   lazy val homePageUrl = "/" + owner.login.get + "/" + name.get
 
-  lazy val sourceTreeUrl = homePageUrl  +"/tree/" + currentBranch
+  lazy val sourceTreeUrl = homePageUrl + "/tree/" + git.currentBranch
 
-  def  sourceTreeUrl(commit : String) = homePageUrl  +"/tree/" + commit
-  def  sourceBlobUrl(commit : String) = homePageUrl  +"/blob/" + commit
+  def sourceTreeUrl(commit: String) = homePageUrl + "/tree/" + commit
+
+  def sourceBlobUrl(commit: String) = homePageUrl + "/blob/" + commit
 
   lazy val publicGitUrl = "git://" + S.hostName + "/" + owner.login.get + "/" + name.get
 

@@ -140,7 +140,7 @@ class Boot extends Loggable {
        sp match {
          case Full(ssp) => {
            ssp.repo match {
-             case Full(repo) if (repo.inited_?) => Full(RedirectResponse(repo.sourceTreeUrl))
+             case Full(repo) if (repo.git.inited_?) => Full(RedirectResponse(repo.sourceTreeUrl))
              case _ => Empty
            }
          }
@@ -161,7 +161,7 @@ class Boot extends Loggable {
        sp match {
          case Full(ssp) => {
            ssp.repo match {
-             case Full(repo) if (repo.inited_?) => Templates("repo" :: "tree" :: Nil) openOr NodeSeq.Empty
+             case Full(repo) if (repo.git.inited_?) => Templates("repo" :: "tree" :: Nil) openOr NodeSeq.Empty
              case Full(repo)  => Templates("repo" :: "default" :: Nil) openOr NodeSeq.Empty
              case _ => NodeSeq.Empty
            }
