@@ -31,7 +31,7 @@ object MyMenu {
   def signIn = {
     "*" #> (UserDoc.currentUser match {
       case Full(u) => Text("")
-      case _ => <a href="/user/signin">Sign In</a>
+      case _ => <a href="/user/m/signin">Sign In</a>
     })
 
   }

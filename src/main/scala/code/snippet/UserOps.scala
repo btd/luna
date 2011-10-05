@@ -43,7 +43,7 @@ class UserOps(up: UserPage) extends Loggable {
           user.repos.flatMap(repo =>
             <div class="repo_block">
               <h3>
-                <a href={"/" + user.login.get + "/" + repo.name.get + "/" + "tree"}>{repo.name.get}</a>
+                <a href={repo.homePage + "/tree" + (if(repo.currentBranch != null) "/" + repo.currentBranch else "")}>{repo.name.get}</a>
               </h3>
               <div class="url-box">
                 <ul class="clone-urls">
@@ -63,7 +63,7 @@ class UserOps(up: UserPage) extends Loggable {
               CollaboratorDoc.findAll("userId", user.id.get).flatMap(_.repoId.obj).flatMap(repo =>
                 <div class="repo_block">
                   <h3>
-                    <a href={"/" + repo.owner.login.get + "/" + repo.name.get + "/" + "tree"}>{repo.name.get}</a>
+                    <a href={repo.homePage + "/tree" + (if(repo.currentBranch != null) "/" + repo.currentBranch else "")}>{repo.name.get}</a>
                     (collaborator)</h3>
                   <div class="url-box">
                     <ul class="clone-urls">

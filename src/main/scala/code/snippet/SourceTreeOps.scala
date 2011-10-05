@@ -5,14 +5,16 @@
 
 package code.snippet
 
-import bootstrap.liftweb.SourceTreePage
+import bootstrap.liftweb.SourcePage
 import net.liftweb._
 import common._
+import http.js.JE.JsRaw
+import http.{S, SHtml}
+
 import util.Helpers._
 import code.model._
 import util._
 import xml.Text
-import org.eclipse.jgit.api._
 
 /**
  * User: denis.bardadym
@@ -20,7 +22,7 @@ import org.eclipse.jgit.api._
  * Time: 12:27 PM
  */
 
-class SourceTreeOps(stp: SourceTreePage) extends Loggable {
+class SourceTreeOps(stp: SourcePage) extends Loggable {
   def pageOwner_?(user: Box[UserDoc]): Boolean = user match {
     case Full(u) if u.login.get == stp.userName => true
     case _ => false
@@ -43,7 +45,7 @@ class SourceTreeOps(stp: SourceTreePage) extends Loggable {
             </li>
             </ul>
               <input type="text" class="textfield" readonly=" " value={repo.publicGitUrl}/>
-          </div>{if (pageOwner_?(UserDoc.currentUser)) <a href={"/admin/" + repo.owner.login.get + "/" + repo.name} class="admin_button">
+          </div>{if (pageOwner_?(UserDoc.currentUser)) <a href={"/admin" + repo.homePage} class="admin_button">
             <span class="ui-icon ui-icon-gear "/>
         </a>}
         </div>
@@ -56,10 +58,10 @@ class SourceTreeOps(stp: SourceTreePage) extends Loggable {
     stp.repo match {
 
       case Full(repo) => {
-        val xhtmlSourceEntiries = repo.ls_tree(stp.path).flatMap(se => se match {
+        val xhtmlSourceEntiries = repo.ls_tree(stp.path, stp.commit).flatMap(se => se match {
                 case Tree(path, _) => {
                   <tr class="tree">
-                    <td><a href={repo.homePage  +"/tree"+ (stp.path match {
+                    <td><a href={repo.homePage  +"/tree" + "/" + stp.commit + (stp.path match {
                       case Nil => "/"
                       case l => l.mkString("/", "/", "/")
                     }) + path}>{path}/</a></td>
@@ -69,7 +71,7 @@ class SourceTreeOps(stp: SourceTreePage) extends Loggable {
                 }
                 case Blob(path, _) => {
                   <tr class="blob">
-                    <td><a href={repo.homePage  +"/blob"+ (stp.path match {
+                    <td><a href={repo.homePage  +"/blob"+ "/" + stp.commit + (stp.path match {
                       case Nil => "/"
                       case l => l.mkString("/", "/", "/")
                     }) + path}>{path}</a></td>
@@ -101,11 +103,11 @@ class SourceTreeOps(stp: SourceTreePage) extends Loggable {
     stp.repo match {
 
           case Full(repo) => {
-            "#breadcrumbs *" #> (<a href={repo.homePage + "/tree"}>{repo.name.get}</a> ++
+            "#breadcrumbs *" #> (<a href={repo.homePage + "/tree" + "/" + stp.commit}>{repo.name.get}</a> ++
               stp.path.zipWithIndex.flatMap(a =>
                   Text("/") ++
                     (if (stp.path.size -1  != a._2)
-                      <a href={repo.homePage  + "/tree" + "/" + stp.path.dropRight(stp.path.size - a._2 - 1).mkString("/")}>{a._1}</a>
+                      <a href={repo.homePage  + "/tree" + "/" + stp.commit + "/" + stp.path.dropRight(stp.path.size - a._2 - 1).mkString("/")}>{a._1}</a>
                     else
                       <span>{a._1}</span>)) )
           }
@@ -117,14 +119,20 @@ class SourceTreeOps(stp: SourceTreePage) extends Loggable {
   }
 
   def renderBranches = {
-    import scala.collection.JavaConversions._
        stp.repo match {
 
           case Full(repo) => {
-            val branches = (new Git(repo.git)).branchList.call
-            "#current_branch *" #> asScalaBuffer(branches).map(ref =>
-              <option>{ ref.getName.substring(ref.getName.lastIndexOf("/") + 1) } </option>
-            )
+            //"#current_branch *" #> asScalaBuffer(branches).map(ref =>
+            //  <option value={ref.getName.substring(ref.getName.lastIndexOf("/") + 1)} selected={if (stp.commit == ref.getName.substring(ref.getName.lastIndexOf("/") + 1)) "selected" else ""}>{ ref.getName.substring(ref.getName.lastIndexOf("/") + 1) } </option>
+            //)
+            "#current_branch" #>
+              SHtml.ajaxSelect(repo.branches.zip(repo.branches),
+                Full(stp.commit),
+                value => S.redirectTo(repo.homePage + "/tree/" + value + (stp.path match {
+                  case Nil => ""
+                  case l => l.mkString("/", "/", "")
+                })))
+
           }
 
           case _ => PassThru

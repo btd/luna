@@ -5,7 +5,7 @@
 
 package code.snippet
 
-import bootstrap.liftweb.SourceTreePage
+import bootstrap.liftweb.SourcePage
 import net.liftweb._
 import common._
 import util.Helpers._
@@ -19,11 +19,11 @@ import java.net.URLDecoder
  * Time: 12:49 PM
  */
 
-class BlobOps(stp: SourceTreePage) extends Loggable {
+class BlobOps(stp: SourcePage) extends Loggable {
   def renderSourceText = {
     val decodedUrl: List[String] = stp.path.map(p => URLDecoder.decode(p, "UTF-8"))
     stp.repo match {
-      case Full(repo) => ".source_code" #> Text(repo.ls_cat(decodedUrl))
+      case Full(repo) => ".source_code" #> Text(repo.ls_cat(decodedUrl, stp.commit))
       case _ => PassThru
     }
   }

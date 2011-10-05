@@ -22,6 +22,9 @@ import org.eclipse.jgit.treewalk.filter.{PathFilter, TreeFilter}
 import java.lang.String
 import org.eclipse.jgit.lib.{Constants, ObjectId, FileMode, RepositoryCache}
 import net.liftweb.common.{Loggable, Box, Empty, Full}
+import org.eclipse.jgit.api.Git
+import concurrent.JavaConversions
+import collection.JavaConverters
 
 /**
  * User: denis.bardadym
@@ -74,13 +77,15 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
       }
     }
 
+  lazy val currentBranch = git.getBranch
+
   //TODO может стоит подгрузить все целиков вначале?
-  def ls_tree(path: List[String]) = {
+  def ls_tree(path: List[String], commit: String) = {
 
     val reader = git.newObjectReader
     val rev = new RevWalk(reader)
 
-    val c = rev.parseCommit(git.resolve("HEAD"))
+    val c = rev.parseCommit(git.resolve(commit))
     var walk = new TreeWalk(reader)
     walk.addTree(c.getTree)
 
@@ -125,12 +130,12 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
     }
   }
 
-  def ls_cat(path: List[String]) = {
+  def ls_cat(path: List[String], commit: String) = {
     //logger.debug("Try to load source " + path)
     val reader = git.newObjectReader
     val rev = new RevWalk(reader)
 
-    val c = rev.parseCommit(git.resolve("HEAD"))
+    val c = rev.parseCommit(git.resolve(commit))
     var walk = new TreeWalk(reader)
     walk.addTree(c.getTree)
 
@@ -154,6 +159,10 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
     reader.release
 
     result
+  }
+
+  def branches = {
+    scala.collection.JavaConversions.asScalaBuffer((new Git(git)).branchList.call).map(ref => ref.getName.substring(ref.getName.lastIndexOf("/") + 1))
   }
 
 
