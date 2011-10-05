@@ -201,6 +201,8 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
 
   lazy val sourceTreeUrl = homePageUrl + "/tree/" + git.currentBranch
 
+  lazy val commitsUrl =  homePageUrl + "/commits/" + git.currentBranch
+
   def sourceTreeUrl(commit: String) = homePageUrl + "/tree/" + commit
 
   def sourceBlobUrl(commit: String) = homePageUrl + "/blob/" + commit

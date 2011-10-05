@@ -30,6 +30,17 @@ case class UserRepoPage(userName: String, repoName: String) extends UserPage(use
   }
 }
 
+case class UserRepoCommitPage(userName: String, repoName: String, commit: String)extends UserPage(userName)  {
+  lazy val repo = user match {
+    case Full(u) => tryo {
+      u.repos.filter(_.name.get == repoName).head
+    } or {
+      Empty
+    }
+    case _ => Empty
+  }
+}
+
 case class SourcePage(userName: String, repoName: String, commit: String, path: List[String]) {
   lazy val user = UserDoc.find(UserDoc.login.name, userName)
   lazy val repo = user match {
@@ -114,7 +125,7 @@ class Boot extends Loggable {
       },
       urp => urp.login :: urp.repoName :: Nil) / "admin" / * / * >> Template(() => Templates("admin" :: "adminRepo" :: Nil) openOr NodeSeq.Empty)
 
-        val blobPage = Menu.params[SourcePage]("blobPage",
+    val blobPage = Menu.params[SourcePage]("blobPage",
       new LinkText[SourcePage](stp => Text("Repo " + stp.repoName)),
       list => {
 
@@ -134,20 +145,20 @@ class Boot extends Loggable {
           case _ => Empty
         }
       },
-      stp => stp.userName :: stp.repoName ::  Nil) / * / * / "tree"  >>
-     Template(() => Templates("repo" :: "default" :: Nil) openOr NodeSeq.Empty) >>
+      stp => stp.userName :: stp.repoName :: Nil) / * / * / "tree" >>
+      Template(() => Templates("repo" :: "default" :: Nil) openOr NodeSeq.Empty) >>
       TestValueAccess(sp =>
-       sp match {
-         case Full(ssp) => {
-           ssp.repo match {
-             case Full(repo) if (repo.git.inited_?) => Full(RedirectResponse(repo.sourceTreeUrl))
-             case _ => Empty
-           }
-         }
-         case _ => Empty
-       })
+        sp match {
+          case Full(ssp) => {
+            ssp.repo match {
+              case Full(repo) if (repo.git.inited_?) => Full(RedirectResponse(repo.sourceTreeUrl))
+              case _ => Empty
+            }
+          }
+          case _ => Empty
+        })
 
-   val sourceTreePage = Menu.params[SourcePage]("sourceTreePage",
+    val sourceTreePage = Menu.params[SourcePage]("sourceTreePage",
       new LinkText[SourcePage](stp => Text("Repo " + stp.repoName)),
       list => {
 
@@ -157,17 +168,47 @@ class Boot extends Loggable {
         }
       },
       stp => (stp.userName :: stp.repoName :: stp.commit :: Nil) ::: stp.path) / * / * / "tree" / * / ** >>
-     ValueTemplate(sp =>
-       sp match {
-         case Full(ssp) => {
-           ssp.repo match {
-             case Full(repo) if (repo.git.inited_?) => Templates("repo" :: "tree" :: Nil) openOr NodeSeq.Empty
-             case Full(repo)  => Templates("repo" :: "default" :: Nil) openOr NodeSeq.Empty
-             case _ => NodeSeq.Empty
-           }
-         }
-         case _ => NodeSeq.Empty
-       })
+      ValueTemplate(sp =>
+        sp match {
+          case Full(ssp) => {
+            ssp.repo match {
+              case Full(repo) if (repo.git.inited_?) => Templates("repo" :: "tree" :: Nil) openOr NodeSeq.Empty
+              case Full(repo) => Templates("repo" :: "default" :: Nil) openOr NodeSeq.Empty
+              case _ => NodeSeq.Empty
+            }
+          }
+          case _ => NodeSeq.Empty
+        })
+
+    val emptyCommitsPage = Menu.params[UserRepoPage]("emptyCommitsPage",
+      new LinkText[UserRepoPage](urp => Text("Repo " + urp.repoName)),
+      list => list match {
+        case login :: repo ::   Nil => Full(UserRepoPage(login, repo))
+        case _ => Empty
+      },
+      urp => urp.login :: urp.repoName :: Nil) / * / * / "commits" >>
+      Template(() => Templates("repo" :: "commit" :: "default" :: Nil) openOr NodeSeq.Empty) >>
+      TestValueAccess(sp =>
+        sp match {
+          case Full(ssp) => {
+            ssp.repo match {
+              case Full(repo) if (repo.git.inited_?) => Full(RedirectResponse(repo.commitsUrl))
+              case _ => Empty
+            }
+          }
+          case _ => Empty
+        })
+
+
+
+    val allCommitsPage = Menu.params[UserRepoCommitPage]("allCommitsPage",
+      new LinkText[UserRepoCommitPage](urp => Text("Repo " + urp.repoName)),
+      list => list match {
+        case login :: repo :: commit :: Nil => Full(UserRepoCommitPage(login, repo, commit))
+        case _ => Empty
+      },
+      urp => urp.login :: urp.repoName :: urp.commit:: Nil) / * / * / "commits" / * >> Template(() => Templates("repo" :: "commit" :: "all" :: Nil) openOr NodeSeq.Empty)
+
 
 
     val signInPage = Menu.i("Sign In") / "user" / "m" / "signin"
@@ -185,7 +226,7 @@ class Boot extends Loggable {
       newUserPage,
       userAdminPage,
       userRepoAdminPage,
-      sourceTreePage, blobPage, emptyRepoPage)
+      sourceTreePage, blobPage, emptyRepoPage, emptyCommitsPage, allCommitsPage)
     //Menu.i("Home") / "index", // the simple way to declare a menu
     //Menu.i("New User") / "new",
 
