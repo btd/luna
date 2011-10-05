@@ -14,6 +14,7 @@ import util._
 import xml.Text
 import java.net.URLDecoder
 import code.model._
+import code.snippet.SnippetHelper._
 
 
 /**
@@ -31,25 +32,5 @@ class BlobOps(stp: SourcePage) extends Loggable {
     }
   }
 
-  def renderBranches = {
-       stp.repo match {
-
-          case Full(repo) => {
-            //"#current_branch *" #> asScalaBuffer(branches).map(ref =>
-            //  <option value={ref.getName.substring(ref.getName.lastIndexOf("/") + 1)} selected={if (stp.commit == ref.getName.substring(ref.getName.lastIndexOf("/") + 1)) "selected" else ""}>{ ref.getName.substring(ref.getName.lastIndexOf("/") + 1) } </option>
-            //)
-            "#current_branch" #>
-              SHtml.ajaxSelect(repo.git.branches.zip(repo.git.branches),
-                Full(stp.commit),
-                commit => S.redirectTo(repo.sourceBlobUrl( commit) + (stp.path match {
-                  case Nil => ""
-                  case l => l.mkString("/", "/", "")
-                })))
-
-          }
-
-          case _ => PassThru
-        }
-
-  }
+  def renderBranches = branchSelector(stp.repo, stp.commit, _.sourceBlobUrl(_)+suffix(stp.path))
 }

@@ -25,6 +25,7 @@ import net.liftweb.common._
 import net.liftweb.util.Helpers._
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.transport.{UploadPack, ReceivePack}
+import collection.immutable.Nil
 
 
 /**
@@ -219,6 +220,16 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
       case Full(u) => collaborators.filter(_.login.get == u.login.get).isEmpty //коллаборатор
       case _ => false
     }
+  }
+
+  def cloneUrls(user: Box[UserDoc]) = canPush_?(user) match {
+    case true => (publicGitUrl, "Git") :: (privateSshUrl(user.get), "Ssh") :: Nil
+    case _ => (publicGitUrl, "Git") :: Nil
+  }
+
+  def owner_?(user: Box[UserDoc]) = user match {
+    case Full(u) if(u.login.get == owner.login.get) => true
+    case _ => false
   }
 
   def meta = RepositoryDoc

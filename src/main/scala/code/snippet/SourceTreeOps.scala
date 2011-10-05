@@ -15,6 +15,7 @@ import util.Helpers._
 import code.model._
 import util._
 import xml.Text
+import SnippetHelper._
 
 /**
  * User: denis.bardadym
@@ -38,10 +39,8 @@ class SourceTreeOps(stp: SourcePage) extends Loggable {
           </h3>
           <div class="url-box">
             <ul class="clone-urls">
-              {if (repo.canPush_?(UserDoc.currentUser)) <li class="private_clone_url">
-              <a href={repo.privateSshUrl}>Ssh</a>
-            </li>}<li class="public_clone_url selected">
-              <a href={repo.publicGitUrl}>Git</a>
+              {if (repo.canPush_?(UserDoc.currentUser)) <li><a href={repo.privateSshUrl}>Ssh</a></li>}
+              <li class="selected"><a href={repo.publicGitUrl}>Git</a>
             </li>
             </ul>
               <input type="text" class="textfield" readonly=" " value={repo.publicGitUrl}/>
@@ -61,20 +60,14 @@ class SourceTreeOps(stp: SourcePage) extends Loggable {
         val xhtmlSourceEntiries = repo.git.ls_tree(stp.path, stp.commit).flatMap(se => se match {
                 case Tree(path, _) => {
                   <tr class="tree">
-                    <td><a href={repo.sourceTreeUrl(stp.commit) + (stp.path match {
-                      case Nil => "/"
-                      case l => l.mkString("/", "/", "/")
-                    }) + path}>{path}/</a></td>
+                    <td><a href={repo.sourceTreeUrl(stp.commit) + suffix(stp.path) + "/" + path}>{path}/</a></td>
                     <td>Date</td>
                     <td>Commit message</td>
                   </tr>
                 }
                 case Blob(path, _) => {
                   <tr class="blob">
-                    <td><a href={repo.sourceBlobUrl(stp.commit) + (stp.path match {
-                      case Nil => "/"
-                      case l => l.mkString("/", "/", "/")
-                    }) + path}>{path}</a></td>
+                    <td><a href={repo.sourceBlobUrl(stp.commit) + suffix(stp.path) + "/" + path}>{path}</a></td>
                     <td>Date</td>
                     <td>Commit message</td>
                   </tr>
@@ -82,12 +75,9 @@ class SourceTreeOps(stp: SourcePage) extends Loggable {
               })
         val parentEntry =
           <tr class="tree">
-            <td><a href={repo.sourceTreeUrl(stp.commit) + (stp.path.dropRight(1) match {
-                      case Nil => ""
-                      case l => l.mkString("/", "/", "")
-                    })}>..</a></td>
+            <td><a href={repo.sourceTreeUrl(stp.commit) + suffix(stp.path.dropRight(1))}>..</a></td>
               <td></td>
-                <td></td>
+              <td></td>
             </tr>
        "#source_tree *" #> (if(stp.path.isEmpty)
           xhtmlSourceEntiries
@@ -118,25 +108,5 @@ class SourceTreeOps(stp: SourcePage) extends Loggable {
 
   }
 
-  def renderBranches = {
-       stp.repo match {
-
-          case Full(repo) => {
-            //"#current_branch *" #> asScalaBuffer(branches).map(ref =>
-            //  <option value={ref.getName.substring(ref.getName.lastIndexOf("/") + 1)} selected={if (stp.commit == ref.getName.substring(ref.getName.lastIndexOf("/") + 1)) "selected" else ""}>{ ref.getName.substring(ref.getName.lastIndexOf("/") + 1) } </option>
-            //)
-            "#current_branch" #>
-              SHtml.ajaxSelect(repo.git.branches.zip(repo.git.branches),
-                Full(stp.commit),
-                value => S.redirectTo(repo.sourceTreeUrl( value) + (stp.path match {
-                  case Nil => ""
-                  case l => l.mkString("/", "/", "")
-                })))
-
-          }
-
-          case _ => PassThru
-        }
-
-  }
+  def renderBranches = branchSelector(stp.repo, stp.commit, _.sourceTreeUrl(_)+suffix(stp.path))
 }
