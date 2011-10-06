@@ -24,33 +24,8 @@ import SnippetHelper._
  */
 
 class SourceTreeOps(stp: SourcePage) extends Loggable {
-  def pageOwner_?(user: Box[UserDoc]): Boolean = user match {
-    case Full(u) if u.login.get == stp.userName => true
-    case _ => false
-  }
 
-
-  def renderUrlBox = {
-    stp.repo match {
-      case Full(repo) => ".repo_block" #>
-        <div class="repo_block">
-          <h3>
-            {repo.name.get}
-          </h3>
-          <div class="url-box">
-            <ul class="clone-urls">
-              {if (repo.canPush_?(UserDoc.currentUser)) <li><a href={repo.privateSshUrl}>Ssh</a></li>}
-              <li class="selected"><a href={repo.publicGitUrl}>Git</a>
-            </li>
-            </ul>
-              <input type="text" class="textfield" readonly=" " value={repo.publicGitUrl}/>
-          </div>{if (pageOwner_?(UserDoc.currentUser)) <a href={"/admin" + repo.homePageUrl} class="admin_button">
-            <span class="ui-icon ui-icon-gear "/>
-        </a>}
-        </div>
-      case _ => PassThru
-    }
-  }
+  def renderUrlBox = urlBox(stp.repo, (r:RepositoryDoc) => Text(r.name.get))
 
   def renderTree = {
 
@@ -108,5 +83,5 @@ class SourceTreeOps(stp: SourcePage) extends Loggable {
 
   }
 
-  def renderBranches = branchSelector(stp.repo, stp.commit, _.sourceTreeUrl(_)+suffix(stp.path))
+  def renderBranches = branchSelector(stp.repo, _ => stp.commit, _.sourceTreeUrl(_)+suffix(stp.path))
 }

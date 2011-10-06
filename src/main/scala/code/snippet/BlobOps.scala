@@ -32,5 +32,5 @@ class BlobOps(stp: SourcePage) extends Loggable {
     }
   }
 
-  def renderBranches = branchSelector(stp.repo, stp.commit, _.sourceBlobUrl(_)+suffix(stp.path))
+  def renderBranches = branchSelector(stp.repo, _ => stp.commit, _.sourceBlobUrl(_)+suffix(stp.path))
 }

@@ -167,7 +167,7 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
 
     private def fs_exists_? = FileKey.resolve(new File(fsPath), FS.DETECTED) != null
 
-    def inited_? = {
+    def inited_? = {  //TODO сделать получше
       val rev = new RevWalk(fs_repo)
       val res = tryo {
         rev.parseCommit(fs_repo.resolve(currentBranch))
@@ -195,6 +195,10 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
     }
 
     def fs_repo_! = fs_repo
+
+    def log(commit: String) = {
+        scala.collection.JavaConversions.asScalaIterator((new Git(fs_repo)).log.add(fs_repo.resolve(commit)).call.iterator)
+    }
   }
 
 
@@ -203,6 +207,8 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
   lazy val sourceTreeUrl = homePageUrl + "/tree/" + git.currentBranch
 
   lazy val commitsUrl =  homePageUrl + "/commits/" + git.currentBranch
+
+  def commitsUrl(commit: String) = homePageUrl + "/commits/" + commit
 
   def sourceTreeUrl(commit: String) = homePageUrl + "/tree/" + commit
 
