@@ -8,8 +8,7 @@ package code.snippet
 import bootstrap.liftweb.SourcePage
 import net.liftweb._
 import common._
-import http.js.JE.JsRaw
-import http.{S, SHtml}
+import http._
 
 import util.Helpers._
 import code.model._
@@ -25,13 +24,16 @@ import SnippetHelper._
 
 class SourceTreeOps(stp: SourcePage) extends Loggable {
 
+  def renderCommitsLink = stp.repo match {
+       case Full(repo) => ".repo_menu *" #> a(repo.commitsUrl, Text("Commits"))
+       case _ => PassThru
+     }
+
+
   def renderUrlBox = urlBox(stp.repo, (r:RepositoryDoc) => Text(r.name.get))
 
-  def renderTree = {
-
-    stp.repo match {
-
-      case Full(repo) => {
+  def renderTree = stp.repo match {
+       case Full(repo) =>  {
         val xhtmlSourceEntiries = repo.git.ls_tree(stp.path, stp.commit).flatMap(se => se match {
                 case Tree(path, _) => {
                   <tr class="tree">
@@ -58,16 +60,13 @@ class SourceTreeOps(stp: SourcePage) extends Loggable {
           xhtmlSourceEntiries
         else parentEntry :: xhtmlSourceEntiries)
       }
-
       case _ => PassThru
-    }
+     }
 
-  }
 
-  def renderBreadcrumbs = {
-    stp.repo match {
 
-          case Full(repo) => {
+  def renderBreadcrumbs = stp.repo match {
+       case Full(repo) => {
             "#breadcrumbs *" #> (<a href={repo.sourceTreeUrl(stp.commit)}>{repo.name.get}</a> ++
               stp.path.zipWithIndex.flatMap(a =>
                   Text("/") ++
@@ -76,12 +75,11 @@ class SourceTreeOps(stp: SourcePage) extends Loggable {
                     else
                       <span>{a._1}</span>)) )
           }
+  case _ => PassThru
+     }
 
-          case _ => PassThru
-        }
 
 
-  }
 
   def renderBranches = branchSelector(stp.repo, _ => stp.commit, _.sourceTreeUrl(_)+suffix(stp.path))
 }

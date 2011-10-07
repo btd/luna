@@ -635,12 +635,12 @@ ul.clone-urls li.selected>a {
 
 }
 
-#source_code_holder {
+.source_code_holder {
     width: 1000px;
     overflow-x: auto;
     border: 1px solid #dcdcdc;
 }
-#source_code_holder pre {
+.source_code_holder pre {
     width: 10000px;
 }
 
@@ -672,6 +672,23 @@ ul.clone-urls li.selected>a {
 .day .commit_author {
     font-size: 0.9em;
     color: #599bdc;
+}
+
+.diff_status_list {
+    list-style: none;
+    font-size: 1.3em;
+}
+
+.diff_status_list .modified {
+    color: #599bdc;
+}
+
+.diff_status_list .new {
+    color: #00cc33;
+}
+
+.diff_status_list .deleted {
+    color: #ff0000;
 }
 
 /* =============================================================================

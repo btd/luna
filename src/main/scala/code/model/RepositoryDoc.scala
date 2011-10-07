@@ -8,14 +8,12 @@ package code.model
 import net.liftweb.mongodb.record.{MongoMetaRecord, MongoRecord}
 import net.liftweb.record.field.{BooleanField, StringField}
 import org.eclipse.jgit.lib.RepositoryCache.FileKey
-import java.io.File
 import org.eclipse.jgit.util.FS
 
 import main.Main
 import net.liftweb.http.S
 import org.apache.commons.codec.digest.DigestUtils
 import net.liftweb.mongodb.record.field.{ObjectIdRefField, ObjectIdPk}
-import collection.mutable.ArrayBuffer
 import org.eclipse.jgit.revwalk.RevWalk
 import org.eclipse.jgit.treewalk.{CanonicalTreeParser, TreeWalk}
 import org.eclipse.jgit.treewalk.filter.{PathFilter, TreeFilter}
@@ -26,6 +24,9 @@ import net.liftweb.util.Helpers._
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.transport.{UploadPack, ReceivePack}
 import collection.immutable.Nil
+import org.eclipse.jgit.diff.DiffFormatter
+import java.io.{ByteArrayOutputStream, File}
+import collection.mutable.{ListBuffer, ArrayBuffer}
 
 
 /**
@@ -199,6 +200,47 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
     def log(commit: String) = {
         scala.collection.JavaConversions.asScalaIterator((new Git(fs_repo)).log.add(fs_repo.resolve(commit)).call.iterator)
     }
+
+    def diff(commit: String) : Pair[List[Change], List[String]] = {
+      import org.eclipse.jgit.diff.DiffEntry.ChangeType._
+
+      val diffList = new ListBuffer[String]
+
+      val baos = new ByteArrayOutputStream
+      val formatter = new DiffFormatter(baos)
+      formatter.setRepository(fs_repo)
+      formatter.setDetectRenames(true)
+
+      val entries = scala.collection.JavaConversions.asScalaBuffer(formatter.scan(fs_repo.resolve(commit + "^1"), fs_repo.resolve(commit)) )
+
+      val statusList = entries.map { ent =>
+          formatter.format(ent)
+          formatter.flush
+
+          diffList += baos.toString("UTF-8")
+
+          baos.reset
+
+          ent.getChangeType match {
+            case ADD => Added(ent.getNewPath)
+						case DELETE => Deleted(ent.getOldPath)
+            case MODIFY => Modified(ent.getNewPath)
+            case COPY => Copied(ent.getOldPath, ent.getNewPath)
+            case RENAME => Renamed(ent.getOldPath, ent.getNewPath)
+          }
+      }
+
+
+      formatter.release
+
+      (statusList.toList -> diffList.toList)
+    }
+
+
+
+
+
+
   }
 
 
@@ -209,6 +251,8 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
   lazy val commitsUrl =  homePageUrl + "/commits/" + git.currentBranch
 
   def commitsUrl(commit: String) = homePageUrl + "/commits/" + commit
+
+  def commitUrl(commit: String) = homePageUrl + "/commit/" + commit
 
   def sourceTreeUrl(commit: String) = homePageUrl + "/tree/" + commit
 
@@ -245,3 +289,16 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
 object RepositoryDoc extends RepositoryDoc with MongoMetaRecord[RepositoryDoc] {
   override def collectionName: String = "repositories"
 }
+
+
+abstract class Change {}
+
+    case class Added(path: String) extends Change {}
+
+    case class Deleted(path: String) extends Change {}
+
+    case class Modified(path: String) extends Change {}
+
+    case class Copied(oldPath: String, newPath: String) extends Change {}
+
+    case class Renamed(oldPath: String, newPath: String) extends Change {}

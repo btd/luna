@@ -6,6 +6,8 @@ seq(webSettings :_*)
 
 scalaVersion := "2.9.1"
 
+scalacOptions += "-deprecation"
+
 checksums := Nil
 
 resolvers ++= Seq (

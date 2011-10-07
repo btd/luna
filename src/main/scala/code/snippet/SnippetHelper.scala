@@ -115,4 +115,8 @@ object SnippetHelper extends Loggable{
     groupedList.toList
   }
 
+
+
+//  def repoMenu(menu: Seq[Pair[String, String]], current: Pair[String, String])
+
 }
