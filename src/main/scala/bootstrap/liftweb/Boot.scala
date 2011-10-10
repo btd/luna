@@ -15,11 +15,17 @@ import sshd.git.GitDaemon
 import com.mongodb.Mongo
 import code.model.UserDoc
 
-case class UserPage(login: String) {
-  lazy val user = UserDoc.find("login", login)
+trait WithUser {
+  def userName: String
+
+  lazy val user = UserDoc.find("login", userName)
 }
 
-case class UserRepoPage(userName: String, repoName: String) extends UserPage(userName) {
+case class UserPage(userName: String) extends WithUser { }
+
+trait WithRepo extends WithUser {
+  def repoName : String
+
   lazy val repo = user match {
     case Full(u) => tryo {
       u.repos.filter(_.name.get == repoName).head
@@ -30,28 +36,11 @@ case class UserRepoPage(userName: String, repoName: String) extends UserPage(use
   }
 }
 
-case class UserRepoCommitPage(userName: String, repoName: String, commit: String)extends UserPage(userName)  {
-  lazy val repo = user match {
-    case Full(u) => tryo {
-      u.repos.filter(_.name.get == repoName).head
-    } or {
-      Empty
-    }
-    case _ => Empty
-  }
-}
+case class RepoPage(userName: String, repoName: String) extends WithRepo {}
 
-case class SourcePage(userName: String, repoName: String, commit: String, path: List[String]) {
-  lazy val user = UserDoc.find(UserDoc.login.name, userName)
-  lazy val repo = user match {
-    case Full(uu) => tryo {
-      uu.repos.filter(_.name.get == repoName).head
-    } or {
-      Empty
-    }
-    case _ => Empty
-  }
-}
+case class RepoAtCommitPage(userName: String, repoName: String, commit: String) extends WithRepo {}
+
+case class SourceElementPage(userName: String, repoName: String, commit: String, path: List[String]) extends WithRepo {}
 
 
 // TODO FIXME
@@ -108,40 +97,40 @@ class Boot extends Loggable {
     // val listPage = Menu.i("List") / "list"
 
     val userPage = Menu.param[UserPage]("userPage",
-      new LinkText[UserPage](up => Text("User " + up.login)),
+      new LinkText[UserPage](up => Text("User " + up.userName)),
       login => Full(UserPage(login)),
-      up => up.login) / "list" / * >> Template(() => Templates("list" :: Nil) openOr NodeSeq.Empty)
+      up => up.userName) / "list" / * >> Template(() => Templates("list" :: Nil) openOr NodeSeq.Empty)
 
     val userAdminPage = Menu.param[UserPage]("userAdminPage",
-      new LinkText[UserPage](up => Text("User " + up.login)),
+      new LinkText[UserPage](up => Text("User " + up.userName)),
       login => Full(UserPage(login)),
-      up => up.login) / "admin" / * >> Template(() => Templates("admin" :: "adminUser" :: Nil) openOr NodeSeq.Empty)
+      up => up.userName) / "admin" / * >> Template(() => Templates("admin" :: "adminUser" :: Nil) openOr NodeSeq.Empty)
 
-    val userRepoAdminPage = Menu.params[UserRepoPage]("userRepoAdminPage",
-      new LinkText[UserRepoPage](urp => Text("Repo " + urp.repoName)),
+    val userRepoAdminPage = Menu.params[RepoPage]("userRepoAdminPage",
+      new LinkText[RepoPage](urp => Text("Repo " + urp.repoName)),
       list => list match {
-        case login :: repo :: Nil => Full(UserRepoPage(login, repo))
+        case login :: repo :: Nil => Full(RepoPage(login, repo))
         case _ => Empty
       },
-      urp => urp.login :: urp.repoName :: Nil) / "admin" / * / * >> Template(() => Templates("admin" :: "adminRepo" :: Nil) openOr NodeSeq.Empty)
+      urp => urp.userName :: urp.repoName :: Nil) / "admin" / * / * >> Template(() => Templates("admin" :: "adminRepo" :: Nil) openOr NodeSeq.Empty)
 
-    val blobPage = Menu.params[SourcePage]("blobPage",
-      new LinkText[SourcePage](stp => Text("Repo " + stp.repoName)),
+    val blobPage = Menu.params[SourceElementPage]("blobPage",
+      new LinkText[SourceElementPage](stp => Text("Repo " + stp.repoName)),
       list => {
 
         list match {
-          case login :: repo :: commit :: path => Full(SourcePage(login, repo, commit, path))
+          case login :: repo :: commit :: path => Full(SourceElementPage(login, repo, commit, path))
           case _ => Empty
         }
       },
       stp => (stp.userName :: stp.repoName :: stp.commit :: Nil) ::: stp.path) / * / * / "blob" / * / ** >> Template(() => Templates("repo" :: "blob" :: Nil) openOr NodeSeq.Empty)
 
-    val emptyRepoPage = Menu.params[SourcePage]("emptyRepoPage",
-      new LinkText[SourcePage](stp => Text("Repo " + stp.repoName)),
+    val emptyRepoPage = Menu.params[SourceElementPage]("emptyRepoPage",
+      new LinkText[SourceElementPage](stp => Text("Repo " + stp.repoName)),
       list => {
 
         list match {
-          case login :: repo :: Nil => Full(SourcePage(login, repo, "", Nil))
+          case login :: repo :: Nil => Full(SourceElementPage(login, repo, "", Nil))
           case _ => Empty
         }
       },
@@ -158,12 +147,12 @@ class Boot extends Loggable {
           case _ => Empty
         })
 
-    val sourceTreePage = Menu.params[SourcePage]("sourceTreePage",
-      new LinkText[SourcePage](stp => Text("Repo " + stp.repoName)),
+    val sourceTreePage = Menu.params[SourceElementPage]("sourceTreePage",
+      new LinkText[SourceElementPage](stp => Text("Repo " + stp.repoName)),
       list => {
 
         list match {
-          case login :: repo :: commit :: path => Full(SourcePage(login, repo, commit, path))
+          case login :: repo :: commit :: path => Full(SourceElementPage(login, repo, commit, path))
           case _ => Empty
         }
       },
@@ -180,13 +169,13 @@ class Boot extends Loggable {
           case _ => NodeSeq.Empty
         })
 
-    val emptyCommitsPage = Menu.params[UserRepoPage]("emptyCommitsPage",
-      new LinkText[UserRepoPage](urp => Text("Repo " + urp.repoName)),
+    val emptyCommitsPage = Menu.params[RepoPage]("emptyCommitsPage",
+      new LinkText[RepoPage](urp => Text("Repo " + urp.repoName)),
       list => list match {
-        case login :: repo ::   Nil => Full(UserRepoPage(login, repo))
+        case login :: repo ::   Nil => Full(RepoPage(login, repo))
         case _ => Empty
       },
-      urp => urp.login :: urp.repoName :: Nil) / * / * / "commits" >>
+      urp => urp.userName :: urp.repoName :: Nil) / * / * / "commits" >>
       Template(() => Templates("repo" :: "commit" :: "default" :: Nil) openOr NodeSeq.Empty) >>
       TestValueAccess(sp =>
         sp match {
@@ -201,21 +190,21 @@ class Boot extends Loggable {
 
 
 
-    val allCommitsPage = Menu.params[UserRepoCommitPage]("allCommitsPage",
-      new LinkText[UserRepoCommitPage](urp => Text("Repo " + urp.repoName)),
+    val allCommitsPage = Menu.params[RepoAtCommitPage]("allCommitsPage",
+      new LinkText[RepoAtCommitPage](urp => Text("Repo " + urp.repoName)),
       list => list match {
-        case login :: repo :: commit :: Nil => Full(UserRepoCommitPage(login, repo, commit))
+        case login :: repo :: commit :: Nil => Full(RepoAtCommitPage(login, repo, commit))
         case _ => Empty
       },
-      urp => urp.login :: urp.repoName :: urp.commit:: Nil) / * / * / "commits" / * >> Template(() => Templates("repo" :: "commit" :: "all" :: Nil) openOr NodeSeq.Empty)
+      urp => urp.userName :: urp.repoName :: urp.commit:: Nil) / * / * / "commits" / * >> Template(() => Templates("repo" :: "commit" :: "all" :: Nil) openOr NodeSeq.Empty)
 
-    val commitPage = Menu.params[UserRepoCommitPage]("commitPage",
-         new LinkText[UserRepoCommitPage](urp => Text("Repo " + urp.repoName)),
+    val commitPage = Menu.params[RepoAtCommitPage]("commitPage",
+         new LinkText[RepoAtCommitPage](urp => Text("Repo " + urp.repoName)),
          list => list match {
-           case login :: repo :: commit :: Nil => Full(UserRepoCommitPage(login, repo, commit))
+           case login :: repo :: commit :: Nil => Full(RepoAtCommitPage(login, repo, commit))
            case _ => Empty
          },
-         urp => urp.login :: urp.repoName :: urp.commit:: Nil) / * / * / "commit" / * >> Template(() => Templates("repo" :: "commit" :: "one" :: Nil) openOr NodeSeq.Empty)
+         urp => urp.userName :: urp.repoName :: urp.commit:: Nil) / * / * / "commit" / * >> Template(() => Templates("repo" :: "commit" :: "one" :: Nil) openOr NodeSeq.Empty)
 
 
     val signInPage = Menu.i("Sign In") / "user" / "m" / "signin"

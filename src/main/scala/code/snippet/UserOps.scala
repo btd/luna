@@ -6,12 +6,14 @@
 package code.snippet
 
 import bootstrap.liftweb.UserPage
-import xml.Text
 import net.liftweb._
 import util.Helpers._
 import http._
 import common._
 import code.model.{CollaboratorDoc, UserDoc, RepositoryDoc}
+import util.PassThru
+import SnippetHelper._
+import xml.Text
 
 /**
  * User: denis.bardadym
@@ -23,69 +25,48 @@ class UserOps(up: UserPage) extends Loggable {
 
   private var newRepositoryName = ""
 
-  def pageOwner_?(user: Box[UserDoc]): Boolean = user match {
-    case Full(u) if u.login.get == up.login => true
-    case _ => false
+  def renderNewRepositoryForm = {
+    up.user match {
+      case Full(u) => {
+        UserDoc.currentUser match {
+          case Full(cu) if (u.login.get == cu.login.get) => {
+            "input" #> SHtml.text(newRepositoryName, {
+              value: String =>
+                newRepositoryName = value.trim //TODO добавить проверку, что только валидные символы
+                if (newRepositoryName.isEmpty) S.error("Email field are empty")
+            },
+            "placeholder" -> "Repo name", "class" -> "textfield large") &
+              "button" #> SHtml.button("New repository", createRepository, "class" -> "button", "id" -> "create_repo_button")
+          }
+          case _ => PassThru
+        }
+      }
+      case _ => PassThru
+    }
   }
 
-  def userPage = {
-    ".sub_menu *" #> (if (pageOwner_?(UserDoc.currentUser))
-      SHtml.text(newRepositoryName, {
-        value: String =>
-          newRepositoryName = value.trim //TODO добавить проверку, что только валидные символы
-          if (newRepositoryName.isEmpty) S.error("Email field are empty")
-      },
-      "placeholder" -> "Repo name", "class" -> "textfield large") ++ <br/> ++
-        SHtml.button("New repository", createRepository, "class" -> "button", "id" -> "create_repo_button")
-    else Text("User " + up.login)) &
-      ".repo_list *" #> (up.user match {
-        case Full(user) => {
-          user.repos.flatMap(repo =>
-            <div class="repo_block">
-              <h3>
-                <a href={repo.sourceTreeUrl}>{repo.name.get}</a>
-              </h3>
-              <div class="url-box">
-                <ul class="clone-urls">
-                  {if (repo.canPush_?(UserDoc.currentUser)) <li class="private_clone_url">
-                  <a href={repo.privateSshUrl}>Ssh</a>
-                </li>}<li class="public_clone_url selected">
-                  <a href={repo.publicGitUrl}>Git</a>
-                </li>
-                </ul>
-                  <input type="text" class="textfield" readonly=" " value={repo.publicGitUrl}/>
-              </div>{if (pageOwner_?(UserDoc.currentUser)) <a href={"/admin/" + up.login + "/" + repo.name} class="admin_button">
-                <span class="ui-icon ui-icon-gear "/>
-            </a>}
-            </div>
-          ) ++
-            (if (pageOwner_?(UserDoc.currentUser))
-              CollaboratorDoc.findAll("userId", user.id.get).flatMap(_.repoId.obj).flatMap(repo =>
-                <div class="repo_block">
-                  <h3>
-                    <a href={repo.sourceTreeUrl}>{repo.name.get}</a>
-                    (collaborator)</h3>
-                  <div class="url-box">
-                    <ul class="clone-urls">
-                      <li class="private_clone_url">
-                        <a href={repo.privateSshUrl(user)}>Ssh</a>
-                      </li>
-                      <li class="public_clone_url selected">
-                        <a href={repo.publicGitUrl}>Git</a>
-                      </li>
-                    </ul>
-                      <input type="text" class="textfield" readonly=" " value={repo.publicGitUrl}/>
-                  </div>
-                  <a href={"/admin/" + up.login + "/" + repo.name.get} class="admin_button">
-                      <span class="ui-icon ui-icon-gear "/>
-                  </a>
-                </div>
-              )
-            else Nil)
-        }
-        case _ => Text("Invalid user")
-      })
+  def renderAvailableRepositoryList = {
+    up.user match {
+      case Full(u) => {
+        ".repo_list *" #> (UserDoc.currentUser match {
+          case Full(cu) if (u.login.get == cu.login.get) => {
+            u.repos.map(repo => urlBox(Full(repo), r => a(r.sourceTreeUrl, Text(r.name.get)))) ++
+            CollaboratorDoc.findAll("userId", u.id.get).map( cDoc => urlBox(cDoc.repoId.obj, r => a(r.sourceTreeUrl, Text(r.name.get + " (collaborator)"))))
+
+          }
+
+          case _ => {
+            u.repos.map(repo =>
+              urlBox(Full(repo), r => a(r.sourceTreeUrl, Text(r.name.get)))
+            )
+          }
+        })
+
+      }
+      case _ => PassThru
+    }
   }
+
 
   private def createRepository() = {
     logger.debug("try to add new repository")

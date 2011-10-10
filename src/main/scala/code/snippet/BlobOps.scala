@@ -5,7 +5,7 @@
 
 package code.snippet
 
-import bootstrap.liftweb.SourcePage
+import bootstrap.liftweb.SourceElementPage
 import net.liftweb._
 import common._
 import util.Helpers._
@@ -21,7 +21,7 @@ import code.snippet.SnippetHelper._
  * Time: 12:49 PM
  */
 
-class BlobOps(stp: SourcePage) extends Loggable {
+class BlobOps(stp: SourceElementPage) extends Loggable {
   def renderSourceText = {
     val decodedUrl: List[String] = stp.path.map(p => URLDecoder.decode(p, "UTF-8"))
     logger.debug("Try to render " + decodedUrl)

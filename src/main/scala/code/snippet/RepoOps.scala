@@ -10,7 +10,7 @@ import common.Full
 import http.SHtml
 import util.Helpers._
 import SnippetHelper._
-import bootstrap.liftweb.UserRepoCommitPage
+import bootstrap.liftweb.RepoAtCommitPage
 import util.PassThru
 import xml.Text
 import code.model._
@@ -21,7 +21,7 @@ import code.model._
  * Time: 2:14 PM
  */
 
-class RepoCommitOps(urp: UserRepoCommitPage) {
+class RepoCommitOps(urp: RepoAtCommitPage) {
 
    def renderSourcesLink = urp.repo match {
        case Full(repo) =>  "*" #> a(repo.sourceTreeUrl, Text("Sources"))

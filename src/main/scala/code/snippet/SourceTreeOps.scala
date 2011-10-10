@@ -5,7 +5,7 @@
 
 package code.snippet
 
-import bootstrap.liftweb.SourcePage
+import bootstrap.liftweb.SourceElementPage
 import net.liftweb._
 import common._
 import http._
@@ -22,7 +22,7 @@ import SnippetHelper._
  * Time: 12:27 PM
  */
 
-class SourceTreeOps(stp: SourcePage) extends Loggable {
+class SourceTreeOps(stp: SourceElementPage) extends Loggable {
 
   def renderCommitsLink = stp.repo match {
        case Full(repo) => ".repo_menu *" #> a(repo.commitsUrl, Text("Commits"))

@@ -1,17 +1,17 @@
 <div id="main" role="main" class="lift:surround?with=def;at=content">
     <div class="lift:embed?what=menu"></div>
 
-    <div class="lift:UserOps.userPage">
+    <div>
 
         <div id="sub_menu_holder">
-            <form class="sub_menu" method="post">
+            <form class="sub_menu lift:UserOps.renderNewRepositoryForm?form=post">
                 <input type="text" class="font large" placeholder="Repository name"/>
                 <br/>
                 <button class="button" type="button" value="New">New repository</button>
             </form>
         </div>
 
-        <div class="repo_list">
+        <div class="repo_list lift:UserOps.renderAvailableRepositoryList">
 
             <div class="repo_block">
                 <h3>Repo 1</h3>

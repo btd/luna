@@ -5,7 +5,7 @@
 
 package code.snippet
 
-import bootstrap.liftweb.UserRepoPage
+import bootstrap.liftweb.RepoPage
 import net.liftweb._
 import http._
 import util.Helpers._
@@ -18,7 +18,7 @@ import code.model.{CollaboratorDoc, UserDoc, SshKeyDoc}
  * Time: 3:28 PM
  */
 
-class AdminRepoOps(urp: UserRepoPage) extends Loggable {
+class AdminRepoOps(urp: RepoPage) extends Loggable {
   private var ssh_key = ""
   private var collaborator_login = ""
 
