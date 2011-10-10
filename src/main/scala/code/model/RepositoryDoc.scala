@@ -262,7 +262,10 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
 
   lazy val privateSshUrl = owner.login.get + "@" + S.hostName + ":" + name.get
 
-  def privateSshUrl(user: UserDoc) = user.login.is + "@" + S.hostName + ":" + owner.login.get + "/" + name.get
+  def privateSshUrl(user: UserDoc) : String = owner_? (Full(user)) match {
+    case true => privateSshUrl
+    case false => user.login.is + "@" + S.hostName + ":" + owner.login.get + "/" + name.get
+  }
 
   def canPush_?(user: Box[UserDoc]) = {
     user match {

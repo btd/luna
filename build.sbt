@@ -1,6 +1,6 @@
 name := "GitoChtoTo"
 
-version := "0.3-SNAPSHOT"
+version := "0.5-SNAPSHOT"
 
 seq(webSettings :_*)
 

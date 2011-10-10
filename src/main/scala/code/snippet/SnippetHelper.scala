@@ -46,7 +46,7 @@ object SnippetHelper extends Loggable{
     }
 
   def urlBox(repo: Box[RepositoryDoc], name: RepositoryDoc => NodeSeq) = {
-    repo match {
+   repo match {
       case Full(rr) =>
         ".repo_block" #>
           <div class="repo_block">
@@ -55,9 +55,10 @@ object SnippetHelper extends Loggable{
             </h3>
             <div class="url-box">
               <ul class="clone-urls">
-                {rr.cloneUrls(UserDoc.currentUser).map(url => <li>
-                {a(url._1, Text(url._2))}
-              </li>)}
+                {
+                rr.cloneUrls(UserDoc.currentUser).map(url =>
+                <li>{a(url._1, Text(url._2))}</li>)
+                }
               </ul>
                 <input type="text" class="textfield" readonly=" " value={rr.publicGitUrl}/>
             </div>{adminBox(repo, UserDoc.currentUser)}

@@ -93,7 +93,7 @@ class RepoCommitOps(urp: UserRepoCommitPage) {
           )) & ".diff_list *" #> (diff._2.flatMap(d => {
             <div class="source_code_holder">
             <pre>
-              <code>{d}</code>
+              <code class="diff">{d}</code>
               </pre>
             </div>
           }) )
