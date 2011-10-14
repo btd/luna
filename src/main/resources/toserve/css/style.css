@@ -461,10 +461,15 @@ form {
     position: relative;
 }
 
-.repo_block .admin_button {
+.repo_block .repo_admin_buttons {
    position: absolute;
     top: 10px;
     right: 10px;
+    height: 60px;
+}
+
+.repo_block .admin_button {
+    margin: 5px 0;
     border-radius: 3px;
     display: block;
 

@@ -13,7 +13,7 @@ import common._
 import code.model.{CollaboratorDoc, UserDoc, RepositoryDoc}
 import util.PassThru
 import SnippetHelper._
-import xml.Text
+import xml.{NodeSeq, Text}
 
 /**
  * User: denis.bardadym
@@ -38,7 +38,7 @@ class UserOps(up: UserPage) extends Loggable {
             "placeholder" -> "Repo name", "class" -> "textfield large") &
               "button" #> SHtml.button("New repository", createRepository, "class" -> "button", "id" -> "create_repo_button")
           }
-          case _ => PassThru
+          case _ => "*" #> NodeSeq.Empty
         }
       }
       case _ => PassThru
@@ -71,7 +71,7 @@ class UserOps(up: UserPage) extends Loggable {
   private def createRepository() = {
     logger.debug("try to add new repository")
 
-    //TODO сделаю сейчас по тупому, потом заменю на CometActor
+
     RepositoryDoc.createRecord.name(newRepositoryName).ownerId(up.user.get.id.is).save
 
 

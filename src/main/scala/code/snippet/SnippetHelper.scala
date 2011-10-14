@@ -7,6 +7,8 @@ package code.snippet
 
 import net.liftweb._
 import common._
+import http.js.jquery.JqJE._
+import http.js.JsCmds
 import http.{S, SHtml}
 
 import util.Helpers._
@@ -45,11 +47,16 @@ object SnippetHelper extends Loggable{
       case l => l.mkString("/", "/", "")
     }
 
-  def urlBox(repo: Box[RepositoryDoc], name: RepositoryDoc => NodeSeq) = {
+  def urlBox(repo: Box[RepositoryDoc], name: RepositoryDoc => NodeSeq)  = {
    repo match {
       case Full(rr) =>
-        ".repo_block" #>
-          <div class="repo_block">
+        ".repo_block" #> urlBoxXhtml(rr, name)
+      case _ => PassThru
+    }
+  }
+
+  def urlBoxXhtml(rr: RepositoryDoc, name: RepositoryDoc => NodeSeq): NodeSeq = {
+      <div class="repo_block">
             <h3>
               {name(rr)}
             </h3>
@@ -61,23 +68,30 @@ object SnippetHelper extends Loggable{
                 }
               </ul>
                 <input type="text" class="textfield" readonly=" " value={rr.publicGitUrl}/>
-            </div>{adminBox(repo, UserDoc.currentUser)}
+            </div>{adminBox(Full(rr), UserDoc.currentUser)}
           </div>
-      case _ => PassThru
-    }
   }
 
-  def adminBox(repo: Box[RepositoryDoc], user: Box[UserDoc]) =
-    repo match {
-      case Full(r) if (r.owner_?(user)) => <a href={"/admin" + r.homePageUrl} class="admin_button">
-          <span class="ui-icon ui-icon-gear "/>
-      </a>
-      case _ => NodeSeq.Empty
-    }
 
+  def adminBox(repo: Box[RepositoryDoc], user: Box[UserDoc]) =
+    <div class="repo_admin_buttons">
+      {repo match {
+      case Full(r) if (r.owner_?(user)) => {
+        <a href={"/admin" + r.homePageUrl} class="admin_button">
+          <span class="ui-icon ui-icon-gear "/>
+        </a> ++ cloneButton(r, user.get)
+      }
+      case Full(r) if UserDoc.loggedIn_? => cloneButton(r, user.get)
+      case _ => NodeSeq.Empty
+    }  }
+
+    </div>
+
+  def cloneButton(r: RepositoryDoc, user: UserDoc) =
+    SHtml.a(() => { logger.debug("Try to add1"); Jq(".repo_list") ~> JqAppend(urlBoxXhtml(r.git.clone(user), r => Text(r.name.get + " (clone)"))); logger.debug("Try to add1"); JsCmds.Noop}, <span class="ui-icon ui-icon-shuffle "/>,  "class" -> "admin_button")
 
   def a(href: String, value: NodeSeq) = <a href={href}>
-    {value}
+    {value }
   </a>
 
   val dateFormatter = new SimpleDateFormat("MMM dd, yyyy")

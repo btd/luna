@@ -80,7 +80,7 @@ $(function() {
 
     $("#current_branch").selectmenu();
 
-    if (hljs) { hljs.initHighlightingOnLoad(); }
+    if (!hljs) { hljs.initHighlightingOnLoad(); }
 });
 
 

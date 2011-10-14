@@ -22,11 +22,11 @@ import org.eclipse.jgit.lib.{Constants, ObjectId, FileMode, RepositoryCache}
 import net.liftweb.common._
 import net.liftweb.util.Helpers._
 import org.eclipse.jgit.api.Git
-import org.eclipse.jgit.transport.{UploadPack, ReceivePack}
 import collection.immutable.Nil
 import org.eclipse.jgit.diff.DiffFormatter
 import java.io.{ByteArrayOutputStream, File}
 import collection.mutable.{ListBuffer, ArrayBuffer}
+import org.eclipse.jgit.transport.{URIish, UploadPack, ReceivePack}
 
 
 /**
@@ -237,9 +237,26 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
       (statusList.toList -> diffList.toList)
     }
 
+     def clone(user: UserDoc): RepositoryDoc = {
+       val uri = new URIish(fsPath)
+       val clonnedDoc = RepositoryDoc.createRecord.ownerId(user.id.get).name(chooseCloneName(user)).forkOf(id.get)
+       Git.cloneRepository.setURI(uri.toString)
+         .setDirectory(new File(clonnedDoc.git.fsPath))
+         .setBare(true)
+         .setCloneAllBranches(true)
+         .call
+       clonnedDoc.save
+     }
 
-
-
+     private def chooseCloneName(user: UserDoc):String = {
+         user.repos.filter(_.name.get.startsWith(name.get)).map(_.name.get) match {
+           case Nil => name.get
+           case l  => name.get + "-" + (l.map(n => tryo { asInt(n.split("-")(1)) } openOr { Empty }).map((x : Box[Int]) => (x match {
+             case Full(i : Int) => i
+             case _ => 0
+           })).max + 1)
+         }
+     }
 
 
   }
