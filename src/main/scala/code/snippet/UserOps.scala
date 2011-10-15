@@ -11,9 +11,11 @@ import util.Helpers._
 import http._
 import common._
 import code.model.{CollaboratorDoc, UserDoc, RepositoryDoc}
+import js.jquery.JqJE._
+import js.jquery.JqJsCmds._
 import util.PassThru
 import SnippetHelper._
-import xml.{NodeSeq, Text}
+import xml.{Node, NodeSeq, Text}
 
 /**
  * User: denis.bardadym
@@ -45,19 +47,21 @@ class UserOps(up: UserPage) extends Loggable {
     }
   }
 
+
+
   def renderAvailableRepositoryList = {
     up.user match {
       case Full(u) => {
-        ".repo_list *" #> (UserDoc.currentUser match {
+        ".repo_block" #> (UserDoc.currentUser match {
           case Full(cu) if (u.login.get == cu.login.get) => {
-            u.repos.map(repo => urlBox(Full(repo), r => a(r.sourceTreeUrl, Text(r.name.get)))) ++
-            CollaboratorDoc.findAll("userId", u.id.get).map( cDoc => urlBox(cDoc.repoId.obj, r => a(r.sourceTreeUrl, Text(r.name.get + " (collaborator)"))))
+            u.repos.map(repo => urlBox(Full(repo), repoName _, cloneButtonAppend)) ++
+              CollaboratorDoc.findAll("userId", u.id.get).map(cDoc => urlBox(cDoc.repoId.obj, r => a(r.sourceTreeUrl, Text(r.name.get + " (collaborator)")), cloneButtonAppend))
 
           }
 
           case _ => {
             u.repos.map(repo =>
-              urlBox(Full(repo), r => a(r.sourceTreeUrl, Text(r.name.get)))
+              urlBox(Full(repo), repoName _, cloneButtonAppend)
             )
           }
         })

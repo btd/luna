@@ -7,18 +7,21 @@ package code.snippet
 
 import net.liftweb._
 import common._
-import http.js.jquery.JqJE._
-import http.js.JsCmds
+import http.js.JE.Call
+import http.js.jquery._
+import http.js.JsCmd
+import JqJE._
+import JqJsCmds._
 import http.{S, SHtml}
 
 import util.Helpers._
 import code.model._
 import util._
-import xml.{Text, NodeSeq}
 import java.text.SimpleDateFormat
 import org.eclipse.jgit.revwalk.RevCommit
 import java.util.{Calendar, Date}
 import collection.mutable.ListBuffer
+import xml.{Node, Text, NodeSeq}
 
 /**
  * User: denis.bardadym
@@ -47,15 +50,15 @@ object SnippetHelper extends Loggable{
       case l => l.mkString("/", "/", "")
     }
 
-  def urlBox(repo: Box[RepositoryDoc], name: RepositoryDoc => NodeSeq)  = {
+  def urlBox(repo: Box[RepositoryDoc], name: RepositoryDoc => NodeSeq, onClone: (RepositoryDoc, UserDoc) => NodeSeq)  = {
    repo match {
       case Full(rr) =>
-        ".repo_block" #> urlBoxXhtml(rr, name)
+        ".repo_block" #> urlBoxXhtml(rr, name, onClone)
       case _ => PassThru
     }
   }
 
-  def urlBoxXhtml(rr: RepositoryDoc, name: RepositoryDoc => NodeSeq): NodeSeq = {
+  def urlBoxXhtml(rr: RepositoryDoc, name: RepositoryDoc => NodeSeq, onClone: (RepositoryDoc, UserDoc) => NodeSeq): NodeSeq = {
       <div class="repo_block">
             <h3>
               {name(rr)}
@@ -68,12 +71,12 @@ object SnippetHelper extends Loggable{
                 }
               </ul>
                 <input type="text" class="textfield" readonly=" " value={rr.publicGitUrl}/>
-            </div>{adminBox(Full(rr), UserDoc.currentUser)}
+            </div>{adminBox(Full(rr), UserDoc.currentUser, onClone)}
           </div>
   }
 
 
-  def adminBox(repo: Box[RepositoryDoc], user: Box[UserDoc]) =
+  def adminBox(repo: Box[RepositoryDoc], user: Box[UserDoc], cloneButton: (RepositoryDoc, UserDoc) => NodeSeq) =
     <div class="repo_admin_buttons">
       {repo match {
       case Full(r) if (r.owner_?(user)) => {
@@ -87,12 +90,23 @@ object SnippetHelper extends Loggable{
 
     </div>
 
-  def cloneButton(r: RepositoryDoc, user: UserDoc) =
-    SHtml.a(() => { logger.debug("Try to add1"); Jq(".repo_list") ~> JqAppend(urlBoxXhtml(r.git.clone(user), r => Text(r.name.get + " (clone)"))); logger.debug("Try to add1"); JsCmds.Noop}, <span class="ui-icon ui-icon-shuffle "/>,  "class" -> "admin_button")
+  def cloneButtonAppend(r: RepositoryDoc, user: UserDoc) : NodeSeq =
+  SHtml.a(() => jsExpToJsCmd ({Jq(".repo_list") ~> JqAppend(urlBoxXhtml(r.git.clone(user), repoName _, cloneButtonAppend))}), <span class="ui-icon ui-icon-shuffle "/>, "class" -> "admin_button")
 
-  def a(href: String, value: NodeSeq) = <a href={href}>
-    {value }
-  </a>
+  def cloneButtonRedirect(r: RepositoryDoc, user: UserDoc) =
+  SHtml.a(() => S.redirectTo(r.git.clone(user).sourceTreeUrl), <span class="ui-icon ui-icon-shuffle "/>, "class" -> "admin_button")
+
+
+  def repoName(r: RepositoryDoc) = {
+    r.forkOf.obj match {
+
+      case Full(rr) => a(r.sourceTreeUrl, Text(r.name.get)) ++ Text(" clone of ") ++ a(rr.sourceTreeUrl, Text(rr.owner.login.get + "/" + rr.name.get))
+      case _ => a(r.sourceTreeUrl, Text(r.name.get))
+    }
+  }
+
+
+  def a(href: String, value: NodeSeq) = <a href={href}>{value}</a>
 
   val dateFormatter = new SimpleDateFormat("MMM dd, yyyy")
   val timeFormatter = new SimpleDateFormat("HH:mm:ss")

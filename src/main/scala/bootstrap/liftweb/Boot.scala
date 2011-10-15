@@ -227,7 +227,7 @@ class Boot extends Loggable {
     //Menu.i("New User") / "new",
 
     //)
-
+    LiftRules.ajaxRetryCount = Full(1)
 
     LiftRules.statelessRewrite.append {
       case RewriteRequest(ParsePath("index" :: Nil, _, _, true), _, _) =>

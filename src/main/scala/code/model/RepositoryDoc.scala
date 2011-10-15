@@ -54,13 +54,15 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
 
   //открытый или закрытый репозиторий not null default true
   object open_? extends BooleanField(this, true)
-
-  object forkOf extends ObjectIdRefField(this, RepositoryDoc)
-
-  //val clonnedFrom: String, //id того репозитория откуда был склонирован
-  object ownerId extends ObjectIdRefField(this, UserDoc)
+//id того репозитория откуда был склонирован
+  object forkOf extends ObjectIdRefField(this, RepositoryDoc) {
+       override def optional_? = true
+  }
 
   // владельц репозитория not null
+  object ownerId extends ObjectIdRefField(this, UserDoc)
+
+
 
   def owner = ownerId.obj.get
 

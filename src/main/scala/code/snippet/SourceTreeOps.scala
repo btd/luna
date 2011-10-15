@@ -10,6 +10,11 @@ import net.liftweb._
 import common._
 import http._
 
+import js.jquery.JqJE.Jq._
+import js.jquery.JqJE.JqAppend._
+import js.jquery.JqJsCmds._
+import js.JsCmds
+import js.JsExp._
 import util.Helpers._
 import code.model._
 import util._
@@ -29,8 +34,15 @@ class SourceTreeOps(stp: SourceElementPage) extends Loggable {
        case _ => PassThru
      }
 
+   def repoName(r: RepositoryDoc) = {
+    r.forkOf.obj match {
 
-  def renderUrlBox = urlBox(stp.repo, (r:RepositoryDoc) => Text(r.name.get))
+      case Full(rr) => Text(r.name.get + " clone of ") ++ a(rr.sourceTreeUrl, Text(rr.owner.login.get + "/" + rr.name.get))
+      case _ =>  Text(r.name.get)
+    }
+  }
+
+  def renderUrlBox = urlBox(stp.repo, repoName _ , cloneButtonRedirect)
 
   def renderTree = stp.repo match {
        case Full(repo) =>  {
