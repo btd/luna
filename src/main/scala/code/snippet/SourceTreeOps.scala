@@ -36,7 +36,6 @@ class SourceTreeOps(stp: SourceElementPage) extends Loggable {
 
    def repoName(r: RepositoryDoc) = {
     r.forkOf.obj match {
-
       case Full(rr) => Text(r.name.get + " clone of ") ++ a(rr.sourceTreeUrl, Text(rr.owner.login.get + "/" + rr.name.get))
       case _ =>  Text(r.name.get)
     }

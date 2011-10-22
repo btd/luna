@@ -288,9 +288,10 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
   }
 
   def canPush_?(user: Box[UserDoc]) = {
+    //logger.debug(user)
     user match {
       case Full(u) if u.login.get == owner.login.get => true //владелец
-      case Full(u) => collaborators.filter(_.login.get == u.login.get).isEmpty //коллаборатор
+      case Full(u) => !collaborators.filter(_.login.get == u.login.get).isEmpty //коллаборатор
       case _ => false
     }
   }

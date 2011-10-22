@@ -33,6 +33,7 @@ $(function() {
             })
         });
     }
+    $(".url-box > .clone-urls > li:first-child").toggleClass("selected");
     $(".url-box > .clone-urls > li > a").click(function() {
         var a = $(this);
         var ul = a.parent().parent();
@@ -78,7 +79,7 @@ $(function() {
             return false;
         });
 
-    $("#current_branch").selectmenu();
+    $(".selectmenu").selectmenu();
 
     if (hljs) { hljs.initHighlightingOnLoad(); }
 });

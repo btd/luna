@@ -206,6 +206,14 @@ class Boot extends Loggable {
          },
          urp => urp.userName :: urp.repoName :: urp.commit:: Nil) / * / * / "commit" / * >> Template(() => Templates("repo" :: "commit" :: "one" :: Nil) openOr NodeSeq.Empty)
 
+    val newPullRequestPage = Menu.params[RepoPage]("newPullRequestPage",
+      new LinkText[RepoPage](urp => Text("Repo " + urp.repoName)),
+      list => list match {
+        case login :: repo ::   Nil => Full(RepoPage(login, repo))
+        case _ => Empty
+      },
+      urp => urp.userName :: urp.repoName :: Nil) / * / * / "pull-request" >>
+      Template(() => Templates("repo" :: "pull-request" :: "new" :: Nil) openOr NodeSeq.Empty)
 
     val signInPage = Menu.i("Sign In") / "user" / "m" / "signin"
 
@@ -222,7 +230,7 @@ class Boot extends Loggable {
       newUserPage,
       userAdminPage,
       userRepoAdminPage,
-      sourceTreePage, blobPage, emptyRepoPage, emptyCommitsPage, allCommitsPage, commitPage)
+      sourceTreePage, blobPage, emptyRepoPage, emptyCommitsPage, allCommitsPage, commitPage, newPullRequestPage)
     //Menu.i("Home") / "index", // the simple way to declare a menu
     //Menu.i("New User") / "new",
 
