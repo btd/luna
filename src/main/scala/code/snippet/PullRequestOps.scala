@@ -27,8 +27,9 @@ class PullRequestOps(urp: RepoPage) extends Loggable {
       case Full(repo) => {
         ".repo_selector" #> (
           <select class="selectmenu repo_selector">
-            {urp.user.get.repos.filter(_.forkOf.get == repo.forkOf.get).map(r =>
-            <option value={r.name.get} selected={if (r.name.get == repo.name.get) "selected" else ""}>{r.name.get}</option>
+            <option value={repo.name.get} selected="selected">{repo.name.get}</option> ++
+            {urp.user.get.repos.filter(r => r.forkOf.get == repo.forkOf.get && r.id.get != repo.id.get).map(r =>
+            <option value={r.name.get}>{r.name.get}</option>
           )}
           </select>)
       }

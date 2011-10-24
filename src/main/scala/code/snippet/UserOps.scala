@@ -61,7 +61,7 @@ class UserOps(up: UserPage) extends Loggable {
 
           case _ => {
             u.repos.map(repo =>
-              urlBox(Full(repo), repoName _, cloneButtonAppend)
+              urlBox(Full(repo), repoName _, cloneButtonRedirect)
             )
           }
         })
