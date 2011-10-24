@@ -700,7 +700,7 @@ ul.clone-urls li.selected>a {
 }
 
 .pull_request_box .repo_selector {
-    width: 100px;
+    width: 200px;
 }
 
 .pull_request_box {

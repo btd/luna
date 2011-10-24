@@ -212,7 +212,7 @@ class Boot extends Loggable {
         case login :: repo ::   Nil => Full(RepoPage(login, repo))
         case _ => Empty
       },
-      urp => urp.userName :: urp.repoName :: Nil) / * / * / "pull-request" >>
+      urp => urp.userName :: urp.repoName :: Nil) / * / * / "pull-request" / "new" >>
       Template(() => Templates("repo" :: "pull-request" :: "new" :: Nil) openOr NodeSeq.Empty)
 
     val signInPage = Menu.i("Sign In") / "user" / "m" / "signin"

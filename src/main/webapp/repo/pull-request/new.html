@@ -1,6 +1,6 @@
 <div id="main" role="main" class="lift:surround?with=def;at=content">
-    <form>
-        <div class="pull_request_box">
+    <form class="lift:PullRequestOps.renderForm?form=post">
+        <div class="pull_request_box lift:PullRequestOps.renderUserClones">
             <select class="selectmenu repo_selector">
                 <option>Repo 1</option>
                 <option>Repo 2</option>
@@ -18,12 +18,13 @@
             </svg>
         </div>
         <div class="pull_request_box">
-            <select class="selectmenu repo_selector">
+            <select class="selectmenu repo_selector lift:PullRequestOps.renderAllClones">
                 <option>Repo 1</option>
                 <option>Repo 2</option>
                 <option>Repo 3</option>
             </select>
             <input type="text" name="destRef" class="textfield" placeholder="Destination ref"/>
         </div>
+        <button name="create_pull_request" class="button">New Pull request</button>
     </form>
 </div>

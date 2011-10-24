@@ -28,6 +28,8 @@ import java.io.{ByteArrayOutputStream, File}
 import collection.mutable.{ListBuffer, ArrayBuffer}
 import org.eclipse.jgit.transport.{URIish, UploadPack, ReceivePack}
 
+import com.foursquare.rogue.Rogue._
+
 
 /**
  * User: denis.bardadym
@@ -312,6 +314,9 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
 
 object RepositoryDoc extends RepositoryDoc with MongoMetaRecord[RepositoryDoc] {
   override def collectionName: String = "repositories"
+
+  def allClonesExceptOwner(repo: RepositoryDoc) =
+    RepositoryDoc where (_.forkOf eqs repo.forkOf.get) and (_.ownerId neqs repo.ownerId.get) fetch
 }
 
 
