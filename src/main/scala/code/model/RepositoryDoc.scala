@@ -69,9 +69,11 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
   def owner = ownerId.obj.get
 
 
-  lazy val collaborators = CollaboratorDoc.findAll("repoId", id.get).flatMap(c => c.userId.obj)
+  def collaborators = CollaboratorDoc.findAll("repoId", id.get).flatMap(c => c.userId.obj)
 
-  lazy val keys = SshKeyDoc.findAll("ownerRepoId", id.is)
+  def keys = SshKeyDoc.findAll("ownerRepoId", id.is)
+
+  def pullRequests: List[PullRequestDoc] = PullRequestDoc where (_.destRepoId eqs id.get) fetch
 
 
   object git {

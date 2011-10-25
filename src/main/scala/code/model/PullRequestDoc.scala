@@ -28,6 +28,12 @@ class PullRequestDoc private() extends MongoRecord[PullRequestDoc] with ObjectId
 
   object creationDate extends DateField(this)
 
+  object accepted_? extends BooleanField(this, false)
+
+  object description extends StringField(this, 1000)
+
+  lazy val homePageUrl = destRepoId.obj.get.homePageUrl + "/pull-request/" + id.get
+
   def meta = PullRequestDoc
 
 }
