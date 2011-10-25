@@ -266,6 +266,8 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
   }
 
 
+  lazy val pullRequestUrl =  homePageUrl + "/pull-requests"
+
   lazy val homePageUrl = "/" + owner.login.get + "/" + name.get
 
   lazy val sourceTreeUrl = homePageUrl + "/tree/" + git.currentBranch
