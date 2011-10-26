@@ -13,7 +13,7 @@ import actors.Actor
 import xml.{NodeSeq, Text}
 import sshd.git.GitDaemon
 import com.mongodb.Mongo
-import code.model.UserDoc
+import code.model.{PullRequestDoc, UserDoc}
 
 trait WithUser {
   def userName: String
@@ -21,10 +21,10 @@ trait WithUser {
   lazy val user = UserDoc.find("login", userName)
 }
 
-case class UserPage(userName: String) extends WithUser { }
+case class UserPage(userName: String) extends WithUser {}
 
 trait WithRepo extends WithUser {
-  def repoName : String
+  def repoName: String
 
   lazy val repo = user match {
     case Full(u) => tryo {
@@ -36,32 +36,22 @@ trait WithRepo extends WithUser {
   }
 }
 
-case class RepoPage(userName: String, repoName: String) extends WithRepo {}
+trait WithPullRequest {
+  def pullRequestId: String
 
-case class RepoAtCommitPage(userName: String, repoName: String, commit: String) extends WithRepo {}
-
-case class SourceElementPage(userName: String, repoName: String, commit: String, path: List[String]) extends WithRepo {}
-
-
-// TODO FIXME
-object ValidUser {
-  def unapply(login: String): Option[String] = Full(login)
-
-  //User.withLogin(login) match {
-  //  case Full(u) => Full(login)
-  //  case _ => None
-  //}
+  lazy val pullRequest = PullRequestDoc.find(pullRequestId)
 }
 
-// TODO FIXME
-object ValidRepo {
-  def unapply(repo: String): Option[String] = Full(repo)
+case class RepoPage(userName: String, repoName: String) extends WithRepo
 
-  //User.withLogin(login) match {
-  //  case Full(u) => Full(login)
-  //  case _ => None
-  //}
-}
+case class RepoAtCommitPage(userName: String, repoName: String, commit: String) extends WithRepo
+
+case class PullRequestRepoPage(userName: String, repoName: String, pullRequestId: String)  extends WithPullRequest with WithRepo
+
+case class SourceElementPage(userName: String, repoName: String, commit: String, path: List[String]) extends WithRepo
+
+
+
 
 /**
  * A class that's instantiated early and run.  It allows the application
@@ -145,7 +135,7 @@ class Boot extends Loggable {
             }
           }
           case _ => Empty
-        })
+        })  >> LocGroup("repo")
 
     val sourceTreePage = Menu.params[SourceElementPage]("sourceTreePage",
       new LinkText[SourceElementPage](stp => Text("Repo " + stp.repoName)),
@@ -172,7 +162,7 @@ class Boot extends Loggable {
     val emptyCommitsPage = Menu.params[RepoPage]("emptyCommitsPage",
       new LinkText[RepoPage](urp => Text("Repo " + urp.repoName)),
       list => list match {
-        case login :: repo ::   Nil => Full(RepoPage(login, repo))
+        case login :: repo :: Nil => Full(RepoPage(login, repo))
         case _ => Empty
       },
       urp => urp.userName :: urp.repoName :: Nil) / * / * / "commits" >>
@@ -186,7 +176,7 @@ class Boot extends Loggable {
             }
           }
           case _ => Empty
-        })
+        }) >> LocGroup("repo")
 
 
 
@@ -196,20 +186,20 @@ class Boot extends Loggable {
         case login :: repo :: commit :: Nil => Full(RepoAtCommitPage(login, repo, commit))
         case _ => Empty
       },
-      urp => urp.userName :: urp.repoName :: urp.commit:: Nil) / * / * / "commits" / * >> Template(() => Templates("repo" :: "commit" :: "all" :: Nil) openOr NodeSeq.Empty)
+      urp => urp.userName :: urp.repoName :: urp.commit :: Nil) / * / * / "commits" / * >> Template(() => Templates("repo" :: "commit" :: "all" :: Nil) openOr NodeSeq.Empty)
 
     val commitPage = Menu.params[RepoAtCommitPage]("commitPage",
-         new LinkText[RepoAtCommitPage](urp => Text("Repo " + urp.repoName)),
-         list => list match {
-           case login :: repo :: commit :: Nil => Full(RepoAtCommitPage(login, repo, commit))
-           case _ => Empty
-         },
-         urp => urp.userName :: urp.repoName :: urp.commit:: Nil) / * / * / "commit" / * >> Template(() => Templates("repo" :: "commit" :: "one" :: Nil) openOr NodeSeq.Empty)
+      new LinkText[RepoAtCommitPage](urp => Text("Repo " + urp.repoName)),
+      list => list match {
+        case login :: repo :: commit :: Nil => Full(RepoAtCommitPage(login, repo, commit))
+        case _ => Empty
+      },
+      urp => urp.userName :: urp.repoName :: urp.commit :: Nil) / * / * / "commit" / * >> Template(() => Templates("repo" :: "commit" :: "one" :: Nil) openOr NodeSeq.Empty)
 
     val newPullRequestPage = Menu.params[RepoPage]("newPullRequestPage",
       new LinkText[RepoPage](urp => Text("Repo " + urp.repoName)),
       list => list match {
-        case login :: repo ::   Nil => Full(RepoPage(login, repo))
+        case login :: repo :: Nil => Full(RepoPage(login, repo))
         case _ => Empty
       },
       urp => urp.userName :: urp.repoName :: Nil) / * / * / "pull-requests" / "new" >>
@@ -218,11 +208,20 @@ class Boot extends Loggable {
     val allPullRequestPage = Menu.params[RepoPage]("allPullRequestPage",
       new LinkText[RepoPage](urp => Text("Repo " + urp.repoName)),
       list => list match {
-        case login :: repo ::   Nil => Full(RepoPage(login, repo))
+        case login :: repo :: Nil => Full(RepoPage(login, repo))
         case _ => Empty
       },
       urp => urp.userName :: urp.repoName :: Nil) / * / * / "pull-requests" >>
-      Template(() => Templates("repo" :: "pull-request" :: "all" :: Nil) openOr NodeSeq.Empty)
+      Template(() => Templates("repo" :: "pull-request" :: "all" :: Nil) openOr NodeSeq.Empty)  >> LocGroup("repo")
+
+    val onePullRequestPage = Menu.params[PullRequestRepoPage]("onePullRequestPage",
+      new LinkText[PullRequestRepoPage](urp => Text("Repo " + urp.repoName)),
+      list => list match {
+        case login :: repo :: pullRequestId :: Nil => Full(PullRequestRepoPage(login, repo, pullRequestId))
+        case _ => Empty
+      },
+      urp => urp.userName :: urp.repoName :: urp.pullRequestId :: Nil) / * / * / "pull-request" / * >>
+      Template(() => Templates("repo" :: "pull-request" :: "one" :: Nil) openOr NodeSeq.Empty)
 
     val signInPage = Menu.i("Sign In") / "user" / "m" / "signin"
 
@@ -239,7 +238,15 @@ class Boot extends Loggable {
       newUserPage,
       userAdminPage,
       userRepoAdminPage,
-      sourceTreePage, blobPage, emptyRepoPage, emptyCommitsPage, allCommitsPage, commitPage, newPullRequestPage, allPullRequestPage)
+      sourceTreePage,
+      blobPage,
+      emptyRepoPage,
+      emptyCommitsPage,
+      allCommitsPage,
+      commitPage,
+      newPullRequestPage,
+      allPullRequestPage,
+      onePullRequestPage)
     //Menu.i("Home") / "index", // the simple way to declare a menu
     //Menu.i("New User") / "new",
 
@@ -250,7 +257,7 @@ class Boot extends Loggable {
       case RewriteRequest(ParsePath("index" :: Nil, _, _, true), _, _) =>
 
         RewriteResponse("index" :: Nil, true)
-      case RewriteRequest(ParsePath(ValidUser(user) :: Nil, _, _, false), _, _) =>
+      case RewriteRequest(ParsePath(user :: Nil, _, _, false), _, _) =>
 
         RewriteResponse("list" :: user :: Nil, Map[String, String]())
 

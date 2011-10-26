@@ -208,8 +208,8 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
         scala.collection.JavaConversions.asScalaIterator((new Git(fs_repo)).log.add(fs_repo.resolve(commit)).call.iterator)
     }
 
-    def diff(commit: String) : Pair[List[Change], List[String]] = {
-      import org.eclipse.jgit.diff.DiffEntry.ChangeType._
+    def diff(commit1: String, commit2: String) = {
+        import org.eclipse.jgit.diff.DiffEntry.ChangeType._
 
       val diffList = new ListBuffer[String]
 
@@ -218,7 +218,7 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
       formatter.setRepository(fs_repo)
       formatter.setDetectRenames(true)
 
-      val entries = scala.collection.JavaConversions.asScalaBuffer(formatter.scan(fs_repo.resolve(commit + "^1"), fs_repo.resolve(commit)) )
+      val entries = scala.collection.JavaConversions.asScalaBuffer(formatter.scan(fs_repo.resolve(commit1), fs_repo.resolve(commit2)) )
 
       val statusList = entries.map { ent =>
           formatter.format(ent)
@@ -243,6 +243,8 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
       (statusList.toList -> diffList.toList)
     }
 
+    def diff(commit: String) : Pair[List[Change], List[String]] = diff(commit + "^1", commit)
+
      def clone(user: UserDoc): RepositoryDoc = {
        val uri = new URIish(fsPath)
        val clonnedDoc = RepositoryDoc.createRecord.ownerId(user.id.get).name(chooseCloneName(user)).forkOf(id.get)
@@ -263,7 +265,6 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
            })).max + 1)
          }
      }
-
 
   }
 

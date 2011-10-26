@@ -80,6 +80,7 @@ class PullRequestOps(urp: RepoPage) extends Loggable {
     }
   }
 
+
   def processNewPullRequest() = {
     UserDoc.currentUser match {
       case Full(u) => {
