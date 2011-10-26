@@ -18,6 +18,19 @@ import xml.{NodeSeq, Text}
 class PullRequestOneOps(pr: PullRequestRepoPage) extends Loggable {
 
 
+  def renderHelp = pr.pullRequest match {
+    case Full(pullRequest) => {
+    "code *" #> ("$ git remote add %s %s\n" +
+      "$ git fetch %s\n" +
+      "$ git merge %s/%s\n").format(pullRequest.srcRepoId.obj.get.owner.login.get,
+        pullRequest.srcRepoId.obj.get.publicGitUrl,
+        pullRequest.srcRepoId.obj.get.owner.login.get,
+        pullRequest.srcRepoId.obj.get.owner.login.get,
+        pullRequest.srcRef.get      )
+    }
+    case _ => PassThru
+  }
+
   def renderAll = pr.pullRequest match {
     case Full(pullRequest) => {
       val destHistory = pullRequest.destRepoId.obj.get.git.log(pullRequest.destRef.get).toList.reverse
@@ -64,6 +77,17 @@ class PullRequestOneOps(pr: PullRequestRepoPage) extends Loggable {
   def processPullRequestClose() = pr.pullRequest match {
       case Full(pullRequest) => {
       pullRequest.accepted_?(true).save
+    }
+    case _ => PassThru
+  }
+
+  def renderMenu = pr.repo match {
+    case Full(r) => "*" #> {
+      <div>
+        <a href={r.sourceTreeUrl}>Sources</a> |
+        <a href={r.commitsUrl}>Commits</a> |
+        <a href={r.pullRequestUrl}>Pull Requests</a>
+      </div>
     }
     case _ => PassThru
   }

@@ -29,10 +29,17 @@ import SnippetHelper._
 
 class SourceTreeOps(stp: SourceElementPage) extends Loggable {
 
-  def renderCommitsLink = stp.repo match {
-       case Full(repo) => ".repo_menu *" #> a(repo.commitsUrl, Text("Commits"))
-       case _ => PassThru
-     }
+   def renderMenu = stp.repo match {
+    case Full(r) => "*" #> {
+      <div>
+        Sources |
+        <a href={r.commitsUrl}>Commits</a> |
+        <a href={r.pullRequestUrl}>Pull Requests</a> |
+        <a href={r.pullRequestUrl + "/new"}>New pull request</a>
+      </div>
+    }
+    case _ => PassThru
+  }
 
    def repoName(r: RepositoryDoc) = {
     r.forkOf.obj match {

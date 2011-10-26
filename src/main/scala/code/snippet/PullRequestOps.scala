@@ -109,4 +109,14 @@ class PullRequestOps(urp: RepoPage) extends Loggable {
       case _ => PassThru
     }
   }
+
+  def renderMenu = urp.repo match {
+    case Full(r) => "*" #> {
+      <div>
+        <a href={r.sourceTreeUrl}>Sources</a> |
+        <a href={r.commitsUrl}>Commits</a>
+      </div>
+    }
+    case _ => PassThru
+  }
 }
