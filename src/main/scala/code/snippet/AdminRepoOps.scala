@@ -8,19 +8,16 @@ package code.snippet
 import bootstrap.liftweb.RepoPage
 import net.liftweb._
 import http._
-import js.JE.Call
 import js.jquery._
 import JqJE._
 import JqJsCmds._
-import js._
 import util.Helpers._
 import common._
-import code.model.{CollaboratorDoc, UserDoc, SshKeyDoc}
 import util.PassThru
-import xml.Text._
-import xml.Text
-
 import com.foursquare.rogue.Rogue._
+import xml.{NodeSeq, Text}
+import code.model._
+import org.bson.types.ObjectId
 
 /**
  * User: denis.bardadym
@@ -42,11 +39,15 @@ class AdminRepoOps(urp: RepoPage) extends Loggable {
           <table class="collaborators_table font table">
             {r.collaborators.flatMap(c => {
             <tr id={c.id.get.toString}>
-              <td>{c.login.get}</td>
-              <td>{SHtml.a(Text("X")) {
-              (CollaboratorDoc where (_.userId eqs c.id.get) and (_.repoId eqs r.id.get)).findAndDeleteOne
-              JqId(c.id.get.toString) ~> JqRemove()
-            }}</td>
+              <td>
+                {c.login.get}
+              </td>
+              <td>
+                {SHtml.a(Text("X")) {
+                (CollaboratorDoc where (_.userId eqs c.id.get) and (_.repoId eqs r.id.get)).findAndDeleteOne
+                JqId(c.id.get.toString) ~> JqRemove()
+              }}
+              </td>
             </tr>
           })}
           </table>
@@ -62,12 +63,14 @@ class AdminRepoOps(urp: RepoPage) extends Loggable {
           {r.keys.flatMap(key => {
             <tr id={key.id.get.toString}>
               <td>
-              {key.comment}
-            </td>
-            <td>{SHtml.a(Text("X")) {
-              key.delete_!
-              JqId(key.id.get.toString) ~> JqRemove()
-            }}</td>
+                {key.comment}
+              </td>
+              <td>
+                {SHtml.a(Text("X")) {
+                key.delete_!
+                JqId(key.id.get.toString) ~> JqRemove()
+              }}
+              </td>
             </tr>
           })}
         </table>
@@ -76,15 +79,16 @@ class AdminRepoOps(urp: RepoPage) extends Loggable {
       case _ => "*" #> "Invaid repo name"
     }
   }
-    def addCollaborator = {
-         "name=login" #>
-        SHtml.text(collaborator_login, {
-          value: String =>
-            collaborator_login = value.trim
-            if (collaborator_login.isEmpty) S.error("Login field are empty")
-        }, "placeholder" -> "login", "class" -> "textfield large") &
+
+  def addCollaborator = {
+    "name=login" #>
+      SHtml.text(collaborator_login, {
+        value: String =>
+          collaborator_login = value.trim
+          if (collaborator_login.isEmpty) S.error("Login field are empty")
+      }, "placeholder" -> "login", "class" -> "textfield large") &
       "button" #> SHtml.button("Add collaborator", addNewCollaborator, "class" -> "button", "id" -> "add_collaborator_button")
-    }
+  }
 
 
   def addKey = {
@@ -112,7 +116,7 @@ class AdminRepoOps(urp: RepoPage) extends Loggable {
   }
 
   private def addNewCollaborator() = {
-     urp.repo match {
+    urp.repo match {
       case Full(r) => {
         UserDoc.find("login", collaborator_login) match {
           case Full(u) => CollaboratorDoc.createRecord.userId(u.id.get).repoId(r.id.get).save
@@ -123,7 +127,6 @@ class AdminRepoOps(urp: RepoPage) extends Loggable {
       case _ => S.error("Invaid repo name") //TODO надо спросить у ребят как лучше такие вещи делать
     }
   }
-
 
 
   def repo = {
@@ -146,11 +149,37 @@ class AdminRepoOps(urp: RepoPage) extends Loggable {
 
   private def updateRepo() = {
     urp.repo match {
-       case Full(repo) => {
+      case Full(repo) => {
         repo.name(name).save
         S.redirectTo("/admin" + repo.homePageUrl)
       }
       case _ => S.error("Invalid repo")
     }
+  }
+
+  def delete = urp.repo match {
+    case Full(repo) => {
+      "button" #> SHtml.button("Delete", processDelete, "class" -> "button")
+    }
+    case _ => "*" #> NodeSeq.Empty
+  }
+
+  def processDelete() = urp.repo match {
+      case Full(repo) => {
+      CollaboratorDoc where (_.repoId eqs repo.id.get) bulkDelete_!!
+
+      PullRequestDoc where (_.destRepoId eqs repo.id.get) bulkDelete_!!
+
+      PullRequestDoc where (_.srcRepoId eqs repo.id.get) bulkDelete_!!
+
+      SshKeyDoc where (_.ownerRepoId eqs repo.id.get) bulkDelete_!!
+
+      RepositoryDoc where (_.forkOf eqs repo.id.get) modify (_.forkOf setTo null) updateMulti
+
+      repo.delete_!
+
+      S.redirectTo(urp.user.get.homePageUrl)
+    }
+    case _ => "*" #> NodeSeq.Empty
   }
 }
