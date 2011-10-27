@@ -8,9 +8,19 @@ package code.snippet
 import bootstrap.liftweb.RepoPage
 import net.liftweb._
 import http._
+import js.JE.Call
+import js.jquery._
+import JqJE._
+import JqJsCmds._
+import js._
 import util.Helpers._
 import common._
 import code.model.{CollaboratorDoc, UserDoc, SshKeyDoc}
+import util.PassThru
+import xml.Text._
+import xml.Text
+
+import com.foursquare.rogue.Rogue._
 
 /**
  * User: denis.bardadym
@@ -22,6 +32,8 @@ class AdminRepoOps(urp: RepoPage) extends Loggable {
   private var ssh_key = ""
   private var collaborator_login = ""
 
+  private var name = ""
+
 
   def collaborators = {
     urp.repo match {
@@ -29,9 +41,12 @@ class AdminRepoOps(urp: RepoPage) extends Loggable {
         "*" #>
           <table class="collaborators_table font table">
             {r.collaborators.flatMap(c => {
-            <tr>
+            <tr id={c.id.get.toString}>
               <td>{c.login.get}</td>
-              <td>X</td>
+              <td>{SHtml.a(Text("X")) {
+              (CollaboratorDoc where (_.userId eqs c.id.get) and (_.repoId eqs r.id.get)).findAndDeleteOne
+              JqId(c.id.get.toString) ~> JqRemove()
+            }}</td>
             </tr>
           })}
           </table>
@@ -45,10 +60,14 @@ class AdminRepoOps(urp: RepoPage) extends Loggable {
       case Full(r) => {
         "*" #> <table class="keys_table font table">
           {r.keys.flatMap(key => {
-            <tr>
-              {<td>
+            <tr id={key.id.get.toString}>
+              <td>
               {key.comment}
-            </td> <td>X</td>}
+            </td>
+            <td>{SHtml.a(Text("X")) {
+              key.delete_!
+              JqId(key.id.get.toString) ~> JqRemove()
+            }}</td>
             </tr>
           })}
         </table>
@@ -102,6 +121,36 @@ class AdminRepoOps(urp: RepoPage) extends Loggable {
 
       }
       case _ => S.error("Invaid repo name") //TODO надо спросить у ребят как лучше такие вещи делать
+    }
+  }
+
+
+
+  def repo = {
+    urp.repo match {
+      case Full(repo) => {
+        "name=name" #> SHtml.text(repo.name.get, {
+          value: String =>
+            name = value.trim
+            if (name.isEmpty) S.error("Name field is empty")
+        },
+        "placeholder" -> "Name", "class" -> "textfield large") &
+          "button" #>
+            SHtml.button("Update", updateRepo, "class" -> "button")
+      }
+      case _ => PassThru
+    }
+
+
+  }
+
+  private def updateRepo() = {
+    urp.repo match {
+       case Full(repo) => {
+        repo.name(name).save
+        S.redirectTo("/admin" + repo.homePageUrl)
+      }
+      case _ => S.error("Invalid repo")
     }
   }
 }

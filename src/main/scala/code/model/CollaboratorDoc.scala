@@ -30,4 +30,6 @@ class CollaboratorDoc  private() extends MongoRecord[CollaboratorDoc] with Objec
 
 object CollaboratorDoc extends CollaboratorDoc with MongoMetaRecord[CollaboratorDoc] {
   override def collectionName: String = "collaborators"
+
+
 }

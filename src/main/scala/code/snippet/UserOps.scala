@@ -35,7 +35,7 @@ class UserOps(up: UserPage) extends Loggable {
             "input" #> SHtml.text(newRepositoryName, {
               value: String =>
                 newRepositoryName = value.trim //TODO добавить проверку, что только валидные символы
-                if (newRepositoryName.isEmpty) S.error("Email field are empty")
+                if (newRepositoryName.isEmpty) S.error("Name field is empty")
             },
             "placeholder" -> "Repo name", "class" -> "textfield large") &
               "button" #> SHtml.button("New repository", createRepository, "class" -> "button", "id" -> "create_repo_button")
@@ -43,7 +43,7 @@ class UserOps(up: UserPage) extends Loggable {
           case _ => "*" #> NodeSeq.Empty
         }
       }
-      case _ => PassThru
+      case _ => "*" #> NodeSeq.Empty
     }
   }
 
@@ -67,7 +67,7 @@ class UserOps(up: UserPage) extends Loggable {
         })
 
       }
-      case _ => PassThru
+      case _ => "*" #> NodeSeq.Empty
     }
   }
 

@@ -11,6 +11,13 @@ import common._
 import util.Helpers._
 import http._
 import code.model.SshKeyDoc
+import js.JE.Call
+import js.jquery._
+import JqJE._
+import JqJsCmds._
+import js._
+import util.PassThru
+import xml.Text
 
 /**
  * User: denis.bardadym
@@ -70,16 +77,20 @@ class AdminUserOps(up: UserPage) extends Loggable {
       case Full(user) => {
         "*" #> <table class="keys_table font table">
           {user.keys.flatMap(key => {
-            <tr>
-              {<td>
+            <tr id={key.id.get.toString}>
+              <td>
               {key.comment}
-            </td> <td>X</td>}
+            </td>
+            <td>{SHtml.a(Text("X")) {
+              key.delete_!
+              JqId(key.id.get.toString) ~> JqRemove()
+            }}</td>
             </tr>
           })}
         </table>
 
       }
-      case _ => "*" #> "Invalid username"
+      case _ => PassThru
     }
 
   }

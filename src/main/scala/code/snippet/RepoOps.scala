@@ -23,20 +23,17 @@ import code.model._
 
 class RepoCommitOps(urp: RepoAtCommitPage) {
 
-   def renderSourcesLink = urp.repo match {
-       case Full(repo) =>  "*" #> a(repo.sourceTreeUrl, Text("Sources"))
-     case _ => PassThru
+ def renderMenu = urp.repo match {
+    case Full(r) => "*" #> {
+      <div>
+        <a href={r.sourceTreeUrl}>Sources</a> |
+        Commits |
+        <a href={r.pullRequestUrl}>Pull Requests</a> |
+        <a href={r.pullRequestUrl + "/new"}>New pull request</a>
+      </div>
+    }
+    case _ => PassThru
   }
-
-  def renderCommitsLink = urp.repo match {
-        case Full(repo) =>  "*" #> a(repo.commitsUrl, Text("Commits"))
-      case _ => PassThru
-   }
-
-  def renderCurrentSourcesLink = urp.repo match {
-        case Full(repo) =>  "*" #> a(repo.sourceTreeUrl(urp.commit), Text("Tree"))
-      case _ => PassThru
-   }
 
 
   def renderCommitsList = urp.repo match {
