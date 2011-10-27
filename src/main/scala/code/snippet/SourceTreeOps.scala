@@ -19,7 +19,7 @@ import util.Helpers._
 import code.model._
 import util._
 import xml.Text
-import SnippetHelper._
+import code.snippet.SnippetHelper._
 
 /**
  * User: denis.bardadym
@@ -52,22 +52,37 @@ class SourceTreeOps(stp: SourceElementPage) extends Loggable {
 
   def renderTree = stp.repo match {
        case Full(repo) =>  {
-        val xhtmlSourceEntiries = repo.git.ls_tree(stp.path, stp.commit).flatMap(se => se match {
+
+
+        val xhtmlSourceEntiries = repo.git.ls_tree(stp.path, stp.commit).flatMap(se =>  {
+          logger.debug("Begin proces " + se)
+          se match {
                 case Tree(path, _) => {
+
+                  val c = repo.git.log(stp.commit, suffix(stp.path, "", "/") + path).next
+
+                  logger.debug(suffix(stp.path, "", "/") + path)
+                    logger.debug(c)
+
                   <tr class="tree">
                     <td><a href={repo.sourceTreeUrl(stp.commit) + suffix(stp.path) + "/" + path}>{path}/</a></td>
-                    <td>Date</td>
-                    <td>Commit message</td>
+                    <td>{SnippetHelper.dateFormatter.format(c.getAuthorIdent.getWhen)}</td>
+                    <td>{c.getShortMessage}</td>
                   </tr>
                 }
                 case Blob(path, _) => {
+                  val c = repo.git.log(stp.commit, suffix(stp.path, "", "/") + path).next
+
+                  logger.debug(suffix(stp.path, "", "/") + path)
+                    logger.debug(c)
+
                   <tr class="blob">
                     <td><a href={repo.sourceBlobUrl(stp.commit) + suffix(stp.path) + "/" + path}>{path}</a></td>
-                    <td>Date</td>
-                    <td>Commit message</td>
+                    <td>{SnippetHelper.dateFormatter.format(c.getAuthorIdent.getWhen)}</td>
+                    <td>{c.getShortMessage}</td>
                   </tr>
                 }
-              })
+              }})
         val parentEntry =
           <tr class="tree">
             <td><a href={repo.sourceTreeUrl(stp.commit) + suffix(stp.path.dropRight(1))}>..</a></td>

@@ -616,7 +616,7 @@ ul.clone-urls li.selected>a {
 }
 
 #source_tree {
-    width: 600px;
+    width: 1000px;
 }
 
 #source_tree * {
@@ -656,7 +656,7 @@ ul.clone-urls li.selected>a {
     margin: 10px 0;
     border: 1px solid gray;
     border-radius: 3px;
-    width: 600px;
+    width: 1000px;
 }
 
 .day .date {

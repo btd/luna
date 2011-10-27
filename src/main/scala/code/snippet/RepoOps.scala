@@ -35,6 +35,11 @@ class RepoCommitOps(urp: RepoAtCommitPage) {
     case _ => PassThru
   }
 
+   def renderCurrentSourcesLink = urp.repo match {
+        case Full(repo) =>  "*" #> a(repo.sourceTreeUrl(urp.commit), Text("Tree"))
+      case _ => PassThru
+   }
+
 
   def renderCommitsList = urp.repo match {
        case Full(repo) =>

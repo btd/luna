@@ -44,10 +44,12 @@ object SnippetHelper extends Loggable{
   }
 
 
-  def suffix(list: List[String]) =
+  def suffix(list: List[String]) : String = suffix(list, "/", "")
+
+   def suffix(list: List[String], first: String, last: String): String =
     list match {
       case Nil => ""
-      case l => l.mkString("/", "/", "")
+      case l => l.mkString(first, "/", last)
     }
 
   def urlBox(repo: Box[RepositoryDoc], name: RepositoryDoc => NodeSeq, onClone: (RepositoryDoc, UserDoc) => NodeSeq)  = {

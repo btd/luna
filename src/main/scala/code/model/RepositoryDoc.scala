@@ -208,6 +208,10 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
         scala.collection.JavaConversions.asScalaIterator((new Git(fs_repo)).log.add(fs_repo.resolve(commit)).call.iterator)
     }
 
+    def log(commit: String, path: String) = {
+        scala.collection.JavaConversions.asScalaIterator((new Git(fs_repo)).log.add(fs_repo.resolve(commit)).addPath(path).call.iterator)
+    }
+
     def diff(commit1: String, commit2: String) = {
         import org.eclipse.jgit.diff.DiffEntry.ChangeType._
 
