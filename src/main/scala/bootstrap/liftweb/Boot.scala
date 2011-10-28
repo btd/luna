@@ -89,12 +89,34 @@ class Boot extends Loggable {
     val userPage = Menu.param[UserPage]("userPage",
       new LinkText[UserPage](up => Text("User " + up.userName)),
       login => Full(UserPage(login)),
-      up => up.userName) / "list" / * >> Template(() => Templates("list" :: Nil) openOr NodeSeq.Empty)
+      up => up.userName) / "list" / * >> Template(() => Templates("list" :: Nil) openOr NodeSeq.Empty)  >>
+      ValueTemplate(up =>  up match {
+        case Full(up1) => up1.user match {
+          case Full(user) =>  Templates("list" :: Nil) openOr NodeSeq.Empty
+          case _ => Templates("404" :: Nil) openOr NodeSeq.Empty
+        }
+        case _ => Templates("404" :: Nil) openOr NodeSeq.Empty
+      })
 
     val userAdminPage = Menu.param[UserPage]("userAdminPage",
       new LinkText[UserPage](up => Text("User " + up.userName)),
       login => Full(UserPage(login)),
-      up => up.userName) / "admin" / * >> Template(() => Templates("admin" :: "adminUser" :: Nil) openOr NodeSeq.Empty)
+      up => up.userName) / "admin" / *  >>
+      ValueTemplate(up =>  up match {
+        case Full(up1) => up1.user match {
+          case Full(user) => {
+            UserDoc.currentUser match {
+              case Full(cuser) if (cuser.id.get == user.id.get) => Templates("admin" :: "adminUser" :: Nil) openOr NodeSeq.Empty
+              case _ => Templates("404" :: Nil) openOr NodeSeq.Empty
+            }
+          }
+          case _ => Templates("404" :: Nil) openOr NodeSeq.Empty
+        }
+        case _ => Templates("404" :: Nil) openOr NodeSeq.Empty
+      })
+
+
+
 
     val userRepoAdminPage = Menu.params[RepoPage]("userRepoAdminPage",
       new LinkText[RepoPage](urp => Text("Repo " + urp.repoName)),
@@ -102,7 +124,19 @@ class Boot extends Loggable {
         case login :: repo :: Nil => Full(RepoPage(login, repo))
         case _ => Empty
       },
-      urp => urp.userName :: urp.repoName :: Nil) / "admin" / * / * >> Template(() => Templates("admin" :: "adminRepo" :: Nil) openOr NodeSeq.Empty)
+      urp => urp.userName :: urp.repoName :: Nil) / "admin" / * / * >>
+      ValueTemplate(up =>  up match {
+        case Full(up1) => up1.repo match {
+          case Full(repo) => {
+            UserDoc.currentUser match {
+              case Full(cuser) if (cuser.id.get == repo.owner.id.get) => Templates("admin" :: "adminRepo" :: Nil) openOr NodeSeq.Empty
+              case _ => Templates("404" :: Nil) openOr NodeSeq.Empty
+            }
+          }
+          case _ => Templates("404" :: Nil) openOr NodeSeq.Empty
+        }
+        case _ => Templates("404" :: Nil) openOr NodeSeq.Empty
+      })
 
     val blobPage = Menu.params[SourceElementPage]("blobPage",
       new LinkText[SourceElementPage](stp => Text("Repo " + stp.repoName)),
@@ -113,7 +147,14 @@ class Boot extends Loggable {
           case _ => Empty
         }
       },
-      stp => (stp.userName :: stp.repoName :: stp.commit :: Nil) ::: stp.path) / * / * / "blob" / * / ** >> Template(() => Templates("repo" :: "blob" :: Nil) openOr NodeSeq.Empty)
+      stp => (stp.userName :: stp.repoName :: stp.commit :: Nil) ::: stp.path) / * / * / "blob" / * / **  >>
+      ValueTemplate(up =>  up match {
+        case Full(up1) => up1.repo match {
+          case Full(repo) =>  Templates("repo" :: "blob" :: Nil) openOr NodeSeq.Empty
+          case _ => Templates("404" :: Nil) openOr NodeSeq.Empty
+        }
+        case _ => Templates("404" :: Nil) openOr NodeSeq.Empty
+      })
 
     val emptyRepoPage = Menu.params[SourceElementPage]("emptyRepoPage",
       new LinkText[SourceElementPage](stp => Text("Repo " + stp.repoName)),
@@ -186,7 +227,15 @@ class Boot extends Loggable {
         case login :: repo :: commit :: Nil => Full(RepoAtCommitPage(login, repo, commit))
         case _ => Empty
       },
-      urp => urp.userName :: urp.repoName :: urp.commit :: Nil) / * / * / "commits" / * >> Template(() => Templates("repo" :: "commit" :: "all" :: Nil) openOr NodeSeq.Empty)
+      urp => urp.userName :: urp.repoName :: urp.commit :: Nil) / * / * / "commits" / *   >>
+      ValueTemplate(up =>  up match {
+        case Full(up1) => up1.repo match {
+          case Full(repo) =>  Templates("repo" :: "commit" :: "all" :: Nil) openOr NodeSeq.Empty
+          case _ => Templates("404" :: Nil) openOr NodeSeq.Empty
+        }
+        case _ => Templates("404" :: Nil) openOr NodeSeq.Empty
+      })
+
 
     val commitPage = Menu.params[RepoAtCommitPage]("commitPage",
       new LinkText[RepoAtCommitPage](urp => Text("Repo " + urp.repoName)),
@@ -194,7 +243,14 @@ class Boot extends Loggable {
         case login :: repo :: commit :: Nil => Full(RepoAtCommitPage(login, repo, commit))
         case _ => Empty
       },
-      urp => urp.userName :: urp.repoName :: urp.commit :: Nil) / * / * / "commit" / * >> Template(() => Templates("repo" :: "commit" :: "one" :: Nil) openOr NodeSeq.Empty)
+      urp => urp.userName :: urp.repoName :: urp.commit :: Nil) / * / * / "commit" / * >>
+      ValueTemplate(up =>  up match {
+        case Full(up1) => up1.repo match {
+          case Full(repo) =>  Templates("repo" :: "commit" :: "one" :: Nil) openOr NodeSeq.Empty
+          case _ => Templates("404" :: Nil) openOr NodeSeq.Empty
+        }
+        case _ => Templates("404" :: Nil) openOr NodeSeq.Empty
+      })
 
     val newPullRequestPage = Menu.params[RepoPage]("newPullRequestPage",
       new LinkText[RepoPage](urp => Text("Repo " + urp.repoName)),
@@ -203,7 +259,13 @@ class Boot extends Loggable {
         case _ => Empty
       },
       urp => urp.userName :: urp.repoName :: Nil) / * / * / "pull-requests" / "new" >>
-      Template(() => Templates("repo" :: "pull-request" :: "new" :: Nil) openOr NodeSeq.Empty)
+      ValueTemplate(rp =>  rp match {
+        case Full(up1) => up1.repo match {
+          case Full(repo) if(repo.canPush_?(UserDoc.currentUser)) => Templates("repo" :: "pull-request" :: "new" :: Nil) openOr NodeSeq.Empty
+          case _ => Templates("404" :: Nil) openOr NodeSeq.Empty
+        }
+        case _ => Templates("404" :: Nil) openOr NodeSeq.Empty
+      })
 
     val allPullRequestPage = Menu.params[RepoPage]("allPullRequestPage",
       new LinkText[RepoPage](urp => Text("Repo " + urp.repoName)),
@@ -212,7 +274,13 @@ class Boot extends Loggable {
         case _ => Empty
       },
       urp => urp.userName :: urp.repoName :: Nil) / * / * / "pull-requests" >>
-      Template(() => Templates("repo" :: "pull-request" :: "all" :: Nil) openOr NodeSeq.Empty)  >> LocGroup("repo")
+      ValueTemplate(up =>  up match {
+        case Full(up1) => up1.repo match {
+          case Full(repo) =>  Templates("repo" :: "pull-request" :: "all" :: Nil) openOr NodeSeq.Empty
+          case _ => Templates("404" :: Nil) openOr NodeSeq.Empty
+        }
+        case _ => Templates("404" :: Nil) openOr NodeSeq.Empty
+      })
 
     val onePullRequestPage = Menu.params[PullRequestRepoPage]("onePullRequestPage",
       new LinkText[PullRequestRepoPage](urp => Text("Repo " + urp.repoName)),
@@ -221,7 +289,13 @@ class Boot extends Loggable {
         case _ => Empty
       },
       urp => urp.userName :: urp.repoName :: urp.pullRequestId :: Nil) / * / * / "pull-request" / * >>
-      Template(() => Templates("repo" :: "pull-request" :: "one" :: Nil) openOr NodeSeq.Empty)
+      ValueTemplate(up =>  up match {
+        case Full(up1) => up1.repo match {
+          case Full(repo) =>   Templates("repo" :: "pull-request" :: "one" :: Nil) openOr NodeSeq.Empty
+          case _ => Templates("404" :: Nil) openOr NodeSeq.Empty
+        }
+        case _ => Templates("404" :: Nil) openOr NodeSeq.Empty
+      })
 
     val signInPage = Menu.i("Sign In") / "user" / "m" / "signin"
 
@@ -256,7 +330,7 @@ class Boot extends Loggable {
     LiftRules.statelessRewrite.append {
       case RewriteRequest(ParsePath("index" :: Nil, _, _, true), _, _) =>
 
-        RewriteResponse("index" :: Nil, true)
+        RewriteResponse("user" :: "m" :: "signin" :: Nil, true)
       case RewriteRequest(ParsePath(user :: Nil, _, _, false), _, _) =>
 
         RewriteResponse("list" :: user :: Nil, Map[String, String]())
