@@ -48,8 +48,8 @@ object AuthOps extends Loggable {
             if (ssh_key.isEmpty) S.error("Ssh Key field is empty")
         }, "placeholder" -> "Enter your ssh key",
         "class" -> "textfield",
-        "cols" -> "40", "rows" -> "20"))  &
-          "button" #> SHtml.button("Register", addNewUser, "class" -> "button")
+        "cols" -> "40", "rows" -> "20")) &
+      "button" #> SHtml.button("Register", addNewUser, "class" -> "button")
   }
 
   private def addNewUser() = {
@@ -58,16 +58,18 @@ object AuthOps extends Loggable {
       UserDoc where (_.email eqs email) get match {
         case Some(uu) => S.error("This email already registered")
         case None => {
-          UserDoc where (_.login eqs login) get match {
-            case Some(uu) => S.error("This login already used")
-            case None => {
-              val u = UserDoc.createRecord.email(email).login(login).password(password).save
-              SshKeyDoc.createRecord.ownerId(u.id.is).rawValue(ssh_key).save
+          if (!login.matches("""[a-zA-Z0-9\.\-]+""")) S.error("Login can contains only ASCII letters, digits, .(point), -")
+          else
+            UserDoc where (_.login eqs login) get match {
+              case Some(uu) => S.error("This login already used")
+              case None => {
+                val u = UserDoc.createRecord.email(email).login(login).password(password).save
+                SshKeyDoc.createRecord.ownerId(u.id.is).rawValue(ssh_key).save
 
-              logger.debug("User added to DB")
-              UserDoc.logUserIn(u, () => S.redirectTo(u.homePageUrl))
+                logger.debug("User added to DB")
+                UserDoc.logUserIn(u, () => S.redirectTo(u.homePageUrl))
+              }
             }
-          }
 
         }
       }

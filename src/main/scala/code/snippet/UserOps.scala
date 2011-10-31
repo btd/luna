@@ -11,11 +11,10 @@ import util.Helpers._
 import http._
 import common._
 import code.model.{CollaboratorDoc, UserDoc, RepositoryDoc}
-import js.jquery.JqJE._
-import js.jquery.JqJsCmds._
-import util.PassThru
 import SnippetHelper._
-import xml.{Node, NodeSeq, Text}
+import xml.{NodeSeq, Text}
+
+import com.foursquare.rogue.Rogue._
 
 /**
  * User: denis.bardadym
@@ -34,7 +33,7 @@ class UserOps(up: UserPage) extends Loggable {
           case Full(cu) if (u.login.get == cu.login.get) => {
             "input" #> SHtml.text(newRepositoryName, {
               value: String =>
-                newRepositoryName = value.trim //TODO добавить проверку, что только валидные символы
+                newRepositoryName = value.trim
                 if (newRepositoryName.isEmpty) S.error("Name field is empty")
             },
             "placeholder" -> "Repo name", "class" -> "textfield large") &
@@ -46,7 +45,6 @@ class UserOps(up: UserPage) extends Loggable {
       case _ => "*" #> NodeSeq.Empty
     }
   }
-
 
 
   def renderAvailableRepositoryList = {
@@ -75,8 +73,14 @@ class UserOps(up: UserPage) extends Loggable {
   private def createRepository() = {
     logger.debug("try to add new repository")
 
+    if (!newRepositoryName.matches("""[a-zA-Z0-9\.\-]+""")) S.error("Repository name can contains only ASCII letters, digits, .(point), -")
+    else {
+      RepositoryDoc where (_.ownerId eqs up.user.get.id.get) get match {
+        case Some(_) => S.error("You already have repository with such name")
+        case None => RepositoryDoc.createRecord.name(newRepositoryName).ownerId(up.user.get.id.is).save
+      }
 
-    RepositoryDoc.createRecord.name(newRepositoryName).ownerId(up.user.get.id.is).save
+    }
 
 
   }

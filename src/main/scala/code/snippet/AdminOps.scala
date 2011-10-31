@@ -37,20 +37,20 @@ class AdminUserOps(up: UserPage) extends Loggable {
         "name=email" #> SHtml.text(user.email.get, {
           value: String =>
             email = value.trim
-            if (email.isEmpty) S.error("Email field are empty")
+            if (email.isEmpty) S.error("Email field is empty")
         },
         "placeholder" -> "email@example.com", "class" -> "textfield large") &
           "name=password" #>
             SHtml.password(user.password.get, {
               value: String =>
                 password = value.trim
-                if (password.isEmpty) S.error("Password field are empty")
+                if (password.isEmpty) S.error("Password field is empty")
             }, "placeholder" -> "password", "class" -> "textfield large") &
           "name=login" #>
             SHtml.text(user.login.get, {
               value: String =>
                 login = value.trim
-                if (login.isEmpty) S.error("Login field are empty")
+                if (login.isEmpty) S.error("Login field is empty")
             }, "placeholder" -> "login", "class" -> "textfield large") &
           "button" #>
             SHtml.button("Update", updateUser, "class" -> "button")
