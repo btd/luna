@@ -9,12 +9,11 @@ import net.liftweb.mongodb.record.{MongoMetaRecord, MongoRecord}
 import net.liftweb._
 
 import common._
-import mongodb.record.field.{MongoPasswordField, ObjectIdRefField, ObjectIdPk}
+import mongodb.record.field.ObjectIdPk
 import util.Helpers._
 import http.{CleanRequestVarOnSessionTransition, SessionVar, RequestVar, S}
 import record.field._
 import util._
-import json.JsonDSL._
 import org.bson.types.ObjectId
 
 /**
@@ -25,13 +24,15 @@ import org.bson.types.ObjectId
 
 class UserDoc private() extends MongoRecord[UserDoc] with ObjectIdPk[UserDoc] {
 
-  object email extends StringField(this, 50) //уникальный и not null может надо будет добавить хоть какую то валидацию (н-р что там есть @)
-  object login extends StringField(this, 50) //уникальный и not null
+  object email extends StringField(this, 50)
+
+  object login extends StringField(this, 50)
+
   object password extends StringField(this, 50)
 
   def meta = UserDoc
 
-  def keys = SshKeyDoc.findAll("ownerId",id.is)
+  def keys = SshKeyDoc.findAll("ownerId", id.is)
 
   def repos = RepositoryDoc.findAll("ownerId", id.is)
 
@@ -41,7 +42,7 @@ class UserDoc private() extends MongoRecord[UserDoc] with ObjectIdPk[UserDoc] {
 object UserDoc extends UserDoc with MongoMetaRecord[UserDoc] {
   override def collectionName: String = "users"
 
-def loggedIn_? = {
+  def loggedIn_? = {
     currentUserId.isDefined
   }
 
@@ -83,16 +84,16 @@ def loggedIn_? = {
     override lazy val __nameSalt = Helpers.nextFuncName
   }
 
-  /*
-  private object curUserId extends SessionVar[Box[String]](Full("btd")) {
-    override lazy val __nameSalt = Helpers.nextFuncName
-  }*/
-  //TODO только для тестов
+
 
 
   def currentUserId: Box[ObjectId] = curUserId.is
 
-  private object curUser extends RequestVar[Box[UserDoc]](tryo {UserDoc.find("_id", currentUserId.get).get } or {Empty}) with CleanRequestVarOnSessionTransition {
+  private object curUser extends RequestVar[Box[UserDoc]](tryo {
+    UserDoc.find("_id", currentUserId.get).get
+  } or {
+    Empty
+  }) with CleanRequestVarOnSessionTransition {
     override lazy val __nameSalt = Helpers.nextFuncName
   }
 

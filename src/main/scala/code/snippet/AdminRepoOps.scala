@@ -85,7 +85,7 @@ class AdminRepoOps(urp: RepoPage) extends Loggable {
       SHtml.text(collaborator_login, {
         value: String =>
           collaborator_login = value.trim
-          if (collaborator_login.isEmpty) S.error("Login field are empty")
+          if (collaborator_login.isEmpty) S.error("collaborators", "Login field is empty")
       }, "placeholder" -> "login", "class" -> "textfield large") &
       "button" #> SHtml.button("Add collaborator", addNewCollaborator, "class" -> "button", "id" -> "add_collaborator_button")
   }
@@ -96,7 +96,7 @@ class AdminRepoOps(urp: RepoPage) extends Loggable {
       SHtml.textarea(ssh_key, {
         value: String =>
           ssh_key = value.replaceAll("^\\s+", "")
-          if (ssh_key.isEmpty) S.error("Ssh Key are empty")
+          if (ssh_key.isEmpty) S.error("keys", "Ssh Key field is empty")
       }, "placeholder" -> "Enter your ssh key",
       "class" -> "textfield",
       "cols" -> "40", "rows" -> "20") &
@@ -107,9 +107,11 @@ class AdminRepoOps(urp: RepoPage) extends Loggable {
   private def addNewKey() = {
     urp.repo match {
       case Full(r) => {
-        SshKeyDoc.createRecord.ownerId(r.ownerId.is).rawValue(ssh_key).ownerRepoId(r.id.is).save
+        if (!ssh_key.isEmpty) {
+          SshKeyDoc.createRecord.ownerId(r.ownerId.is).rawValue(ssh_key).ownerRepoId(r.id.is).save
+        }
       }
-      case _ => S.error("Invaid repo name") //TODO надо спросить у ребят как лучше такие вещи делать
+      case _ => S.error("Invaid repo name")
     }
 
 
@@ -120,11 +122,11 @@ class AdminRepoOps(urp: RepoPage) extends Loggable {
       case Full(r) => {
         UserDoc.find("login", collaborator_login) match {
           case Full(u) => CollaboratorDoc.createRecord.userId(u.id.get).repoId(r.id.get).save
-          case _ => S.error("Invaid collaborator name")
+          case _ => S.error("collaborators", "Invaid collaborator name")
         }
 
       }
-      case _ => S.error("Invaid repo name") //TODO надо спросить у ребят как лучше такие вещи делать
+      case _ => S.error("Invaid repo name")
     }
   }
 
@@ -150,8 +152,21 @@ class AdminRepoOps(urp: RepoPage) extends Loggable {
   private def updateRepo() = {
     urp.repo match {
       case Full(repo) => {
-        repo.name(name).save
-        S.redirectTo("/admin" + repo.homePageUrl)
+        if (!name.isEmpty) {
+          if (repo.owner.repos.contains((r: RepositoryDoc) => r.name.get == name)) {
+            S.error("repo", "Invalid repo")
+          } else {
+            if (!name.matches("""[a-zA-Z0-9\.\-]+""")) {
+              S.error("repo", "Repo name can contains only ASCII letters, digits, .(point), -")
+            }
+            else {
+              repo.name(name).saveTheRecord
+              S.redirectTo("/admin" + repo.homePageUrl)
+            }
+
+          }
+
+        }
       }
       case _ => S.error("Invalid repo")
     }
@@ -165,7 +180,7 @@ class AdminRepoOps(urp: RepoPage) extends Loggable {
   }
 
   def processDelete() = urp.repo match {
-      case Full(repo) => {
+    case Full(repo) => {
       CollaboratorDoc where (_.repoId eqs repo.id.get) bulkDelete_!!
 
       PullRequestDoc where (_.destRepoId eqs repo.id.get) bulkDelete_!!

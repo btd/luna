@@ -3,12 +3,17 @@
 
     <div class="options_holder">
         <h2 class="font large">Personal information</h2>
+
         <form class="lift:AdminUserOps.person?form=post">
             <input class="textfield large font" name="login" type="text"/>
             <br/>
             <input class="textfield large font" name="email" type="text"/>
             <br/>
             <input class="textfield large font" name="password" type="password"/>
+
+            <div class="lift:Msg?id=person&errorClass=error">
+
+            </div>
             <br/>
             <button class="button">Update</button>
         </form>
@@ -16,13 +21,18 @@
     <hr/>
     <div class="options_holder">
         <h2 class="font large">Ssh Keys</h2>
+
         <div class="lift:AdminUserOps.keys"></div>
         <div id="add_key_holder">
-        <form class="lift:AdminUserOps.addKey?form=post add_key_form">
-            <textarea class="textfield" name="ssh_key" cols="40" rows="20" placeholder="Your public ssh key" title="Enter ssh public key"></textarea>
-            <br/>
-            <button class="button">Add</button>
-        </form>
+            <form class="lift:AdminUserOps.addKey?form=post add_key_form">
+                <textarea class="textfield" name="ssh_key" cols="40" rows="20" placeholder="Your public ssh key"
+                          title="Enter ssh public key"></textarea>
+                <br/>
+                <button class="button">Add</button>
+            </form>
+            <div class="lift:Msg?id=keys&errorClass=error">
+
+            </div>
         </div>
     </div>
 </div>

@@ -27,7 +27,7 @@ class SshKeyDoc private() extends MongoRecord[SshKeyDoc] with ObjectIdPk[SshKeyD
   }
 
   def acceptableFor_?(repo: RepositoryDoc) = ownerRepoId.obj match {
-    case Full(r) => r.name == repo.name //ключ репозитория    TODO надо здесь get??
+    case Full(r) => r.name.get == repo.name.get //ключ репозитория
     case _ => true //ключ пользователя
   }
 

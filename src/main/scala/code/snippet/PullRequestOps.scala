@@ -103,7 +103,7 @@ class PullRequestOps(urp: RepoPage) extends Loggable {
         <p>{a(pr.srcRepoId.obj.get.sourceTreeUrl(pr.srcRef.get), Text(pr.srcRepoId.obj.get.owner.login.get + "/" + pr.srcRepoId.obj.get.name.get + "@" + pr.srcRef))} &rarr;
         {a(pr.destRepoId.obj.get.sourceTreeUrl(pr.srcRef.get), Text(pr.destRepoId.obj.get.owner.login.get + "/" + pr.destRepoId.obj.get.name.get + "@" + pr.destRef))} created by
           {a(pr.creatorId.obj.get.homePageUrl, Text(pr.creatorId.obj.get.login.get))} at {SnippetHelper.dateFormatter.format(pr.creationDate.get)}</p>
-        <p>{a(pr.homePageUrl, Text(pr.description.get))}</p>
+        <p>{a(pr.homePageUrl, Text(if(!pr.description.get.isEmpty) pr.description.get else "No description"))}</p>
         </div>
       })
       case _ => PassThru
