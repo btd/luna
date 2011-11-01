@@ -181,15 +181,7 @@ class AdminRepoOps(urp: RepoPage) extends Loggable {
 
   def processDelete() = urp.repo match {
     case Full(repo) => {
-      CollaboratorDoc where (_.repoId eqs repo.id.get) bulkDelete_!!
-
-      PullRequestDoc where (_.destRepoId eqs repo.id.get) bulkDelete_!!
-
-      PullRequestDoc where (_.srcRepoId eqs repo.id.get) bulkDelete_!!
-
-      SshKeyDoc where (_.ownerRepoId eqs repo.id.get) bulkDelete_!!
-
-      RepositoryDoc where (_.forkOf eqs repo.id.get) modify (_.forkOf setTo null) updateMulti
+      repo.deleteDependend
 
       repo.delete_!
 

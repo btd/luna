@@ -16,6 +16,8 @@ import record.field._
 import util._
 import org.bson.types.ObjectId
 
+import com.foursquare.rogue.Rogue._
+
 /**
  * User: denis.bardadym
  * Date: 9/30/11
@@ -37,6 +39,19 @@ class UserDoc private() extends MongoRecord[UserDoc] with ObjectIdPk[UserDoc] {
   def repos = RepositoryDoc.findAll("ownerId", id.is)
 
   def homePageUrl = "/" + login.is
+
+  def deleteDependend = {
+    repos.foreach(r => {
+      r.deleteDependend
+      r.delete_!
+    })
+
+    CollaboratorDoc where (_.userId eqs id.get) bulkDelete_!!
+
+    SshKeyDoc where (_.ownerId eqs id.get) bulkDelete_!!
+
+    PullRequestDoc where (_.creatorId eqs id.get) bulkDelete_!!
+  }
 }
 
 object UserDoc extends UserDoc with MongoMetaRecord[UserDoc] {

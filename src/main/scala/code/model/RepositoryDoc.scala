@@ -15,8 +15,8 @@ import net.liftweb.http.S
 import org.apache.commons.codec.digest.DigestUtils
 import net.liftweb.mongodb.record.field.{ObjectIdRefField, ObjectIdPk}
 import org.eclipse.jgit.revwalk.RevWalk
-import org.eclipse.jgit.treewalk.{CanonicalTreeParser, TreeWalk}
-import org.eclipse.jgit.treewalk.filter.{PathFilter, TreeFilter}
+import org.eclipse.jgit.treewalk.TreeWalk
+import org.eclipse.jgit.treewalk.filter.PathFilter
 
 import org.eclipse.jgit.lib.{Constants, ObjectId, FileMode, RepositoryCache}
 import net.liftweb.common._
@@ -48,7 +48,8 @@ case class Tree(path: String, id: ObjectId) extends SourceElement {
 }
 
 class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk[RepositoryDoc] with Loggable {
-//имя папки репозитория not null unique primary key хеш наверно SHA-1
+
+  //имя папки репозитория not null unique primary key хеш наверно SHA-1
   object fsName extends StringField(this, 50, DigestUtils.sha(id.get.toString).toString)
 
   //имя репозитория для пользователя not null
@@ -56,14 +57,14 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
 
   //открытый или закрытый репозиторий not null default true
   object open_? extends BooleanField(this, true)
-//id того репозитория откуда был склонирован
+
+  //id того репозитория откуда был склонирован
   object forkOf extends ObjectIdRefField(this, RepositoryDoc) {
-       override def optional_? = true
+    override def optional_? = true
   }
 
   // владельц репозитория not null
   object ownerId extends ObjectIdRefField(this, UserDoc)
-
 
 
   def owner = ownerId.obj.get
@@ -175,7 +176,8 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
 
     private def fs_exists_? = FileKey.resolve(new File(fsPath), FS.DETECTED) != null
 
-    def inited_? = {  //TODO сделать получше
+    def inited_? = {
+      //TODO сделать получше
       val rev = new RevWalk(fs_repo)
       val res = tryo {
         rev.parseCommit(fs_repo.resolve(currentBranch))
@@ -205,81 +207,92 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
     def fs_repo_! = fs_repo
 
     def log(commit: String) = {
-        scala.collection.JavaConversions.asScalaIterator((new Git(fs_repo)).log.add(fs_repo.resolve(commit)).call.iterator)
+      scala.collection.JavaConversions.asScalaIterator((new Git(fs_repo)).log.add(fs_repo.resolve(commit)).call.iterator)
     }
 
     def log(commit: String, path: String) = {
-        scala.collection.JavaConversions.asScalaIterator((new Git(fs_repo)).log.add(fs_repo.resolve(commit)).addPath(path).call.iterator)
+      scala.collection.JavaConversions.asScalaIterator((new Git(fs_repo)).log.add(fs_repo.resolve(commit)).addPath(path).call.iterator)
     }
 
     def diff(commit1: String, commit2: String) = {
-        import org.eclipse.jgit.diff.DiffEntry.ChangeType._
+      import org.eclipse.jgit.diff.DiffEntry.ChangeType._
 
       val diffList = new ListBuffer[String]
+      val statusList = tryo {
+        val baos = new ByteArrayOutputStream
+        val formatter = new DiffFormatter(baos)
+        formatter.setRepository(fs_repo)
+        formatter.setDetectRenames(true)
 
-      val baos = new ByteArrayOutputStream
-      val formatter = new DiffFormatter(baos)
-      formatter.setRepository(fs_repo)
-      formatter.setDetectRenames(true)
 
-      val entries = scala.collection.JavaConversions.asScalaBuffer(formatter.scan(fs_repo.resolve(commit1), fs_repo.resolve(commit2)) )
+        val entries = scala.collection.JavaConversions.asScalaBuffer(formatter.scan(fs_repo.resolve(commit1), fs_repo.resolve(commit2)))
 
-      val statusList = entries.map { ent =>
-          formatter.format(ent)
-          formatter.flush
+        val sl = entries.map {
+          ent =>
+            formatter.format(ent)
+            formatter.flush
 
-          diffList += baos.toString("UTF-8")
+            diffList += baos.toString("UTF-8")
 
-          baos.reset
+            baos.reset
 
-          ent.getChangeType match {
-            case ADD => Added(ent.getNewPath)
-						case DELETE => Deleted(ent.getOldPath)
-            case MODIFY => Modified(ent.getNewPath)
-            case COPY => Copied(ent.getOldPath, ent.getNewPath)
-            case RENAME => Renamed(ent.getOldPath, ent.getNewPath)
-          }
+            ent.getChangeType match {
+              case ADD => Added(ent.getNewPath)
+              case DELETE => Deleted(ent.getOldPath)
+              case MODIFY => Modified(ent.getNewPath)
+              case COPY => Copied(ent.getOldPath, ent.getNewPath)
+              case RENAME => Renamed(ent.getOldPath, ent.getNewPath)
+            }
+        }
+
+
+        formatter.release
+
+        sl.toList
+      } openOr {
+        Nil
       }
 
-
-      formatter.release
-
-      (statusList.toList -> diffList.toList)
+      (statusList -> diffList.toList)
     }
 
-    def diff(commit: String) : Pair[List[Change], List[String]] = diff(commit + "^1", commit)
+    def diff(commit: String): Pair[List[Change], List[String]] = diff(commit + "^1", commit)
 
-     def clone(user: UserDoc): RepositoryDoc = {
-       val uri = new URIish(fsPath)
-       val clonnedDoc = RepositoryDoc.createRecord.ownerId(user.id.get).name(chooseCloneName(user)).forkOf(id.get)
-       Git.cloneRepository.setURI(uri.toString)
-         .setDirectory(new File(clonnedDoc.git.fsPath))
-         .setBare(true)
-         .setCloneAllBranches(true)
-         .call
-       clonnedDoc.save
-     }
+    def clone(user: UserDoc): RepositoryDoc = {
+      val uri = new URIish(fsPath)
+      val clonnedDoc = RepositoryDoc.createRecord.ownerId(user.id.get).name(chooseCloneName(user)).forkOf(id.get)
+      Git.cloneRepository.setURI(uri.toString)
+        .setDirectory(new File(clonnedDoc.git.fsPath))
+        .setBare(true)
+        .setCloneAllBranches(true)
+        .call
+      clonnedDoc.save
+    }
 
-     private def chooseCloneName(user: UserDoc):String = {
-         user.repos.filter(_.name.get.startsWith(name.get)).map(_.name.get) match {
-           case Nil => name.get
-           case l  => name.get + "-" + (l.map(n => tryo { asInt(n.split("-")(1)) } openOr { Empty }).map((x : Box[Int]) => (x match {
-             case Full(i : Int) => i
-             case _ => 0
-           })).max + 1)
-         }
-     }
+    private def chooseCloneName(user: UserDoc): String = {
+      user.repos.filter(_.name.get.startsWith(name.get)).map(_.name.get) match {
+        case Nil => name.get
+        case l => name.get + "-" + (l.map(n => tryo {
+          asInt(n.split("-")(1))
+        } openOr {
+          Empty
+        }).map((x: Box[Int]) => (x match {
+          case Full(i: Int) => i
+          case _ => 0
+        })).max + 1)
+      }
+    }
 
   }
 
 
-  lazy val pullRequestUrl =  homePageUrl + "/pull-requests"
+  lazy val pullRequestUrl = homePageUrl + "/pull-requests"
 
   lazy val homePageUrl = "/" + owner.login.get + "/" + name.get
 
   lazy val sourceTreeUrl = homePageUrl + "/tree/" + git.currentBranch
 
-  lazy val commitsUrl =  homePageUrl + "/commits/" + git.currentBranch
+  lazy val commitsUrl = homePageUrl + "/commits/" + git.currentBranch
 
   def commitsUrl(commit: String) = homePageUrl + "/commits/" + commit
 
@@ -293,7 +306,7 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
 
   lazy val privateSshUrl = owner.login.get + "@" + S.hostName + ":" + name.get
 
-  def privateSshUrl(user: UserDoc) : String = owner_? (Full(user)) match {
+  def privateSshUrl(user: UserDoc): String = owner_?(Full(user)) match {
     case true => privateSshUrl
     case false => user.login.is + "@" + S.hostName + ":" + owner.login.get + "/" + name.get
   }
@@ -313,8 +326,20 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
   }
 
   def owner_?(user: Box[UserDoc]) = user match {
-    case Full(u) if(u.login.get == owner.login.get) => true
+    case Full(u) if (u.login.get == owner.login.get) => true
     case _ => false
+  }
+
+  def deleteDependend = {
+    CollaboratorDoc where (_.repoId eqs id.get) bulkDelete_!!
+
+      PullRequestDoc where (_.destRepoId eqs id.get) bulkDelete_!!
+
+      PullRequestDoc where (_.srcRepoId eqs id.get) bulkDelete_!!
+
+      SshKeyDoc where (_.ownerRepoId eqs id.get) bulkDelete_!!
+
+      RepositoryDoc where (_.forkOf eqs id.get) modify (_.forkOf setTo null) updateMulti
   }
 
   def meta = RepositoryDoc
@@ -331,12 +356,12 @@ object RepositoryDoc extends RepositoryDoc with MongoMetaRecord[RepositoryDoc] {
 
 abstract class Change {}
 
-    case class Added(path: String) extends Change {}
+case class Added(path: String) extends Change {}
 
-    case class Deleted(path: String) extends Change {}
+case class Deleted(path: String) extends Change {}
 
-    case class Modified(path: String) extends Change {}
+case class Modified(path: String) extends Change {}
 
-    case class Copied(oldPath: String, newPath: String) extends Change {}
+case class Copied(oldPath: String, newPath: String) extends Change {}
 
-    case class Renamed(oldPath: String, newPath: String) extends Change {}
+case class Renamed(oldPath: String, newPath: String) extends Change {}

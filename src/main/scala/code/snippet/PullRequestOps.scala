@@ -11,8 +11,8 @@ import http._
 import common._
 import util._
 import Helpers._
-import xml.Text
-import code.model.{UserDoc, PullRequestDoc, RepositoryDoc}
+import scala.xml._
+import code.model._
 import code.snippet.SnippetHelper._
 
 /**
@@ -45,13 +45,13 @@ class PullRequestOps(urp: RepoPage) extends Loggable {
             if (sourceRef.isEmpty) S.error("Source reference is empty")
           }, "class" -> "textfield")
       }
-      case _ => PassThru
+      case _ => "*" #> NodeSeq.Empty
     }
   }
 
   def renderAllClones = {
     urp.repo match {
-      case Full(repo) => {
+      case Full(repo) if (!repo.forkOf.valueBox.isEmpty)=> {
         ".repo_selector" #> SHtml.selectObj[RepositoryDoc]((repo.forkOf.obj.get -> (repo.forkOf.obj.get.owner.login + "/" + repo.forkOf.obj.get.name.get)) :: RepositoryDoc.allClonesExceptOwner(repo).map(r => r -> (r.owner.login + "/" + r.name.get)),
           repo.forkOf.obj, (r: RepositoryDoc) => {
             destRepo = r
@@ -61,7 +61,7 @@ class PullRequestOps(urp: RepoPage) extends Loggable {
             if (destRef.isEmpty) S.error("Destination reference is empty")
           }, "class" -> "textfield")
       }
-      case _ => PassThru
+      case _ => "*" #> NodeSeq.Empty
     }
   }
 
@@ -76,7 +76,7 @@ class PullRequestOps(urp: RepoPage) extends Loggable {
           "class" -> "textfield",
           "cols" -> "40", "rows" -> "20")
       }
-      case _ => PassThru
+      case _ => "*" #> NodeSeq.Empty
     }
   }
 
@@ -106,7 +106,7 @@ class PullRequestOps(urp: RepoPage) extends Loggable {
         <p>{a(pr.homePageUrl, Text(if(!pr.description.get.isEmpty) pr.description.get else "No description"))}</p>
         </div>
       })
-      case _ => PassThru
+      case _ => "*" #> NodeSeq.Empty
     }
   }
 
@@ -117,6 +117,6 @@ class PullRequestOps(urp: RepoPage) extends Loggable {
         <a href={r.commitsUrl}>Commits</a>
       </div>
     }
-    case _ => PassThru
+    case _ => "*" #> NodeSeq.Empty
   }
 }

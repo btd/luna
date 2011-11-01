@@ -148,4 +148,18 @@ class AdminUserOps(up: UserPage) extends Loggable {
 
 
   }
+
+  def delete = up.user match {
+    case Full(u) => "button" #> SHtml.button("Delete", processDelete, "class" -> "button")
+    case _ => "*" #> NodeSeq.Empty
+  }
+
+  def processDelete() =  up.user match {
+    case Full(u) => {
+      u.deleteDependend
+      u.delete_!
+    }
+    case _ => "*" #> NodeSeq.Empty
+  }
+
 }
