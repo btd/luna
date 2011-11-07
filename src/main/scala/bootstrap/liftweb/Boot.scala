@@ -326,6 +326,7 @@ class Boot extends Loggable {
 
     //)
     LiftRules.ajaxRetryCount = Full(1)
+     LiftRules.ajaxPostTimeout = 15000
 
     LiftRules.statelessRewrite.append {
       case RewriteRequest(ParsePath("index" :: Nil, _, _, true), _, _) =>

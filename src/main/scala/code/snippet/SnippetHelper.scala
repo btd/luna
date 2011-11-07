@@ -93,7 +93,7 @@ object SnippetHelper extends Loggable{
     </div>
 
   def cloneButtonAppend(r: RepositoryDoc, user: UserDoc) : NodeSeq =
-  SHtml.a(() => jsExpToJsCmd ({Jq(".repo_list") ~> JqAppend(urlBoxXhtml(r.git.clone(user), repoName _, cloneButtonAppend))}), <span class="ui-icon ui-icon-shuffle "/>, "class" -> "admin_button")
+  SHtml.a(() => jsExpToJsCmd(Jq(".repo_list") ~> JqAppend(urlBoxXhtml(r.git.clone(user), repoName _, cloneButtonAppend))), <span class="ui-icon ui-icon-shuffle "/>, "class" -> "admin_button")
 
   def cloneButtonRedirect(r: RepositoryDoc, user: UserDoc) =
   SHtml.a(() => S.redirectTo(r.git.clone(user).sourceTreeUrl), <span class="ui-icon ui-icon-shuffle "/>, "class" -> "admin_button")
