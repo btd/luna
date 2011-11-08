@@ -5,7 +5,7 @@
 
 package code.snippet
 
-import bootstrap.liftweb.UserPage
+import bootstrap.liftweb._
 import net.liftweb._
 import util.Helpers._
 import http._
@@ -22,9 +22,13 @@ import com.foursquare.rogue.Rogue._
  * Time: 2:16 PM
  */
 
-class UserOps(up: UserPage) extends Loggable {
+class UserOps(up: WithUser) extends Loggable {
 
   private var newRepositoryName = ""
+
+  def renderUserName = {
+    "*" #> up.user.get.login.get
+  }
 
   def renderNewRepositoryForm = {
     up.user match {
@@ -75,7 +79,7 @@ class UserOps(up: UserPage) extends Loggable {
 
     if (!newRepositoryName.matches("""[a-zA-Z0-9\.\-]+""")) S.error("Repository name can contains only ASCII letters, digits, .(point), -")
     else {
-      RepositoryDoc where (_.ownerId eqs up.user.get.id.get) get match {
+      RepositoryDoc where (_.ownerId eqs up.user.get.id.get) and (_.name eqs newRepositoryName) get match {
         case Some(_) => S.error("You already have repository with such name")
         case None => RepositoryDoc.createRecord.name(newRepositoryName).ownerId(up.user.get.id.is).save
       }

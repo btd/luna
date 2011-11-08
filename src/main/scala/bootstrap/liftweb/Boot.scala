@@ -21,7 +21,7 @@ trait WithUser {
   lazy val user = UserDoc.find("login", userName)
 }
 
-case class UserPage(userName: String) extends WithUser {}
+case class UserPage(userName: String) extends WithUser
 
 trait WithRepo extends WithUser {
   def repoName: String
@@ -176,7 +176,7 @@ class Boot extends Loggable {
             }
           }
           case _ => Empty
-        })  >> LocGroup("repo")
+        }) >> LocGroup("repo")
 
     val sourceTreePage = Menu.params[SourceElementPage]("sourceTreePage",
       new LinkText[SourceElementPage](stp => Text("Repo " + stp.repoName)),
