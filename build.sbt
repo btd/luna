@@ -17,7 +17,7 @@ resolvers ++= Seq (
 
 
 libraryDependencies ++= Seq (
-  "org.apache.sshd"     % "sshd-core" 	          % "0.5.0",
+  "org.apache.sshd"     % "sshd-core" 	          % "0.6.0",
   "org.eclipse.jgit"    % "org.eclipse.jgit"      % "1.1.0.201109151100-r",
   "commons-codec"       % "commons-codec"         % "1.5",
   "junit"               % "junit"                 % "4.8"                   % "test",
