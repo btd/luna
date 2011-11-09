@@ -19,6 +19,7 @@ resolvers ++= Seq (
 libraryDependencies ++= Seq (
   "org.apache.sshd"     % "sshd-core" 	          % "0.6.0",
   "org.eclipse.jgit"    % "org.eclipse.jgit"      % "1.1.0.201109151100-r",
+  "org.apache.mina"     % "mina-core"             % "2.0.4",
   "commons-codec"       % "commons-codec"         % "1.5",
   "junit"               % "junit"                 % "4.8"                   % "test",
   "net.liftweb"         %% "lift-webkit"          % "2.4-SNAPSHOT"          % "compile",
@@ -27,5 +28,5 @@ libraryDependencies ++= Seq (
   "net.liftweb"         %% "lift-mongodb-record"  % "2.4-SNAPSHOT"          % "compile",
   "com.foursquare"      %% "rogue"                % "1.0.27"                intransitive(),
   "org.eclipse.jetty"   % "jetty-webapp"          % "8.0.0.v20110901"       % "jetty",
-  "ch.qos.logback"      % "logback-classic"       % "0.9.26"
+  "ch.qos.logback"      % "logback-classic"       % "1.0.0"
   )
