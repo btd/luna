@@ -13,7 +13,7 @@ import code.model.UserDoc
  * To change this template use File | Settings | File Templates.
  */
 
-object MyMenu {
+class MyMenu {
   def your = {
     "*" #> (UserDoc.currentUser match {
       case Full(u) => <a href={"/" + u.login.get}>Your page</a>

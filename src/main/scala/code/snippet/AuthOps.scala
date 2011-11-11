@@ -15,7 +15,7 @@ import com.foursquare.rogue.Rogue._
  * To change this template use File | Settings | File Templates.
  */
 
-object AuthOps extends Loggable {
+class AuthOps extends Loggable {
   private var email = ""
   private var password = ""
   private var login = ""
