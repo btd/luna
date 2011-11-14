@@ -43,6 +43,13 @@ object SnippetHelper extends Loggable{
     }
   }
 
+  def cleanAll: NodeSeq => NodeSeq = "*" #> NodeSeq.Empty
+
+  def w[B](arg: Box[B])(f:(B) => (NodeSeq => NodeSeq)): NodeSeq => NodeSeq = arg match {
+    case Full(a) => f(a)
+    case _ => cleanAll
+  }
+
 
   def suffix(list: List[String]) : String = suffix(list, "/", "")
 

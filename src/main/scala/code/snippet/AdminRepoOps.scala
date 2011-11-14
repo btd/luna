@@ -5,7 +5,7 @@
 
 package code.snippet
 
-import bootstrap.liftweb.RepoPage
+import bootstrap.liftweb._
 import net.liftweb._
 import http._
 import js.jquery._
@@ -18,6 +18,7 @@ import com.foursquare.rogue.Rogue._
 import xml.{NodeSeq, Text}
 import code.model._
 import org.bson.types.ObjectId
+import SnippetHelper._
 
 /**
  * User: denis.bardadym
@@ -25,8 +26,7 @@ import org.bson.types.ObjectId
  * Time: 3:28 PM
  */
 
-class AdminRepoOps(urp: RepoPage) extends Loggable {
-  private var ssh_key = ""
+class AdminRepoOps(urp: WithRepo) extends Loggable with SshKeyUI {
   private var collaborator_login = ""
 
   private var name = ""
@@ -56,28 +56,8 @@ class AdminRepoOps(urp: RepoPage) extends Loggable {
     }
   }
 
-  def keys = {
-    urp.repo match {
-      case Full(r) => {
-        "*" #> <table class="keys_table font table">
-          {r.keys.flatMap(key => {
-            <tr id={key.id.get.toString}>
-              <td>
-                {key.comment}
-              </td>
-              <td>
-                {SHtml.a(Text("X")) {
-                key.delete_!
-                JqId(key.id.get.toString) ~> JqRemove()
-              }}
-              </td>
-            </tr>
-          })}
-        </table>
-
-      }
-      case _ => "*" #> "Invaid repo name"
-    }
+  def renderSshKeysTable = w(urp.repo) {repo =>
+    keysTable(repo.keys)
   }
 
   def addCollaborator = {
@@ -91,30 +71,12 @@ class AdminRepoOps(urp: RepoPage) extends Loggable {
   }
 
 
-  def addKey = {
-    "name=ssh_key" #>
-      SHtml.textarea(ssh_key, {
-        value: String =>
-          ssh_key = value.replaceAll("^\\s+", "")
-          if (ssh_key.isEmpty) S.error("keys", "Ssh Key field is empty")
-      }, "placeholder" -> "Enter your ssh key",
-      "class" -> "textfield",
-      "cols" -> "40", "rows" -> "20") &
-      "button" #> SHtml.button("Add key", addNewKey, "class" -> "button", "id" -> "add_key_button")
+  def renderAddKeyForm = w(urp.repo) {repo => sshKeyForm(addNewKey(repo))}
 
-  }
-
-  private def addNewKey() = {
-    urp.repo match {
-      case Full(r) => {
+  private def addNewKey(repo: RepositoryDoc)() = {
         if (!ssh_key.isEmpty) {
-          SshKeyDoc.createRecord.ownerId(r.ownerId.is).rawValue(ssh_key).ownerRepoId(r.id.is).save
+          SshKeyDoc.createRecord.ownerId(repo.ownerId.is).rawValue(ssh_key).ownerRepoId(repo.id.is).saveTheRecord
         }
-      }
-      case _ => S.error("Invaid repo name")
-    }
-
-
   }
 
   private def addNewCollaborator() = {
@@ -131,27 +93,18 @@ class AdminRepoOps(urp: RepoPage) extends Loggable {
   }
 
 
-  def repo = {
-    urp.repo match {
-      case Full(repo) => {
-        "name=name" #> SHtml.text(repo.name.get, {
+  def renderUpdateRepoForm = w(urp.repo) {repo => 
+      "name=name" #> SHtml.text(repo.name.get, {
           value: String =>
             name = value.trim
             if (name.isEmpty) S.error("Name field is empty")
         },
         "placeholder" -> "Name", "class" -> "textfield large") &
           "button" #>
-            SHtml.button("Update", updateRepo, "class" -> "button")
-      }
-      case _ => PassThru
-    }
+            SHtml.button("Update", updateRepo(repo), "class" -> "button")
+  }   
 
-
-  }
-
-  private def updateRepo() = {
-    urp.repo match {
-      case Full(repo) => {
+  private def updateRepo(repo: RepositoryDoc)() = {
         if (!name.isEmpty) {
           if (repo.owner.repos.contains((r: RepositoryDoc) => r.name.get == name)) {
             S.error("repo", "Invalid repo")
@@ -167,26 +120,18 @@ class AdminRepoOps(urp: RepoPage) extends Loggable {
           }
 
         }
-      }
-      case _ => S.error("Invalid repo")
-    }
   }
 
-  def delete = urp.repo match {
-    case Full(repo) => {
-      "button" #> SHtml.button("Delete", processDelete, "class" -> "button")
-    }
-    case _ => "*" #> NodeSeq.Empty
+  def renderDeleteRepo = w(urp.repo) {repo => 
+      "button" #> SHtml.button("Delete", processDelete(repo), "class" -> "button")
   }
 
-  def processDelete() = urp.repo match {
-    case Full(repo) => {
+  def processDelete(repo: RepositoryDoc)() = { 
+      val redirect = repo.owner.homePageUrl
       repo.deleteDependend
 
       repo.delete_!
 
-      S.redirectTo(urp.user.get.homePageUrl)
-    }
-    case _ => "*" #> NodeSeq.Empty
-  }
+      S.redirectTo(redirect)
+   }
 }

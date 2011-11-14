@@ -4,7 +4,7 @@
     <div class="options_holder">
         <h2 class="font large">Information</h2>
 
-        <form class="lift:AdminRepoOps.repo?form=post">
+        <form class="lift:AdminRepoOps.renderUpdateRepoForm?form=post">
             <input class="textfield large font" name="name" type="text"/>
             <br/>
             <button class="button">Update</button>
@@ -19,8 +19,8 @@
 
         <div class="lift:AdminRepoOps.collaborators"></div>
 
-        <div id="add_collaborator_holder">
-            <form class="lift:AdminRepoOps.addCollaborator?form=post add_collaborator_form">
+        <div>
+            <form class="lift:AdminRepoOps.addCollaborator?form=post add_collaborator_form replaceDialog" data-button-text="Add collaborator">
                 <input class="textfield large font" name="login" type="text"/>
                 <br/>
                 <button class="button">Add</button>
@@ -34,9 +34,16 @@
     <div class="options_holder">
         <h2 class="font large">Ssh Keys</h2>
 
-        <div class="lift:AdminRepoOps.keys"></div>
-        <div id="add_key_holder">
-            <form class="lift:AdminRepoOps.addKey?form=post add_key_form">
+        <div class="lift:AdminRepoOps.renderSshKeysTable">
+            <table class="keys font table">
+                <tr class="key" id="">
+                    <td class="key_name"></td>
+                    <td class="key_delete"></td>
+                </tr>
+            </table>
+        </div>
+        <div>
+            <form class="lift:AdminRepoOps.renderAddKeyForm?form=post  replaceDialog" data-button-text="Add key">
                 <textarea class="textfield" name="ssh_key" cols="40" rows="20" placeholder="Your public ssh key"
                           title="Enter ssh public key"></textarea>
                 <br/>
@@ -52,7 +59,7 @@
     <div class="options_holder">
         <h2 class="font large ui-state-highlight">WARNING</h2>
 
-        <form class="lift:AdminRepoOps.delete?form=post">
+        <form class="lift:AdminRepoOps.renderDeleteRepo?form=post">
 
             <button class="button">delete</button>
         </form>

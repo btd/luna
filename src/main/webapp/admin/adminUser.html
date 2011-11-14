@@ -4,7 +4,7 @@
     <div class="options_holder">
         <h2 class="font large">Personal information</h2>
 
-        <form class="lift:AdminUserOps.person?form=post">
+        <form class="lift:AdminUserOps.renderUserForm?form=post" >
             <input class="textfield large font" name="login" type="text"/>
             <br/>
             <input class="textfield large font" name="email" type="text"/>
@@ -22,9 +22,16 @@
     <div class="options_holder">
         <h2 class="font large">Ssh Keys</h2>
 
-        <div class="lift:AdminUserOps.keys"></div>
-        <div id="add_key_holder">
-            <form class="lift:AdminUserOps.addKey?form=post add_key_form">
+        <div class="lift:AdminUserOps.renderSshKeysTable">
+            <table class="keys font table">
+                <tr class="key" id="">
+                    <td class="key_name"></td>
+                    <td class="key_delete"></td>
+                </tr>
+            </table>
+        </div>
+        <div>
+            <form class="lift:AdminUserOps.renderAddKeyForm?form=post replaceDialog" data-button-text="Add key">
                 <textarea class="textfield" name="ssh_key" cols="40" rows="20" placeholder="Your public ssh key"
                           title="Enter ssh public key"></textarea>
                 <br/>
@@ -40,7 +47,7 @@
     <div class="options_holder">
         <h2 class="font large ui-state-highlight">WARNING</h2>
 
-        <form class="lift:AdminUserOps.delete?form=post">
+        <form class="lift:AdminUserOps.renderDeleteUser?form=post">
 
             <button class="button">delete</button>
         </form>

@@ -41,43 +41,20 @@ $(function() {
         ul.siblings("input").val(a.attr("href"));
         return false;
     });
-    if ($("form.sub_menu").children("input").length != 0) {
-        var dialog_add_repo = $("form.sub_menu").dialog({ autoOpen: false, modal: true, width: "600px" });
 
-        $("#sub_menu_holder").append("<button class='button'>Add repository</button>");
-        $("#sub_menu_holder > button").click(function() {
-            dialog_add_repo.dialog("open");
-            $("#create_repo_button").click(function() {
-                dialog_add_repo.dialog("close");
+    $("form.replaceDialog").each(function(i, form){
+        var el = $(form);
+        var newButton = $("<button class='button'>" + el.attr('data-button-text') + "</button>").click(function(){
+            el.dialog("open");
+            $('button', el).click(function(){
+                el.dialog.dialog("close");
                 return true;
-            })
+            });
             return false;
         });
-    }
-
-     var dialog_add_key= $("form.add_key_form").dialog({ autoOpen: false, modal: true, width: "600px" });
-
-        $("#add_key_holder").append("<button class='button'>Add key</button>");
-        $("#add_key_holder > button").click(function() {
-            dialog_add_key.dialog("open");
-            $("#add_key_button").click(function() {
-                dialog_add_key.dialog("close");
-                return true;
-            })
-            return false;
-        });
-
-    var dialog_add_collaborator= $("form.add_collaborator_form").dialog({ autoOpen: false, modal: true, width: "600px" });
-
-        $("#add_collaborator_holder").append("<button class='button'>Add collaborator</button>");
-        $("#add_collaborator_holder > button").click(function() {
-            dialog_add_collaborator.dialog("open");
-            $("#add_collaborator_holder").click(function() {
-                dialog_add_collaborator.dialog("close");
-                return true;
-            })
-            return false;
-        });
+        el.parent().append(newButton)
+        el.dialog({ autoOpen: false, modal: true, width: "600px" });        
+    });
 
     $(".selectmenu").selectmenu();
 

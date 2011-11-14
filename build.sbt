@@ -1,6 +1,6 @@
 name := "GitoChtoTo"
 
-version := "0.5-SNAPSHOT"
+version := "0.7-SNAPSHOT"
 
 seq(webSettings :_*)
 
@@ -12,7 +12,8 @@ checksums := Nil
 
 resolvers ++= Seq (
   "jgit-repository" at "http://download.eclipse.org/jgit/maven",
-  "scala-tools snapshots" at "http://scala-tools.org/repo-snapshots"
+  "scala-tools snapshots" at "http://scala-tools.org/repo-snapshots",
+  "my github repo" at "http://btd.github.com/maven2"
   )
 
 
@@ -21,6 +22,7 @@ libraryDependencies ++= Seq (
   "org.eclipse.jgit"    % "org.eclipse.jgit"      % "1.1.0.201109151100-r",
   "org.apache.mina"     % "mina-core"             % "2.0.4",
   "commons-codec"       % "commons-codec"         % "1.5",
+  "com.github.btd"      %% "scala-linguist"       % "1.0",
   "junit"               % "junit"                 % "4.8"                   % "test",
   "net.liftweb"         %% "lift-webkit"          % "2.4-SNAPSHOT"          % "compile",
   "net.liftweb"         %% "lift-db"              % "2.4-SNAPSHOT"          % "compile",
