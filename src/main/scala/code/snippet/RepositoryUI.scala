@@ -15,28 +15,17 @@ import code.model._
 import org.bson.types.ObjectId
 
 trait RepositoryUI {
-	protected var ssh_key = "" 
+	protected var name = "" 
 
-	def keysTable(keys: Seq[SshKeyDoc]): NodeSeq => NodeSeq = 
-		".keys" #> keys.map(key => {
-			".key [id]" #> key.id.get.toString &
-			".key *" #> (".key_name *" #> key.comment &
-						".key_delete *" #> SHtml.a(Text("X")) {
-                									key.delete_!
-                									JqId(key.id.get.toString) ~> JqRemove()})
-
-          })
-	
-	def sshKeyForm(onSubmit: () => Unit): NodeSeq => NodeSeq = {
-    "name=ssh_key" #>
-      SHtml.textarea(ssh_key, {
-        value: String =>
-          ssh_key = value.replaceAll("""^\s+""", "")
-          if (ssh_key.isEmpty) S.error("keys", "Ssh Key are empty")
-      }, "placeholder" -> "Enter your ssh key",
-      "class" -> "textfield",
-      "cols" -> "40", "rows" -> "20") &
-      "button" #> SHtml.button("Add key", onSubmit, "class" -> "button")
+	def repositoryForm(defaultName: String, onSubmit: () => Unit): NodeSeq => NodeSeq = {
+    "name=name" #> SHtml.text(defaultName, {
+          value: String =>
+            name = value.trim
+            if (name.isEmpty) S.error("Name field is empty")
+        },
+        "placeholder" -> "Name", "class" -> "textfield large") &
+          "button" #>
+            SHtml.button("Update", onSubmit, "class" -> "button")
   	}
 	
 }

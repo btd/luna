@@ -26,34 +26,18 @@ import SnippetHelper._
  * Time: 3:28 PM
  */
 
-class AdminRepoOps(urp: WithRepo) extends Loggable with SshKeyUI {
+class AdminRepoOps(urp: WithRepo) extends Loggable with SshKeyUI with RepositoryUI {
   private var collaborator_login = ""
 
-  private var name = ""
+  def renderCollaboratorsTable = w(urp.repo) { repo =>
+    ".collaborators" #> repo.collaborators.map(c => {
+      ".collaborator [id]" #> c.id.get.toString &
+      ".collaborator *" #> (".collaborator_name *" #> c.login.get &
+            ".collaborator_delete *" #> SHtml.a(Text("X")) {
+                                  (CollaboratorDoc where (_.userId eqs c.id.get) and (_.repoId eqs repo.id.get)).findAndDeleteOne
+                JqId(c.id.get.toString) ~> JqRemove()})
 
-
-  def collaborators = {
-    urp.repo match {
-      case Full(r) => {
-        "*" #>
-          <table class="collaborators_table font table">
-            {r.collaborators.flatMap(c => {
-            <tr id={c.id.get.toString}>
-              <td>
-                {c.login.get}
-              </td>
-              <td>
-                {SHtml.a(Text("X")) {
-                (CollaboratorDoc where (_.userId eqs c.id.get) and (_.repoId eqs r.id.get)).findAndDeleteOne
-                JqId(c.id.get.toString) ~> JqRemove()
-              }}
-              </td>
-            </tr>
-          })}
-          </table>
-      }
-      case _ => "*" #> "Invaid repo name"
-    }
+          })
   }
 
   def renderSshKeysTable = w(urp.repo) {repo =>
@@ -93,16 +77,7 @@ class AdminRepoOps(urp: WithRepo) extends Loggable with SshKeyUI {
   }
 
 
-  def renderUpdateRepoForm = w(urp.repo) {repo => 
-      "name=name" #> SHtml.text(repo.name.get, {
-          value: String =>
-            name = value.trim
-            if (name.isEmpty) S.error("Name field is empty")
-        },
-        "placeholder" -> "Name", "class" -> "textfield large") &
-          "button" #>
-            SHtml.button("Update", updateRepo(repo), "class" -> "button")
-  }   
+  def renderUpdateRepoForm = w(urp.repo) {repo => repositoryForm(repo.name.get, updateRepo(repo)) }   
 
   private def updateRepo(repo: RepositoryDoc)() = {
         if (!name.isEmpty) {

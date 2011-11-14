@@ -17,7 +17,14 @@
     <div class="options_holder">
         <h2 class="font large">Collaborators</h2>
 
-        <div class="lift:AdminRepoOps.collaborators"></div>
+        <div class="lift:AdminRepoOps.renderCollaboratorsTable">
+            <table class="collaborators font table">
+                <tr class="collaborator" id="">
+                    <td class="collaborator_name"></td>
+                    <td class="collaborator_delete"></td>
+                </tr>
+            </table>
+        </div>
 
         <div>
             <form class="lift:AdminRepoOps.addCollaborator?form=post add_collaborator_form replaceDialog" data-button-text="Add collaborator">

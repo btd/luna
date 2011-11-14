@@ -22,7 +22,7 @@ import com.foursquare.rogue.Rogue._
  * Time: 2:16 PM
  */
 
-class UserOps(up: WithUser) extends Loggable {
+class UserOps(up: WithUser) extends Loggable with RepositoryUI {
 
   private var newRepositoryName = ""
 
@@ -30,25 +30,11 @@ class UserOps(up: WithUser) extends Loggable {
     "*" #> up.user.get.login.get
   }
 
-  def renderNewRepositoryForm = {
-    up.user match {
-      case Full(u) => {
-        UserDoc.currentUser match {
-          case Full(cu) if (u.login.get == cu.login.get) => {
-            "input" #> SHtml.text(newRepositoryName, {
-              value: String =>
-                newRepositoryName = value.trim
-                if (newRepositoryName.isEmpty) S.error("Name field is empty")
-            },
-            "placeholder" -> "Repo name", "class" -> "textfield large") &
-              "button" #> SHtml.button("New repository", createRepository, "class" -> "button", "id" -> "create_repo_button")
-          }
-          case _ => "*" #> NodeSeq.Empty
-        }
-      }
-      case _ => "*" #> NodeSeq.Empty
-    }
-  }
+  def renderNewRepositoryForm = w(up.user) {u => w(UserDoc.currentUser){cu => {
+    if(u.login.get == cu.login.get) repositoryForm("", createRepository)
+    else cleanAll
+  }}}
+ 
 
 
   def renderAvailableRepositoryList = {
