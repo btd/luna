@@ -24,14 +24,13 @@ import com.foursquare.rogue.Rogue._
 
 class UserOps(up: WithUser) extends Loggable with RepositoryUI {
 
-  private var newRepositoryName = ""
-
   def renderUserName = {
     "*" #> up.user.get.login.get
   }
 
   def renderNewRepositoryForm = w(up.user) {u => w(UserDoc.currentUser){cu => {
-    if(u.login.get == cu.login.get) repositoryForm("", createRepository)
+    val repo = RepositoryDoc.createRecord.ownerId(u.id.get)
+    if(u.login.get == cu.login.get) repositoryForm(repo, "Add", saveRepo(repo))
     else cleanAll
   }}}
  
@@ -60,20 +59,7 @@ class UserOps(up: WithUser) extends Loggable with RepositoryUI {
   }
 
 
-  private def createRepository() = {
-    logger.debug("try to add new repository")
-
-    if (!newRepositoryName.matches("""[a-zA-Z0-9\.\-]+""")) S.error("Repository name can contains only ASCII letters, digits, .(point), -")
-    else {
-      RepositoryDoc where (_.ownerId eqs up.user.get.id.get) and (_.name eqs newRepositoryName) get match {
-        case Some(_) => S.error("You already have repository with such name")
-        case None => RepositoryDoc.createRecord.name(newRepositoryName).ownerId(up.user.get.id.is).save
-      }
-
-    }
-
-
-  }
+  
 
 
 }

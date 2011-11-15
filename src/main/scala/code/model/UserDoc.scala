@@ -26,17 +26,44 @@ import com.foursquare.rogue.Rogue._
 
 class UserDoc private() extends MongoRecord[UserDoc] with ObjectIdPk[UserDoc] {
 
-  object email extends StringField(this, 50)
+  object email extends StringField(this, 50) {
+    private def unique_?(msg: String)(value:String): List[FieldError] = {
+      if ((UserDoc where (_.email eqs value) get) isDefined) 
+        List(FieldError(this, msg)) 
+      else 
+        Nil 
+    }
 
-  object login extends StringField(this, 50)
+    override def validations = valMinLen(1, "Email cannot be empty") _ :: 
+                                valRegex(".*@.*".r.pattern, "Email address must contain @") _ :: 
+                                valMaxLen(maxLength, "Email cannot be more than 50 symbols") _ ::
+                                unique_?("This email already used") _ :: super.validations
+  }
 
-  object password extends StringField(this, 50)
+  object login extends StringField(this, 50) {
+    private def unique_?(msg: String)(value:String): List[FieldError] = {
+      if ((UserDoc where (_.login eqs value) get) isDefined) 
+        List(FieldError(this, msg)) 
+      else 
+        Nil 
+    }
+    override def validations = valMinLen(1, "Login cannot be empty") _ :: 
+                                valRegex("""[a-zA-Z0-9\.\-]+""".r.pattern, "Login can contains only US-ASCII letters, digits, .(point), -(minus)") _ :: 
+                                valMaxLen(maxLength, "Login cannot be more than 50 symbols") _ ::
+                                unique_?("This login already used") _ :: super.validations
+  }
+
+  object password extends StringField(this, 50) {
+    override def validations = valMinLen(1, "Password cannot be empty") _ :: 
+                                valMaxLen(maxLength, "Login cannot be more than 50 symbols") _ ::
+                                 super.validations
+  }
 
   def meta = UserDoc
 
-  def keys = SshKeyDoc.findAll("ownerId", id.is)
+  def keys = SshKeyDoc where (_.ownerId eqs id.get) fetch
 
-  def repos = RepositoryDoc.findAll("ownerId", id.is)
+  def repos = RepositoryDoc where (_.ownerId eqs id.get) fetch
 
   def homePageUrl = "/" + login.is
 
@@ -52,6 +79,7 @@ class UserDoc private() extends MongoRecord[UserDoc] with ObjectIdPk[UserDoc] {
 
     PullRequestDoc where (_.creatorId eqs id.get) bulkDelete_!!
   }
+  
 }
 
 object UserDoc extends UserDoc with MongoMetaRecord[UserDoc] {

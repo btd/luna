@@ -50,6 +50,8 @@ object SnippetHelper extends Loggable{
     case _ => cleanAll
   }
 
+  def button(text: String, onSubmit: () => Any): CssSel = "button" #> SHtml.button(text, onSubmit, "class" -> "button")
+
 
   def suffix(list: List[String]) : String = suffix(list, "/", "")
 

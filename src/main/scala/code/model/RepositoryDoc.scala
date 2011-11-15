@@ -5,8 +5,10 @@
 
 package code.model
 
-import net.liftweb.mongodb.record.{MongoMetaRecord, MongoRecord}
-import net.liftweb.record.field.{BooleanField, StringField}
+import net.liftweb._
+import mongodb.record.{MongoMetaRecord, MongoRecord}
+import record.field._
+import util._
 import org.eclipse.jgit.lib.RepositoryCache.FileKey
 import org.eclipse.jgit.util.FS
 
@@ -27,6 +29,7 @@ import org.eclipse.jgit.diff.DiffFormatter
 import java.io.{ByteArrayOutputStream, File}
 import collection.mutable.{ListBuffer, ArrayBuffer}
 import org.eclipse.jgit.transport.{URIish, UploadPack, ReceivePack}
+
 
 import com.foursquare.rogue.Rogue._
 
@@ -53,7 +56,19 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
   object fsName extends StringField(this, 50, DigestUtils.sha(id.get.toString).toString)
 
   //имя репозитория для пользователя not null
-  object name extends StringField(this, 50)
+  object name extends StringField(this, 50) {
+    private def unique_?(msg: String)(value:String): List[FieldError] = {
+      if ((RepositoryDoc where (_.ownerId eqs ownerId.get) and (_.name eqs value) get) isDefined) 
+        List(FieldError(this, msg)) 
+      else 
+        Nil 
+    }
+
+    override def validations = valMinLen(1, "Name cannot be empty") _ :: 
+                                valRegex("""[a-zA-Z0-9\.\-]+""".r.pattern, "Name can contains only US-ASCII letters, digits, .(point), -(minus)") _ :: 
+                                valMaxLen(maxLength, "Name cannot be more than "+maxLength+" symbols") _ ::
+                                unique_?("Repository with such name already exists") _ :: super.validations
+  }
 
   //открытый или закрытый репозиторий not null default true
   object open_? extends BooleanField(this, true)

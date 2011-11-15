@@ -3,6 +3,7 @@ package code.snippet
 import bootstrap.liftweb._
 import net.liftweb._
 import http._
+import util._
 import js.jquery._
 import JqJE._
 import JqJsCmds._
@@ -12,6 +13,7 @@ import util.PassThru
 import com.foursquare.rogue.Rogue._
 import xml.{NodeSeq, Text}
 import code.model._
+import SnippetHelper._
 import org.bson.types.ObjectId
 
 trait SshKeyUI {
@@ -27,16 +29,22 @@ trait SshKeyUI {
 
           })
 	
-	def sshKeyForm(onSubmit: () => Unit): NodeSeq => NodeSeq = {
+	def sshKeyForm(key: SshKeyDoc): CssSel = {
     "name=ssh_key" #>
-      SHtml.textarea(ssh_key, {
-        value: String =>
-          ssh_key = value.replaceAll("""^\s+""", "")
-          if (ssh_key.isEmpty) S.error("keys", "Ssh Key are empty")
-      }, "placeholder" -> "Enter your ssh key",
+      SHtml.textarea(key.rawValue.get, v => ssh_key = v.replaceAll("""^\s+""", ""), "placeholder" -> "Enter your ssh key",
       "class" -> "textfield",
-      "cols" -> "40", "rows" -> "20") &
-      "button" #> SHtml.button("Add key", onSubmit, "class" -> "button")
+      "cols" -> "40", "rows" -> "20")      
   	}
-	
+
+  def sshKeyForm(key: SshKeyDoc, buttonText: String, onSubmit: () => Any): NodeSeq => NodeSeq = 
+    sshKeyForm(key) & button(buttonText, onSubmit)
+
+  def saveSshKey(key: SshKeyDoc)() = {
+    val record = key.rawValue(ssh_key)
+    record.validate match {
+      case Nil => record.save
+      case l => l.foreach(fe => S.error("keys", fe.msg))
+    }
+  }
+
 }

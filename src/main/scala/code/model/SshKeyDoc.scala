@@ -18,7 +18,11 @@ import net.liftweb.mongodb.record.field.{ObjectIdRefField, ObjectIdPk}
 
 class SshKeyDoc private() extends MongoRecord[SshKeyDoc] with ObjectIdPk[SshKeyDoc] {
 
-  object rawValue extends TextareaField(this, 4000)
+  object rawValue extends TextareaField(this, 4000) {
+    override def validations = valMinLen(1, "Ssh key cannot be empty") _ :: 
+                                valRegex("""^ssh\-[a-z]{3}\s\S+(\s\S+)?$""".r.pattern, "Ssh key is not valid") _ :: 
+                                super.validations
+  }
 
   object ownerId extends ObjectIdRefField(this, UserDoc)
 

@@ -40,9 +40,7 @@ class AdminRepoOps(urp: WithRepo) extends Loggable with SshKeyUI with Repository
           })
   }
 
-  def renderSshKeysTable = w(urp.repo) {repo =>
-    keysTable(repo.keys)
-  }
+  def renderSshKeysTable = w(urp.repo) {repo => keysTable(repo.keys)}
 
   def addCollaborator = {
     "name=login" #>
@@ -55,13 +53,12 @@ class AdminRepoOps(urp: WithRepo) extends Loggable with SshKeyUI with Repository
   }
 
 
-  def renderAddKeyForm = w(urp.repo) {repo => sshKeyForm(addNewKey(repo))}
+  def renderAddKeyForm = w(urp.repo) {repo => {
+    val newKey = SshKeyDoc.createRecord.ownerId(repo.ownerId.is).ownerRepoId(repo.id.is)
+    sshKeyForm(newKey, "Add", saveSshKey(newKey))
+  }}
 
-  private def addNewKey(repo: RepositoryDoc)() = {
-        if (!ssh_key.isEmpty) {
-          SshKeyDoc.createRecord.ownerId(repo.ownerId.is).rawValue(ssh_key).ownerRepoId(repo.id.is).saveTheRecord
-        }
-  }
+  
 
   private def addNewCollaborator() = {
     urp.repo match {
@@ -77,36 +74,14 @@ class AdminRepoOps(urp: WithRepo) extends Loggable with SshKeyUI with Repository
   }
 
 
-  def renderUpdateRepoForm = w(urp.repo) {repo => repositoryForm(repo.name.get, updateRepo(repo)) }   
+  def renderUpdateRepoForm = w(urp.repo) {repo => {
+    repositoryForm(repo, "Update", saveRepo(repo, r => S.redirectTo("/admin" + r.homePageUrl))) }}
 
-  private def updateRepo(repo: RepositoryDoc)() = {
-        if (!name.isEmpty) {
-          if (repo.owner.repos.contains((r: RepositoryDoc) => r.name.get == name)) {
-            S.error("repo", "Invalid repo")
-          } else {
-            if (!name.matches("""[a-zA-Z0-9\.\-]+""")) {
-              S.error("repo", "Repo name can contains only ASCII letters, digits, .(point), -")
-            }
-            else {
-              repo.name(name).saveTheRecord
-              S.redirectTo("/admin" + repo.homePageUrl)
-            }
-
-          }
-
-        }
-  }
+  
 
   def renderDeleteRepo = w(urp.repo) {repo => 
-      "button" #> SHtml.button("Delete", processDelete(repo), "class" -> "button")
+      "button" #> SHtml.button("Delete", deleteRepo(repo, r => S.redirectTo(repo.owner.homePageUrl)), "class" -> "button")
   }
 
-  def processDelete(repo: RepositoryDoc)() = { 
-      val redirect = repo.owner.homePageUrl
-      repo.deleteDependend
-
-      repo.delete_!
-
-      S.redirectTo(redirect)
-   }
+  
 }
