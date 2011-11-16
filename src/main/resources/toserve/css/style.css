@@ -2,9 +2,6 @@
  * Copyright (c) 2011 Denis Bardadym
  * Distributed under Apache License.
  */
-
-@import url(http://fonts.googleapis.com/css?family=Open+Sans&subset=latin,cyrillic-ext,cyrillic);
-
 /*
  * HTML5 Boilerplate
  *
@@ -84,11 +81,11 @@ Links
 ========================================================================== */
 
 a {
-    color: #00e;
+    color: #0070C0;
 }
 
 a:visited {
-    color: #551a8b;
+    color: #0070C0;
 }
 
 a:focus {
@@ -359,6 +356,7 @@ html, body {
 }
 
 #container {
+    padding-top:50px;
     height: 100%;
 
     display: -webkit-box;
@@ -378,29 +376,93 @@ html, body {
 }
 
 form {
-    padding: 10px;
+    padding: 10px 0;
+}
+input, textarea, button {
+    margin: 10px 0;
 }
 
 .textfield {
-    font-family: 'Open Sans', sans-serif;
     margin: 10px 0;
     width: 100%;
 }
+
+.left {
+    float: left;
+}
+
+.right {
+    float: right;
+}
+
 
 .large {
     font-size: 3em;
 }
 
-.font {
-    font-family: 'Open Sans', sans-serif;
+
+.repo.short {
+    height: 90px;
+    width: 620px;
+
+    border: 2px solid black;
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    -o-border-radius: 3px;
+    border-radius: 3px;
+
+    margin-bottom: 10px;
 }
 
-.font * {
-    font-family: 'Open Sans', sans-serif;
+.repo.short * {
+    font-family: arial, sans-serif;
+    font-weight: normal;
 }
 
-.placeholder {
-    color: gray;
+.repo.public {
+    border-color: #C3D69B;
+    background-color: #EBF1DE;
+}
+.repo.private {
+    border-color: #D99694;
+    background-color: #F2DCDB;
+}
+.repo.collaborated {
+    border-color: #95B3D7;
+    background-color: #DCE6F2;
+}
+
+.repo.short  .repo_name {
+    margin-left: 15px;
+    font-size: 2em;
+    line-height: 0.6em;
+}
+
+.repo > .sub.admin {
+    border-top: 2px solid black;
+    margin: 0;
+    padding: 0;
+}
+
+.repo.public > .sub.admin {
+    border-color: #C3D69B;
+}
+.repo.private > .sub.admin {
+    border-color: #D99694;
+}
+.repo.collaborated > .sub.admin {
+    border-color: #95B3D7;
+}
+
+.repo > .sub.admin > li {
+    display: inline-block;
+    margin-left: 15px;
+
+}
+
+.repo > .sub.admin > li * {
+    font-size: 1.1em;
+    line-height: 2em;
 }
 
 .button {
@@ -416,7 +478,7 @@ form {
 
     padding: 1em;
 
-    font-family: 'Open Sans', sans-serif;
+    font-family: arial, sans-serif;
 
     border: 1px solid rgba(0, 0, 0, 0.1);
 
@@ -454,43 +516,10 @@ form {
     border: 1px solid #B0281A;
 }
 
-.repo_block {
-    border-top: 1px solid rgba(0, 0, 0, 0.4);
-    margin: 10px 0;
-    padding: 1em;
-    max-width: 1000px;
-    position: relative;
-}
-
-.repo_block .repo_admin_buttons {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    height: 60px;
-}
-
-.repo_block .admin_button {
-    margin: 5px 0;
-    border-radius: 3px;
-    display: block;
-
-    text-decoration: none;
-    padding: 2px 3px 3px 2px;
-
-    border: 1px solid #d4d4d4;
-    background: #f4f4f4;
-    filter: progid:DXImageTransform.Microsoft.gradient(GradientType = 0, startColorstr = '#f4f4f4', endColorstr = '#ececec');
-    background: -webkit-gradient(linear, left top, left bottom, from(#f4f4f4), to(#ececec));
-    background: -moz-linear-gradient(top, #f4f4f4, #ececec);
-}
-
-.repo_block h3 {
-    font-family: 'Open Sans', sans-serif;
-    font-size: 2em;
-}
-
 .url-box {
     height: 30px;
+    margin-right: 15px;
+    margin-top: 15px;
 }
 
 ul.clone-urls {
@@ -568,7 +597,7 @@ ul.clone-urls li.selected>a {
     background: -moz-linear-gradient(top, #d7d7d7, #ababab);
 }
 
-.url-box input.textfield {
+.url-box .textfield {
     float: left;
     width: 400px;
     padding: 3px 5px 2px 5px;
@@ -576,17 +605,44 @@ ul.clone-urls li.selected>a {
     height: 23px;
     border: 1px solid #ccc;
     border-left: none;
+
     font-family: Monaco, "Courier New", "DejaVu Sans Mono", "Bitstream Vera Sans Mono", monospace;
 
     border-radius: 0 3px 3px 0;
 }
 
 .top_menu {
-    position: absolute;
+    padding: 5px 0;
+    position: fixed;
     top: 0;
     right: 0;
+    width: 100%;
+    font-family: Arial, serif;
+    background-color: black;
 
-    font-family: 'Open Sans', sans-serif;
+    -moz-box-shadow: 0 10px 15px #ccc;
+    -webkit-box-shadow: 0 10px 15px #ccc;
+    box-shadow: 0 10px 15px #ccc;
+}
+.top_menu ul {
+    padding: 0;
+}
+
+.top_menu li {
+    display: inline-block;
+    
+    margin-right: 15px;
+}
+
+.top_menu a {
+    color: white;
+}
+.top_menu a:visited {
+    color: white;
+}
+
+.main_menu {
+    float: right;
 }
 
 .table {

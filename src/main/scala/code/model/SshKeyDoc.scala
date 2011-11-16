@@ -20,8 +20,7 @@ class SshKeyDoc private() extends MongoRecord[SshKeyDoc] with ObjectIdPk[SshKeyD
 
   object rawValue extends TextareaField(this, 4000) {
     override def validations = valMinLen(1, "Ssh key cannot be empty") _ :: 
-                                valRegex("""^ssh\-[a-z]{3}\s\S+(\s\S+)?$""".r.pattern, "Ssh key is not valid") _ :: 
-                                super.validations
+                                                            super.validations
   }
 
   object ownerId extends ObjectIdRefField(this, UserDoc)

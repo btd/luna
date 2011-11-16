@@ -16,7 +16,7 @@ import code.model._
 import SnippetHelper._
 import org.bson.types.ObjectId
 
-trait SshKeyUI {
+trait SshKeyUI extends Loggable {
 	protected var ssh_key = "" 
 
 	def keysTable(keys: Seq[SshKeyDoc]): NodeSeq => NodeSeq = 
@@ -39,8 +39,11 @@ trait SshKeyUI {
   def sshKeyForm(key: SshKeyDoc, buttonText: String, onSubmit: () => Any): NodeSeq => NodeSeq = 
     sshKeyForm(key) & button(buttonText, onSubmit)
 
+  def fillKey(key: SshKeyDoc) = key.rawValue(ssh_key)
+
   def saveSshKey(key: SshKeyDoc)() = {
     val record = key.rawValue(ssh_key)
+    logger.debug(record)
     record.validate match {
       case Nil => record.save
       case l => l.foreach(fe => S.error("keys", fe.msg))

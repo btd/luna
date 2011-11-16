@@ -76,10 +76,7 @@ object SnippetHelper extends Loggable{
             </h3>
             <div class="url-box">
               <ul class="clone-urls">
-                {
-                rr.cloneUrls(UserDoc.currentUser).map(url =>
-                <li>{a(url._1, Text(url._2))}</li>)
-                }
+                
               </ul>
                 <input type="text" class="textfield" readonly=" " value={rr.publicGitUrl}/>
             </div>{adminBox(Full(rr), UserDoc.currentUser, onClone)}

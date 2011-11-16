@@ -33,14 +33,18 @@ $(function() {
             })
         });
     }
-    $(".url-box > .clone-urls > li:first-child").toggleClass("selected");
+    
+
     $(".url-box > .clone-urls > li > a").click(function() {
         var a = $(this);
         var ul = a.parent().parent();
-        ul.children().toggleClass("selected")
+        ul.children().removeClass("selected");
+        a.parent().addClass("selected");
         ul.siblings("input").val(a.attr("href"));
         return false;
     });
+
+    $(".url-box > .clone-urls > li:first-child > a").click();
 
     $("form.replaceDialog").each(function(i, form){
         var el = $(form);

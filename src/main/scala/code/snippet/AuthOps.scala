@@ -24,11 +24,25 @@ class AuthOps extends Loggable with UserUI with SshKeyUI {
   def renderNewUserForm = {
     val newUser = UserDoc.createRecord
     val newKey = SshKeyDoc.createRecord.ownerId(newUser.id.get)
+
     userForm(newUser) &
     sshKeyForm(newKey) &
-    button("Register", { 
-      saveUser(newUser)
-      saveSshKey(newKey)
+    button("Register", () => {
+      fillUser(newUser)
+      fillKey(newKey)
+
+      newUser.validate match {
+        case Nil => newUser.validate match {
+            case Nil => {
+              newUser.save
+              newKey.save
+              logger.debug(newUser)
+              UserDoc.logUserIn(newUser, ()=> S.redirectTo(newUser.homePageUrl))
+            }
+            case l => l.foreach(fe => S.error(fe.msg))
+          }
+        case l => l.foreach(fe => S.error(fe.msg))
+      }
     })
   }
  

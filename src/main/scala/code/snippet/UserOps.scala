@@ -24,10 +24,6 @@ import com.foursquare.rogue.Rogue._
 
 class UserOps(up: WithUser) extends Loggable with RepositoryUI {
 
-  def renderUserName = {
-    "*" #> up.user.get.login.get
-  }
-
   def renderNewRepositoryForm = w(up.user) {u => w(UserDoc.currentUser){cu => {
     val repo = RepositoryDoc.createRecord.ownerId(u.id.get)
     if(u.login.get == cu.login.get) repositoryForm(repo, "Add", saveRepo(repo))
@@ -36,30 +32,33 @@ class UserOps(up: WithUser) extends Loggable with RepositoryUI {
  
 
 
-  def renderAvailableRepositoryList = {
-    up.user match {
-      case Full(u) => {
-        ".repo_block" #> (UserDoc.currentUser match {
-          case Full(cu) if (u.login.get == cu.login.get) => {
-            u.repos.map(repo => urlBox(Full(repo), repoName _, cloneButtonAppend)) ++
-              CollaboratorDoc.findAll("userId", u.id.get).map(cDoc => urlBox(cDoc.repoId.obj, r => a(r.sourceTreeUrl, Text(r.name.get + " (collaborator)")), cloneButtonAppend))
-
+  def renderRepositoryList = w(up.user) {u => 
+    if(u.repos.isEmpty)
+      ".repo" #> NodeSeq.Empty
+    else 
+    ".repo *" #>  u.repos.map(repo => 
+      (UserDoc.currentUser match {
+        case Full(cu) if (cu.login.get == u.login.get) => {
+            ".repo_name *" #> a(repo.sourceTreeUrl, Text(repo.name.get)) &
+            ".clone-url *" #> (repo.cloneUrlsForCurrentUser.map(url => "a" #> a(url._1, Text(url._2)))) &
+            ".admin_page *" #> a("/admin" + repo.homePageUrl, Text("admin")) & 
+            ".fork *" #> a("", Text("fork it")) &
+            ".toggle_open" #> NodeSeq.Empty
+        }
+        case Full(cu) => {        
+            ".repo_name *" #> a(repo.sourceTreeUrl, Text(repo.name.get)) &
+            ".clone-url *" #> (repo.cloneUrlsForCurrentUser.map(url => a(url._1, Text(url._2)))) &
+            ".admin_page" #> NodeSeq.Empty & 
+            ".fork *" #> a("", Text("fork it")) &
+            ".toggle_open" #> NodeSeq.Empty
           }
-
-          case _ => {
-            u.repos.map(repo =>
-              urlBox(Full(repo), repoName _, cloneButtonRedirect)
-            )
-          }
-        })
-
-      }
-      case _ => "*" #> NodeSeq.Empty
-    }
+        case _ => {
+            ".repo_name *" #> a(repo.sourceTreeUrl, Text(repo.name.get)) &
+            ".clone-url *" #> (repo.cloneUrlsForCurrentUser.map(url => a(url._1, Text(url._2)))) &
+            ".admin_page" #> NodeSeq.Empty & 
+            ".fork" #> NodeSeq.Empty & 
+            ".toggle_open" #> NodeSeq.Empty
+        }
+    }))    
   }
-
-
-  
-
-
 }

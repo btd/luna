@@ -24,7 +24,6 @@ import code.snippet.SnippetHelper._
 class BlobOps(stp: SourceElementPage) extends Loggable {
   def renderSourceText = {
     val decodedUrl: List[String] = stp.path.map(p => URLDecoder.decode(p, "UTF-8"))
-    logger.debug("Try to render " + decodedUrl)
     stp.repo match {
        case Full(repo) => ".source_code" #> Text(repo.git.ls_cat(decodedUrl, stp.commit))
        case _ => PassThru

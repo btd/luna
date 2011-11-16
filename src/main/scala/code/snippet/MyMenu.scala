@@ -15,21 +15,21 @@ import code.model.UserDoc
 
 class MyMenu {
   def your = {
-    "*" #> (UserDoc.currentUser match {
+    "li *" #> (UserDoc.currentUser match {
       case Full(u) => <a href={"/" + u.login.get}>Your page</a>
       case _ => Text("")
     })
   }
 
   def admin = {
-    "*" #> (UserDoc.currentUser match {
+    "li *" #> (UserDoc.currentUser match {
       case Full(u) => <a href={"/admin/" + u.login.get}>Admin</a>
       case _ => Text("")
     })
   }
 
   def signIn = {
-    "*" #> (UserDoc.currentUser match {
+    "li *" #> (UserDoc.currentUser match {
       case Full(u) => Text("")
       case _ => <a href="/user/m/signin">Sign In</a>
     })

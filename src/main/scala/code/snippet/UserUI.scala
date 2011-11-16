@@ -61,6 +61,8 @@ trait UserUI {
       }
   }
 
+ def fillUser(user:UserDoc) = user.email(email).login(login).password(password)
+
  def saveUser(user:UserDoc)():Any = {
  	saveUser(user, u => u)
  }
@@ -68,10 +70,13 @@ trait UserUI {
   def saveUser(user:UserDoc, postUpdate: (UserDoc) => Any)():Any = {
     val updated = user.email(email).login(login).password(password)
     updated.validate match {
-      case Nil => updated.save
+      case Nil => {
+        updated.save
+        postUpdate(user)
+      }
       case l => l.foreach(fe => S.error("person", fe.msg))
     }
-    postUpdate(user)
+    
   }
 
   def deleteUser(user: UserDoc)() = {

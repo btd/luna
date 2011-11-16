@@ -321,9 +321,9 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
 
   lazy val privateSshUrl = owner.login.get + "@" + S.hostName + ":" + name.get
 
-  def privateSshUrl(user: UserDoc): String = owner_?(Full(user)) match {
+  def privateSshUrl(user: Box[UserDoc]): String = owner_?(user) match {
     case true => privateSshUrl
-    case false => user.login.is + "@" + S.hostName + ":" + owner.login.get + "/" + name.get
+    case false => user.get.login.is + "@" + S.hostName + ":" + owner.login.get + "/" + name.get
   }
 
   def canPush_?(user: Box[UserDoc]) = {
@@ -335,8 +335,8 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
     }
   }
 
-  def cloneUrls(user: Box[UserDoc]) = canPush_?(user) match {
-    case true => (publicGitUrl, "Git") :: (privateSshUrl(user.get), "Ssh") :: Nil
+  def cloneUrlsForCurrentUser = canPush_?(UserDoc.currentUser) match {
+    case true => (publicGitUrl, "Git") :: (privateSshUrl(UserDoc.currentUser), "Ssh") :: Nil
     case _ => (publicGitUrl, "Git") :: Nil
   }
 
