@@ -41,7 +41,7 @@ import com.foursquare.rogue.Rogue._
  */
 
 abstract class SourceElement {
-
+  def path: String
 }
 
 case class Blob(path: String, id: ObjectId) extends SourceElement {}
@@ -301,7 +301,7 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
   }
 
 
-  lazy val pullRequestUrl = homePageUrl + "/pull-requests"
+  lazy val pullRequestsUrl = homePageUrl + "/pull-requests"
 
   lazy val homePageUrl = "/" + owner.login.get + "/" + name.get
 

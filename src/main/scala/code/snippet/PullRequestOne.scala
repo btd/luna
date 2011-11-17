@@ -12,10 +12,10 @@ import util._
 import Helpers._
 import code.model.{UserDoc, PullRequestDoc, RepositoryDoc}
 import code.snippet.SnippetHelper._
-import bootstrap.liftweb.{PullRequestRepoPage, RepoPage}
+import bootstrap.liftweb._
 import xml.{NodeSeq, Text}
 
-class PullRequestOneOps(pr: PullRequestRepoPage) extends Loggable {
+class PullRequestOneOps(pr: WithPullRequest) extends Loggable {
 
 
   def renderHelp = pr.pullRequest match {
@@ -81,15 +81,6 @@ class PullRequestOneOps(pr: PullRequestRepoPage) extends Loggable {
     case _ => PassThru
   }
 
-  def renderMenu = pr.repo match {
-    case Full(r) => "*" #> {
-      <div>
-        <a href={r.sourceTreeUrl}>Sources</a> |
-        <a href={r.commitsUrl}>Commits</a> |
-        <a href={r.pullRequestUrl}>Pull Requests</a>
-      </div>
-    }
-    case _ => PassThru
-  }
+  def renderMenu = PassThru
 
 }

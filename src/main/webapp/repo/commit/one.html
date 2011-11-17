@@ -1,32 +1,33 @@
 
 <div id="main" role="main" class="lift:surround?with=def-h;at=content">
-    <div class="lift:embed?what=menu"></div>
-
-    <div class="repo_menu font">
-        <span class="lift:RepoCommitOps.renderMenu"></span>
+    <div class="top_menu">
+        <nav class="repo_menu">
+            <ul>
+                <li class="lift:RepoOps.renderSourceTreeDefaultLink repo_menu_link"></li>
+                <li class="lift:RepoOps.renderCommitsDefaultLink repo_menu_link"></li>
+                <li class="lift:RepoOps.renderPullRequestsLink repo_menu_link"></li>
+            </ul>
+        </nav>
+        <nav class="main_menu">
+            <ul>
+                <li class="lift:MyMenu.admin">Admin</li>
+                <li class="lift:MyMenu.your">Your page</li>
+                <li class="lift:MyMenu.signIn">Sign In</li>
+            </ul>
+        </nav>
     </div>
 
-    <hr/>
 
-    <div>
-        <div class="lift:RepoCommitOps.renderCurrentSourcesLink "></div>
-    </div>
+    <div class="lift:CommitOps.renderDiffList">
 
-    <div class="lift:RepoCommitOps.renderDiffList">
-
-        <ul class=" font diff_status_list">
+        <ul class="diff_status_list">
             <li class="modified">asdassdasdaas/assda/asdd/file1</li>
             <li class="new">asdassdasdaas/assda/asdd/file1</li>
             <li class="deleted">asdassdasdaas/assda/asdd/file1</li>
         </ul>
-
-        <hr/>
-
         <div class="diff_list">
-            <div class="source_code_holder">
-            <pre><code class="diff">
-                <span class="source_code"></span>
-            </code></pre>
+            <div class="blob">
+                <pre><code class="diff"><span class="source_code"></span></code></pre>
             </div>
         </div>
     </div>

@@ -21,7 +21,7 @@ import code.snippet.SnippetHelper._
  * Time: 2:43 PM
  */
 
-class PullRequestOps(urp: RepoPage) extends Loggable {
+class PullRequestOps(urp: PullRequestRepoPage) extends Loggable {
 
   private var sourceRepo: RepositoryDoc = null
 
@@ -89,7 +89,7 @@ class PullRequestOps(urp: RepoPage) extends Loggable {
           .srcRef(sourceRef)
           .destRef(destRef)
           .creatorId(u.id.get).description(description).save
-        S.redirectTo(sourceRepo.pullRequestUrl)
+        S.redirectTo(sourceRepo.pullRequestsUrl)
       }
       case _ => S.error("User not authentificated")
     }
@@ -110,13 +110,4 @@ class PullRequestOps(urp: RepoPage) extends Loggable {
     }
   }
 
-  def renderMenu = urp.repo match {
-    case Full(r) => "*" #> {
-      <div>
-        <a href={r.sourceTreeUrl}>Sources</a> |
-        <a href={r.commitsUrl}>Commits</a>
-      </div>
-    }
-    case _ => "*" #> NodeSeq.Empty
-  }
 }

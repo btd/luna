@@ -31,17 +31,6 @@ import xml.{Node, Text, NodeSeq}
 
 object SnippetHelper extends Loggable{
 
-  def branchSelector(repo: Box[RepositoryDoc], defaultSelectedBranch: RepositoryDoc => String, redirectUrl: (RepositoryDoc, String) => String) = {
-    repo match {
-      case Full(r) =>
-        "#current_branch" #>
-          SHtml.ajaxSelect(r.git.branches.zip(r.git.branches),
-            Full(defaultSelectedBranch(r)),
-            value => S.redirectTo(redirectUrl(r, value)))
-
-      case _ => PassThru
-    }
-  }
 
   def cleanAll: NodeSeq => NodeSeq = "*" #> NodeSeq.Empty
 
@@ -61,59 +50,15 @@ object SnippetHelper extends Loggable{
       case l => l.mkString(first, "/", last)
     }
 
-  def urlBox(repo: Box[RepositoryDoc], name: RepositoryDoc => NodeSeq, onClone: (RepositoryDoc, UserDoc) => NodeSeq)  = {
-   repo match {
-      case Full(rr) =>
-        ".repo_block" #> urlBoxXhtml(rr, name, onClone)
-      case _ => PassThru
-    }
-  }
+  
+  //def cloneButtonAppend(r: RepositoryDoc, user: UserDoc) : NodeSeq =
+  //SHtml.a(() => jsExpToJsCmd(Jq(".repo_list") ~> JqAppend(urlBoxXhtml(r.git.clone(user), repoName _, cloneButtonAppend))), <span class="ui-icon ui-icon-shuffle "/>, "class" -> "admin_button")
 
-  def urlBoxXhtml(rr: RepositoryDoc, name: RepositoryDoc => NodeSeq, onClone: (RepositoryDoc, UserDoc) => NodeSeq): NodeSeq = {
-      <div class="repo_block">
-            <h3>
-              {name(rr)}
-            </h3>
-            <div class="url-box">
-              <ul class="clone-urls">
-                
-              </ul>
-                <input type="text" class="textfield" readonly=" " value={rr.publicGitUrl}/>
-            </div>{adminBox(Full(rr), UserDoc.currentUser, onClone)}
-          </div>
-  }
+  //def cloneButtonRedirect(r: RepositoryDoc, user: UserDoc) =
+  //SHtml.a(() => S.redirectTo(r.git.clone(user).sourceTreeUrl), <span class="ui-icon ui-icon-shuffle "/>, "class" -> "admin_button")
 
 
-  def adminBox(repo: Box[RepositoryDoc], user: Box[UserDoc], cloneButton: (RepositoryDoc, UserDoc) => NodeSeq) =
-    <div class="repo_admin_buttons">
-      {repo match {
-      case Full(r) if (r.owner_?(user)) => {
-        <a href={"/admin" + r.homePageUrl} class="admin_button">
-          <span class="ui-icon ui-icon-gear "/>
-        </a> ++ cloneButton(r, user.get)
-      }
-      case Full(r) if UserDoc.loggedIn_? => cloneButton(r, user.get)
-      case _ => NodeSeq.Empty
-    }  }
-
-    </div>
-
-  def cloneButtonAppend(r: RepositoryDoc, user: UserDoc) : NodeSeq =
-  SHtml.a(() => jsExpToJsCmd(Jq(".repo_list") ~> JqAppend(urlBoxXhtml(r.git.clone(user), repoName _, cloneButtonAppend))), <span class="ui-icon ui-icon-shuffle "/>, "class" -> "admin_button")
-
-  def cloneButtonRedirect(r: RepositoryDoc, user: UserDoc) =
-  SHtml.a(() => S.redirectTo(r.git.clone(user).sourceTreeUrl), <span class="ui-icon ui-icon-shuffle "/>, "class" -> "admin_button")
-
-
-  def repoName(r: RepositoryDoc) = {
-    r.forkOf.obj match {
-
-      case Full(rr) => a(r.sourceTreeUrl, Text(r.name.get)) ++ Text(" clone of ") ++ a(rr.sourceTreeUrl, Text(rr.owner.login.get + "/" + rr.name.get))
-      case _ => a(r.sourceTreeUrl, Text(r.name.get))
-    }
-  }
-
-
+  
   def a(href: String, value: NodeSeq) = <a href={href}>{value}</a>
 
   val dateFormatter = new SimpleDateFormat("MMM dd, yyyy")
@@ -153,7 +98,5 @@ object SnippetHelper extends Loggable{
   }
 
 
-
-//  def repoMenu(menu: Seq[Pair[String, String]], current: Pair[String, String])
 
 }

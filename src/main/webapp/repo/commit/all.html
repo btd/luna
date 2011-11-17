@@ -1,44 +1,39 @@
 <div id="main" role="main" class="lift:surround?with=def;at=content">
-    <div class="lift:embed?what=menu"></div>
-
-   <div class="repo_menu font">
-        <span class="lift:RepoCommitOps.renderMenu"></span>
+    <div class="top_menu">
+        <nav class="repo_menu">
+            <ul>
+                <li class="lift:RepoOps.renderSourceTreeDefaultLink repo_menu_link"></li>
+                <li class="lift:RepoOps.renderCommitsDefaultLink?current=true repo_menu_link"></li>
+                <li class="lift:RepoOps.renderPullRequestsLink repo_menu_link"></li>
+            </ul>
+        </nav>
+        <nav class="main_menu">
+            <ul>
+                <li class="lift:MyMenu.admin">Admin</li>
+                <li class="lift:MyMenu.your">Your page</li>
+                <li class="lift:MyMenu.signIn">Sign In</li>
+            </ul>
+        </nav>
     </div>
 
-    <form id="current_branch_select_holder">
-        <select name="current_branch" id="current_branch" class="lift:RepoCommitOps.renderBranchSelector selectmenu">
-            <option value="master" selected="selected">master</option>
+    <form class="current_branch_select_holder">
+        <select name="current_branch"  class="lift:CommitOps.renderBranchSelector selectmenu current_branch">
+            
         </select>
     </form>
-    <hr/>
-    <div class="commits_list font lift:RepoCommitOps.renderCommitsList">
+    
+    <div class="commits_list font lift:CommitOps.renderCommitsList">
         <div class="day">
-            <h2 class="date">10/10/2000</h2>
-
-            <div class="commit">
-                <p class="commit_msg">Commit message</p>
-
-                <p class="commit_author">commiter</p>
+          <h3 class="date"></h3>
+          <div class="commit">
+            <pre class="commit_msg"></pre>
+            <div class="clearfix">
+              <p class="commit_author left"></p>
+              <p class="right">
+                <span class="source_tree_link"></span><span class="diff_link"></span>
+              </p>
             </div>
-            <div class="commit">
-                <p class="commit_msg">Commit message</p>
-
-                <p class="commit_author">commiter</p>
-            </div>
-            <div class="commit">
-                <p class="commit_msg">Commit message</p>
-
-                <p class="commit_author">commiter</p>
-            </div>
-        </div>
-        <div class="day">
-            <h2 class="date">10/10/2000</h2>
-
-            <div class="commit">
-                <p class="commit_msg">Commit message</p>
-
-                <p class="commit_author">commiter</p>
-            </div>
+          </div>
         </div>
     </div>
 </div>

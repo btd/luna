@@ -383,7 +383,6 @@ input, textarea, button {
 }
 
 .textfield {
-    margin: 10px 0;
     width: 100%;
 }
 
@@ -399,12 +398,7 @@ input, textarea, button {
 .large {
     font-size: 3em;
 }
-
-
-.repo.short {
-    height: 90px;
-    width: 620px;
-
+.repo {
     border: 2px solid black;
     -webkit-border-radius: 3px;
     -moz-border-radius: 3px;
@@ -414,7 +408,15 @@ input, textarea, button {
     margin-bottom: 10px;
 }
 
-.repo.short * {
+.repo.short {
+    width: 620px;   
+}
+
+.repo.long {
+    width: 1000px;
+}
+
+.repo * {
     font-family: arial, sans-serif;
     font-weight: normal;
 }
@@ -432,7 +434,7 @@ input, textarea, button {
     background-color: #DCE6F2;
 }
 
-.repo.short  .repo_name {
+.repo  .repo_name {
     margin-left: 15px;
     font-size: 2em;
     line-height: 0.6em;
@@ -617,15 +619,23 @@ ul.clone-urls li.selected>a {
     top: 0;
     right: 0;
     width: 100%;
-    font-family: Arial, serif;
+    
     background-color: black;
 
     -moz-box-shadow: 0 10px 15px #ccc;
     -webkit-box-shadow: 0 10px 15px #ccc;
     box-shadow: 0 10px 15px #ccc;
+
+    z-index: 100;
 }
 .top_menu ul {
     padding: 0;
+}
+
+.top_menu .repo_menu {
+    width: 500px;
+    float: left;
+    margin-left: 10%;
 }
 
 .top_menu li {
@@ -634,7 +644,8 @@ ul.clone-urls li.selected>a {
     margin-right: 15px;
 }
 
-.top_menu a {
+.top_menu * {
+    font-family: Arial, serif;
     color: white;
 }
 .top_menu a:visited {
@@ -659,54 +670,76 @@ ul.clone-urls li.selected>a {
     border-top: 1px solid gray;
 }
 
-#current_branch {
+.current_branch {
     width: 200px;
 }
 
-#current_branch_select_holder {
-    margin: 20px 0;
+.current_branch_select_holder {
+    margin: 10px 0;
 }
 
-#source_tree {
+.source_tree {
+    display: block;
     width: 1000px;
+    border: 2px solid rgb(217, 217, 217);
+    background-color: rgb(242,242,242);
+    border-radius: 3px;
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
 }
 
-#source_tree * {
-    font-family: 'Open Sans', sans-serif;
+.source_tree table {
+    width: 100%;
 }
 
-#source_tree tr {
-    border-bottom: 1px solid gray;
+.source_tree .last_commit {
+    width: 50%;
 }
 
-#source_tree td {
+.source_tree td {
+    padding-left: 15px;
+}
+
+.source_tree tr {
+
+    border-top: 1px solid rgb(217, 217, 217);
     font-size: 1.3em;
-    padding: 10px 0;
+    line-height: 2em;
+}
+.source_tree tr:first-child {
+    border-top: 0;
 }
 
-#breadcrumbs {
-    margin: 20px 0;
+.slash {
+    font-size: 1.5em;
 }
-
-#breadcrumbs * {
-    font-family: 'Open Sans', sans-serif;
+.breadcrumbs {
     font-size: 1.3em;
-
+    line-height: 1em;
+    margin: 10px 0;
+    
+}
+.breadcrumbs * {
+    vertical-align: middle;
 }
 
-.source_code_holder {
+
+.blob {
     width: 1000px;
     overflow-x: auto;
-    border: 1px solid #dcdcdc;
+    border: 2px solid #dcdcdc;
+    border-radius: 3px;
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
 }
 
-.source_code_holder pre {
+.blob pre {
     width: 10000px;
 }
 
 .day {
     margin: 10px 0;
-    border: 1px solid gray;
+    border: 2px solid #E6E6B8;
     border-radius: 3px;
     width: 1000px;
 }
@@ -716,17 +749,17 @@ ul.clone-urls li.selected>a {
     display: block;
     width: 96%;
     margin: 0;
-    padding: 10px 2%;
+    padding: 10px 15px;
 }
 
 .day .commit, .commit {
-    padding: 10px 2%;
-    border-top: 1px solid gray;
+    padding: 10px 15px;
+    border-top: 2px solid #E6E6B8;
     font-size: 1.3em;
 }
 
 .day .commit p, .commit p {
-    margin: 0.5em;
+    margin: 15px 0;
 }
 
 .day .commit_author, .commit_author {
@@ -734,22 +767,35 @@ ul.clone-urls li.selected>a {
     color: #599bdc;
 }
 
+.commit .source_tree_link {
+    margin-right: 15px;
+}
+
 .diff_status_list {
     list-style: none;
     font-size: 1.3em;
+    margin: 0;
+    padding: 15px;
+}
+
+.diff_status_list li::before {
+    margin-right: 30px;
 }
 
 .diff_status_list .modified {
     color: #599bdc;
 }
+.diff_status_list .modified::before { content: "M" }
 
 .diff_status_list .new {
     color: #00cc33;
 }
+.diff_status_list .new::before { content: "A" }
 
 .diff_status_list .deleted {
     color: #ff0000;
 }
+.diff_status_list .deleted::before { content: "R" }
 
 .pull_request_box .repo_selector {
     width: 200px;

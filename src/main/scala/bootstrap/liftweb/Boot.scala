@@ -42,13 +42,17 @@ trait WithPullRequest {
   lazy val pullRequest = PullRequestDoc.find(pullRequestId)
 }
 
+trait WithCommit extends WithRepo {
+  def commit: String
+}
+
 case class RepoPage(userName: String, repoName: String) extends WithRepo
 
-case class RepoAtCommitPage(userName: String, repoName: String, commit: String) extends WithRepo
+case class RepoAtCommitPage(userName: String, repoName: String, commit: String) extends WithCommit
 
 case class PullRequestRepoPage(userName: String, repoName: String, pullRequestId: String)  extends WithPullRequest with WithRepo
 
-case class SourceElementPage(userName: String, repoName: String, commit: String, path: List[String]) extends WithRepo
+case class SourceElementPage(userName: String, repoName: String, commit: String, path: List[String]) extends WithCommit
 
 
 

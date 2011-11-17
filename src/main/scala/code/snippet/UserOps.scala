@@ -55,9 +55,7 @@ class UserOps(up: WithUser) extends Loggable with RepositoryUI {
         case _ => {
             ".repo_name *" #> a(repo.sourceTreeUrl, Text(repo.name.get)) &
             ".clone-url *" #> (repo.cloneUrlsForCurrentUser.map(url => a(url._1, Text(url._2)))) &
-            ".admin_page" #> NodeSeq.Empty & 
-            ".fork" #> NodeSeq.Empty & 
-            ".toggle_open" #> NodeSeq.Empty
+            ".admin" #> NodeSeq.Empty 
         }
     }))    
   }

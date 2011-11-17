@@ -1,61 +1,60 @@
 <div id="main" role="main" class="lift:surround?with=def;at=content">
-    <div class="lift:embed?what=menu"></div>
-
-   <div class="repo_menu font">
-        <span class="lift:SourceTreeOps.renderMenu"></span>
-    </div>
-
-    <div class="lift:SourceTreeOps.renderUrlBox repo_block">
-        <h3>Repo 1</h3>
-
-        <div class="url-box">
-            <ul class="clone-urls">
-                <li class="private_clone_url"><a href="git@github.com:btd/querulous.git"
-                        >SSH</a></li>
-
-                <li class="public_clone_url selected"><a href="git://github.com/btd/querulous.git"
-                        >Git</a></li>
+    <div class="top_menu">
+        <nav class="repo_menu">
+            <ul>
+                <li class="lift:RepoOps.renderSourceTreeDefaultLink?current=true repo_menu_link"></li>
+                <li class="lift:RepoOps.renderCommitsDefaultLink repo_menu_link"></li>
+                <li class="lift:RepoOps.renderPullRequestsLink repo_menu_link"></li>
             </ul>
-            <input type="text" class="textfield" value="git://github.com/btd/querulous.git" readonly/>
-
-        </div>
+        </nav>
+        <nav class="main_menu">
+            <ul>
+                <li class="lift:MyMenu.admin">Admin</li>
+                <li class="lift:MyMenu.your">Your page</li>
+                <li class="lift:MyMenu.signIn">Sign In</li>
+            </ul>
+        </nav>
     </div>
-    <hr/>
-    <form id="current_branch_select_holder">
-        <select name="current_branch" id="current_branch" class="lift:SourceTreeOps.renderBranches selectmenu">
-            <option value="master" selected="selected">master</option>
+
+    <div class="repo_list lift:RepoOps.renderRepositoryBlock">
+            <div class="repo long public">
+                <div class="clearfix">
+                    <h2 class="repo_name left"><a href="">repo</a></h2>
+                    <div class="url-box right">                  
+                        <ul class="clone-urls">
+                            <li class="clone-url"><a href="git@github.com:btd/querulous.git">SSH</a></li>
+                        </ul>
+                        <input type="text" class="textfield" value="git://github.com/btd/querulous.git"/>
+                    </div>
+                </div>
+                <ul class="sub admin">
+                    <li class="admin_page"><a href="">admin</a></li>
+                    <li class="fork"><a href="">fork it</a></li>
+                    <li class="toggle_open"><a href="">make private</a></li>
+                </ul>
+            </div>
+        </div>
+    <form class="current_branch_select_holder">
+        <select name="current_branch"  class="lift:SourceElementOps.renderBrancheSelector selectmenu current_branch">
+            
         </select>
     </form>
 
-    <div id="breadcrumbs" class="lift:SourceTreeOps.renderBreadcrumbs">
+    <div class="lift:SourceElementOps.renderBreadcrumbs breadcrumbs">
 
     </div>
-
-    <table id="source_tree" class="lift:SourceTreeOps.renderTree">
-        <tr class="tree">
-            <td>Dir1/</td>
-            <td>Date</td>
-            <td>Commit message</td>
+<div class="source_tree">
+    <table class="lift:SourceElementOps.renderTree">
+        <tr class="parent">
+            <td class="name">..</td>
+            <td></td>
+            <td></td>
         </tr>
-        <tr class="tree">
-            <td>Dir2/</td>
-            <td>Date</td>
-            <td>Commit message</td>
-        </tr>
-        <tr class="tree">
-            <td>Dir3/</td>
-            <td>Date</td>
-            <td>Commit message</td>
-        </tr>
-        <tr class="blob">
-            <td>Blob</td>
-            <td>Date</td>
-            <td>Commit message</td>
-        </tr>
-        <tr class="blob">
-            <td>Blob</td>
-            <td>Date</td>
-            <td>Commit message</td>
+        <tr class="source_element">
+            <td class="name">Dir2/</td>
+            <td class="date">Date</td>
+            <td class="last_commit">Commit message</td>
         </tr>
     </table>
+    </div>
 </div>
