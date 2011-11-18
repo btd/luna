@@ -54,9 +54,15 @@ class UserDoc private() extends MongoRecord[UserDoc] with ObjectIdPk[UserDoc] {
   }
 
   object password extends StringField(this, 50) {
+    import org.mindrot.jbcrypt._
+
     override def validations = valMinLen(1, "Password cannot be empty") _ :: 
                                 valMaxLen(maxLength, "Login cannot be more than 50 symbols") _ ::
                                  super.validations
+
+    override def set(in: String): String = super.set(BCrypt.hashpw(in, BCrypt.gensalt(12)))
+
+    def match_?(passwd: String) = BCrypt.checkpw(passwd, this.get)
   }
 
   def meta = UserDoc

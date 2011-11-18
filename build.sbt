@@ -18,6 +18,7 @@ resolvers ++= Seq (
 
 
 libraryDependencies ++= Seq (
+  "org.mindrot"         % "jbcrypt"               % "0.3m",
   "org.apache.sshd"     % "sshd-core" 	          % "0.6.0",
   "org.eclipse.jgit"    % "org.eclipse.jgit"      % "1.1.0.201109151100-r",
   "org.apache.mina"     % "mina-core"             % "2.0.4",

@@ -49,7 +49,7 @@ trait UserUI {
       S.error("Email field is empty")
     else
       UserDoc.find("email", email) match {
-        case Full(u) if (u.password.get == password) => {
+        case Full(u) if (u.password.match_?(password)) => {
           UserDoc.logUserIn(u, () => {
             S.redirectTo(u.homePageUrl)
           })
