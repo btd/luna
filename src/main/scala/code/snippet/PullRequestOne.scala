@@ -18,17 +18,14 @@ import xml.{NodeSeq, Text}
 class PullRequestOneOps(pr: WithPullRequest) extends Loggable {
 
 
-  def renderHelp = pr.pullRequest match {
-    case Full(pullRequest) => {
-    "code *" #> ("$ git remote add %s %s\n" +
+  def renderHelp = w(pr.pullRequest){pullRequest =>
+    ".shell *" #> ("$ git remote add %s %s\n" +
       "$ git fetch %s\n" +
       "$ git merge %s/%s\n").format(pullRequest.srcRepoId.obj.get.owner.login.get,
         pullRequest.srcRepoId.obj.get.publicGitUrl,
         pullRequest.srcRepoId.obj.get.owner.login.get,
         pullRequest.srcRepoId.obj.get.owner.login.get,
         pullRequest.srcRef.get      )
-    }
-    case _ => PassThru
   }
 
   def renderAll = pr.pullRequest match {
@@ -52,35 +49,21 @@ class PullRequestOneOps(pr: WithPullRequest) extends Loggable {
 
         </div>
       ) &
-      ".diff_list *" #> pullRequest.srcRepoId.obj.get.git.diff(diff.head.getName + "^1", diff.last.getName)._2.map(
-        d => {
-            <div class="source_code_holder">
-            <pre>
-              <code class="diff">{d}</code>
-              </pre>
-            </div>
-          }
+      ".blob *" #> pullRequest.srcRepoId.obj.get.git.diff(diff.head.getName + "^1", diff.last.getName)._2.map(
+        d => ".source_code" #> d
       )
     }
     case _ => PassThru
   }
 
-  def renderForm = pr.pullRequest match {
-    case Full(pullRequest) => {
+  def renderForm = w(pr.pullRequest){pullRequest => {
       "p" #> <p>{pullRequest.description.get}</p> &
-      "button" #> (if (!pullRequest.accepted_?.get) SHtml.button("Close", processPullRequestClose, "class" -> "button") else NodeSeq.Empty)
-
+      "button" #> (if (!pullRequest.accepted_?.get && UserDoc.loggedIn_?) 
+                    SHtml.button("Close", processPullRequestClose(pullRequest), "class" -> "button") 
+                  else NodeSeq.Empty)
     }
-    case _ => PassThru
   }
 
-  def processPullRequestClose() = pr.pullRequest match {
-      case Full(pullRequest) => {
-      pullRequest.accepted_?(true).save
-    }
-    case _ => PassThru
-  }
-
-  def renderMenu = PassThru
+  def processPullRequestClose(pullRequest: PullRequestDoc)() =  pullRequest.accepted_?(true).save
 
 }

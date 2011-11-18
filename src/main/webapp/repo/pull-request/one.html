@@ -1,11 +1,22 @@
 <div id="main" role="main" class="lift:surround?with=def-h;at=content">
-    <div class="lift:embed?what=menu"></div>
-
-    <div class="font">
-        <span class="lift:PullRequestOneOps.renderMenu"></span>
+    <div class="top_menu">
+        <nav class="repo_menu">
+            <ul>
+                <li class="lift:RepoOps.renderSourceTreeDefaultLink repo_menu_link"></li>
+                <li class="lift:RepoOps.renderCommitsDefaultLink repo_menu_link"></li>
+                <li class="lift:RepoOps.renderPullRequestsLink?current=true repo_menu_link"></li>
+            </ul>
+        </nav>
+        <nav class="main_menu">
+            <ul>
+                <li class="lift:MyMenu.admin">Admin</li>
+                <li class="lift:MyMenu.your">Your page</li>
+                <li class="lift:MyMenu.signIn">Sign In</li>
+            </ul>
+        </nav>
     </div>
 
-    <form class="pull_request font lift:PullRequestOneOps.renderForm?form=post">
+    <form class="pull_request lift:PullRequestOneOps.renderForm?form=post">
         <p>Pull request message</p>
         <button class="button">Close</button>
     </form>
@@ -45,11 +56,9 @@
             </div>
         </div>
         <div class="diff_list">
-        <pre>
-            <code class="diff">
-                diff
-            </code>
-        </pre>
+        <div class="blob">
+        <pre><code class="diff"><span class="source_code"></span></code></pre>
+        </div>
         </div>
 
     </div>

@@ -801,6 +801,15 @@ ul.clone-urls li.selected>a {
     width: 200px;
 }
 
+.pull_request {
+    font-size: 1.1em;
+    border: 2px solid #dcdcdc;
+    border-radius: 3px;
+    padding: 15px;
+    width: 970px;
+    margin: 10px 0;
+}
+
 .pull_request_box {
     border: 1px solid gray;
     padding: 20px;
@@ -814,6 +823,7 @@ ul.clone-urls li.selected>a {
 
 .help {
     background-color: #fcefa1;
+    border: 2px solid #dcdcdc;
 }
 
 #lift__noticesContainer___error , .error {
