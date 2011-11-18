@@ -65,6 +65,8 @@ class UserDoc private() extends MongoRecord[UserDoc] with ObjectIdPk[UserDoc] {
 
   def repos = RepositoryDoc where (_.ownerId eqs id.get) fetch
 
+  def collaboratedRepos: Seq[RepositoryDoc] = (CollaboratorDoc where (_.userId eqs id.get) fetch).map(_.repoId.obj.get)
+
   def homePageUrl = "/" + login.is
 
   def deleteDependend = {

@@ -57,7 +57,10 @@ object SnippetHelper extends Loggable{
   //def cloneButtonRedirect(r: RepositoryDoc, user: UserDoc) =
   //SHtml.a(() => S.redirectTo(r.git.clone(user).sourceTreeUrl), <span class="ui-icon ui-icon-shuffle "/>, "class" -> "admin_button")
 
-
+  def makeFork(repo: RepositoryDoc, u: UserDoc)():JsCmd = {
+    repo.git.clone(u)
+    S.redirectTo(u.homePageUrl)
+  }
   
   def a(href: String, value: NodeSeq) = <a href={href}>{value}</a>
 

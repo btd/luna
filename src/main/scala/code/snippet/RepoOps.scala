@@ -13,6 +13,7 @@ import SnippetHelper._
 import bootstrap.liftweb._
 import util._
 import xml._
+import js._
 import code.model._
 
 /**
@@ -45,28 +46,35 @@ class RepoOps(urp: WithRepo) {
   }} 
 
   def renderRepositoryBlock = w(urp.user){u =>  w(urp.repo){repo => 
+      ".repo [class+]" #> (UserDoc.currentUser match {
+        case Full(cu) if(!repo.owner_?(Full(cu)) && repo.canPush_?(Full(cu))) => "collaborated"
+        case Full(cu) if(repo.owner_?(Full(cu)))=> if(repo.open_?.get) "public" else "private"
+        case _ => "public"
+      }) &
       ".repo *" #> (UserDoc.currentUser match {
         case Full(cu) if (cu.login.get == u.login.get) => {
             ".repo_name *" #> a(repo.sourceTreeUrl, Text(repo.name.get)) &
             ".clone-url *" #> (repo.cloneUrlsForCurrentUser.map(url => "a" #> a(url._1, Text(url._2)))) &
             ".admin_page *" #> a("/admin" + repo.homePageUrl, Text("admin")) & 
-            ".fork *" #> a("", Text("fork it")) &
+            ".fork *" #> SHtml.a(makeFork(repo, cu) _, Text("fork it")) &
             ".toggle_open" #> NodeSeq.Empty
         }
-        case Full(cu) => {        
+        case Full(cu) => {     
             ".repo_name *" #> a(repo.sourceTreeUrl, Text(repo.name.get)) &
-            ".clone-url *" #> (repo.cloneUrlsForCurrentUser.map(url => a(url._1, Text(url._2)))) &
+            ".clone-url *" #> (repo.cloneUrlsForCurrentUser.map(url => "a" #> a(url._1, Text(url._2)))) &
             ".admin_page" #> NodeSeq.Empty & 
-            ".fork *" #> a("", Text("fork it")) &
+            ".fork *" #> SHtml.a(makeFork(repo, cu) _, Text("fork it")) &
             ".toggle_open" #> NodeSeq.Empty
           }
         case _ => {
             ".repo_name *" #> a(repo.sourceTreeUrl, Text(repo.name.get)) &
-            ".clone-url *" #> (repo.cloneUrlsForCurrentUser.map(url => a(url._1, Text(url._2)))) &
+            ".clone-url *" #> (repo.cloneUrlsForCurrentUser.map(url => "a" #> a(url._1, Text(url._2)))) &
             ".admin" #> NodeSeq.Empty 
         }
     })
   }} 
+
+  
 
   
 }
