@@ -16,7 +16,7 @@ import code.model._
 import SnippetHelper._
 import org.bson.types.ObjectId
 
-trait UserUI {
+trait UserUI extends Loggable{
   private var login = ""
   private var email = ""
   private var password = ""
@@ -68,7 +68,9 @@ trait UserUI {
  }
 
   def saveUser(user:UserDoc, postUpdate: (UserDoc) => Any)():Any = {
+
     val updated = user.email(email).login(login).password(password)
+
     updated.validate match {
       case Nil => {
         updated.save

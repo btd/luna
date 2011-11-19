@@ -30,9 +30,8 @@ class AuthOps extends Loggable with UserUI with SshKeyUI {
     button("Register", () => {
       fillUser(newUser)
       fillKey(newKey)
-
       newUser.validate match {
-        case Nil => newUser.validate match {
+        case Nil => newKey.validate match {
             case Nil => {
               newUser.save
               newKey.save

@@ -53,16 +53,16 @@ class UserDoc private() extends MongoRecord[UserDoc] with ObjectIdPk[UserDoc] {
                                 unique_?("This login already used") _ :: super.validations
   }
 
-  object password extends StringField(this, 50) {
+  object password extends StringField(this, 500) {
     import org.mindrot.jbcrypt._
 
     override def validations = valMinLen(1, "Password cannot be empty") _ :: 
-                                valMaxLen(maxLength, "Login cannot be more than 50 symbols") _ ::
+                                valMaxLen(maxLength, "Password cannot be more than 50 symbols") _ ::
                                  super.validations
 
-    override def set(in: String): String = super.set(BCrypt.hashpw(in, BCrypt.gensalt(12)))
-
-    def match_?(passwd: String) = BCrypt.checkpw(passwd, this.get)
+    override def apply (in: String): UserDoc = super.apply(BCrypt.hashpw(in, BCrypt.gensalt(12)))
+                                 
+    def match_?(passwd: String) = BCrypt.checkpw(passwd, get)
   }
 
   def meta = UserDoc
