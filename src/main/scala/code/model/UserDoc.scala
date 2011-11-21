@@ -57,12 +57,16 @@ class UserDoc private() extends MongoRecord[UserDoc] with ObjectIdPk[UserDoc] {
     import org.mindrot.jbcrypt._
 
     override def validations = valMinLen(1, "Password cannot be empty") _ :: 
-                                valMaxLen(maxLength, "Password cannot be more than 50 symbols") _ ::
                                  super.validations
 
     override def apply (in: String): UserDoc = super.apply(BCrypt.hashpw(in, BCrypt.gensalt(12)))
                                  
     def match_?(passwd: String) = BCrypt.checkpw(passwd, get)
+  }
+
+  def is (user: Box[UserDoc]): Boolean = user match {
+    case Full(u) if(u.login.get == login.get) => true
+    case _ => false
   }
 
   def meta = UserDoc
@@ -72,6 +76,10 @@ class UserDoc private() extends MongoRecord[UserDoc] with ObjectIdPk[UserDoc] {
   def repos = RepositoryDoc where (_.ownerId eqs id.get) fetch
 
   def collaboratedRepos: Seq[RepositoryDoc] = (CollaboratorDoc where (_.userId eqs id.get) fetch).map(_.repoId.obj.get)
+
+  def publicRepos = RepositoryDoc where (_.ownerId eqs id.get) and (_.open_? eqs true) fetch
+
+  def privateRepos = RepositoryDoc where (_.ownerId eqs id.get) and (_.open_? eqs false) fetch
 
   def homePageUrl = "/" + login.is
 

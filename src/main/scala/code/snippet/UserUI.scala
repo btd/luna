@@ -25,7 +25,7 @@ trait UserUI extends Loggable{
     "name=email" #> SHtml.text(user.email.get, v => email = v.trim,
       "placeholder" -> "email@example.com", "class" -> "textfield large") &
       "name=password" #>
-      SHtml.password(user.password.get,v => password = v.trim, 
+      SHtml.password("",v => password = v.trim, 
         "placeholder" -> "password", "class" -> "textfield large") &
         "name=login" #>
         SHtml.text(user.login.get, v => login = v.trim,

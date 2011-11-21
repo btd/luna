@@ -36,15 +36,15 @@ class UserOps(up: WithUser) extends Loggable with RepositoryUI {
     if(u.repos.isEmpty)
     ".repo" #> NodeSeq.Empty
     else 
-    ".repo" #> (u.repos.map(repo => {
-      ".repo [class+]" #> "public" &
+    ".repo" #> ((u.publicRepos ++ (if(u.is(UserDoc.currentUser)) u.privateRepos else Nil)).map(repo => {
+      ".repo [class+]" #> (if(repo.open_?.get) "public" else "private" ) &
         (UserDoc.currentUser match {
           case Full(cu) if (cu.login.get == u.login.get) => {
               ".repo_name *" #> a(repo.sourceTreeUrl, Text(repo.name.get)) &
               ".clone-url" #> (repo.cloneUrlsForCurrentUser.map(url => "a" #> a(url._1, Text(url._2)))) &
               ".admin_page *" #> a("/admin" + repo.homePageUrl, Text("admin")) & 
               ".fork *" #> SHtml.a(makeFork(repo, cu) _, Text("fork it")) & //later will be added js append
-              ".toggle_open" #> NodeSeq.Empty
+              ".toggle_open *" #> SHtml.a(toggleOpen(repo) _, Text(if (repo.open_?.get) "make private" else "make public"))
           }
           case Full(cu) => {        
               ".repo_name *" #> a(repo.sourceTreeUrl, Text(repo.name.get)) &
@@ -60,10 +60,7 @@ class UserOps(up: WithUser) extends Loggable with RepositoryUI {
         }
       }) 
     }) ++
-    (UserDoc.currentUser match {
-      case Full(cu) if (cu.login.get == u.login.get) => u.collaboratedRepos
-      case _ => Nil 
-    }).map(repo => {
+    (if(u.is(UserDoc.currentUser)) u.collaboratedRepos else Nil).map(repo => {
       ".repo [class+]" #> "collaborated" &
         (     ".repo_name *" #> a(repo.sourceTreeUrl, Text(repo.name.get)) &
               ".clone-url" #> (repo.cloneUrlsForCurrentUser.map(url => "a" #> a(url._1, Text(url._2)))) &
@@ -71,7 +68,7 @@ class UserOps(up: WithUser) extends Loggable with RepositoryUI {
               ".fork *" #> SHtml.a(makeFork(repo, UserDoc.currentUser.get) _, Text("fork it")) &
               ".toggle_open" #> NodeSeq.Empty
         ) 
-      })
+    }) 
     )  
   }
 }

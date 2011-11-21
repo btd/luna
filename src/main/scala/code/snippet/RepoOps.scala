@@ -57,7 +57,7 @@ class RepoOps(urp: WithRepo) {
             ".clone-url *" #> (repo.cloneUrlsForCurrentUser.map(url => "a" #> a(url._1, Text(url._2)))) &
             ".admin_page *" #> a("/admin" + repo.homePageUrl, Text("admin")) & 
             ".fork *" #> SHtml.a(makeFork(repo, cu) _, Text("fork it")) &
-            ".toggle_open" #> NodeSeq.Empty
+            ".toggle_open *" #> SHtml.a(toggleOpen(repo) _, Text(if (repo.open_?.get) "make private" else "make public"))
         }
         case Full(cu) => {     
             ".repo_name *" #> a(repo.sourceTreeUrl, Text(repo.name.get)) &

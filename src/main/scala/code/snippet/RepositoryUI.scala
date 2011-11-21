@@ -15,11 +15,13 @@ import code.model._
 import org.bson.types.ObjectId
 
 trait RepositoryUI {
-	protected var name = "" 
+	private var name = "" 
+  private var open_? = false
+
 
 	def repositoryForm(repo: RepositoryDoc, buttonText:String, onSubmit: () => Any): NodeSeq => NodeSeq = {
-    "name=name" #> SHtml.text(repo.name.get, v => name = v.trim,
-      "placeholder" -> "Name", "class" -> "textfield large") &
+    "name=name" #> SHtml.text(repo.name.get, v => name = v.trim, "placeholder" -> "Name", "class" -> "textfield large") &
+    "name=open" #> SHtml.checkbox(repo.open_?.get, open_? = _) &
       "button" #> SHtml.button(buttonText, onSubmit, "class" -> "button")
     }
 
@@ -29,7 +31,7 @@ trait RepositoryUI {
 
 
     def saveRepo(repo: RepositoryDoc, postUpdate: (RepositoryDoc) => Any)(): Any = {
-      val record = repo.name(name)
+      val record = repo.name(name).open_?(open_?)
       record.validate match {
         case Nil => record.save
         case l => l.foreach(fe => S.error("repo", fe.msg))

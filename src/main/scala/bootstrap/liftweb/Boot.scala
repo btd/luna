@@ -27,11 +27,13 @@ trait WithRepo extends WithUser {
   def repoName: String
 
   lazy val repo = user match {
-    case Full(u) => tryo {
-      u.repos.filter(_.name.get == repoName).head
-    } or {
-      Empty
+
+    case Full(u) => (tryo {  u.repos.filter(_.name.get == repoName).head } or { Empty }) match {
+      case Full(r) if (r.open_?.get) => Full(r)
+      case Full(r) if (r.canPush_?(UserDoc.currentUser)) => Full(r)
+      case _ => Empty
     }
+        
     case _ => Empty
   }
 }
@@ -339,7 +341,6 @@ class Boot extends Loggable {
       case RewriteRequest(ParsePath(user :: Nil, _, _, false), _, _) =>
 
         RewriteResponse("list" :: user :: Nil, Map[String, String]())
-
     }
 
 

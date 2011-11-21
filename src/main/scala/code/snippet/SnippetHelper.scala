@@ -61,6 +61,11 @@ object SnippetHelper extends Loggable{
     repo.git.clone(u)
     S.redirectTo(u.homePageUrl)
   }
+
+  def toggleOpen(repo: RepositoryDoc)():JsCmd = {
+    repo.open_?(!repo.open_?.get).save
+    S.redirectTo(repo.owner.homePageUrl)
+  }
   
   def a(href: String, value: NodeSeq) = <a href={href}>{value}</a>
 
