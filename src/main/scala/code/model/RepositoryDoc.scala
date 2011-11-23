@@ -32,7 +32,7 @@ import org.eclipse.jgit.transport.{URIish, UploadPack, ReceivePack}
 
 
 import com.foursquare.rogue.Rogue._
-
+import main._
 
 /**
  * User: denis.bardadym
@@ -42,13 +42,17 @@ import com.foursquare.rogue.Rogue._
 
 abstract class SourceElement {
   def path: String
+
+  def basename = path.substring(path.lastIndexOf("/") + 1)
 }
 
-case class Blob(path: String, id: ObjectId) extends SourceElement {}
-
-case class Tree(path: String, id: ObjectId) extends SourceElement {
-
+abstract case class Blob(path: String, size: Long) extends SourceElement with BlobHelper with FileBlob {
+  def basePath = None
+ 
+  def name = path
 }
+
+case class Tree(path: String) extends SourceElement
 
 class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk[RepositoryDoc] with Loggable {
 
@@ -105,7 +109,7 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
     def currentBranch = fs_repo.getBranch
 
     def ls_tree(path: List[String], commit: String) = {
-
+      logger.debug("ls_tree" + path)
       val reader = fs_repo.newObjectReader
       val rev = new RevWalk(reader)
 
@@ -119,17 +123,15 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
         walk = subTree(walk, Nil, path)
       }
 
-      def preparePath(rawPath: Array[Byte]) = {
-        val str = new String(rawPath, "UTF-8")
-        logger.debug("Path: " + str)
-        str.substring(str.lastIndexOf("/") + 1)
-      }
-
       val list = new ArrayBuffer[SourceElement](50)
       while (walk.next) {
+        val fullPath = new String(walk.getRawPath, "UTF-8")
+
         list +=
-          (if (walk.getFileMode(level) == FileMode.TREE) Tree(preparePath(walk.getRawPath), walk.getObjectId(level))
-          else Blob(preparePath(walk.getRawPath), walk.getObjectId(level)))
+          (if (walk.getFileMode(level) == FileMode.TREE) Tree(fullPath)
+          else new Blob(fullPath, reader.getObjectSize(walk.getObjectId(level), Constants.OBJ_BLOB)) {
+            lazy val data = ls_cat(fullPath.split("/").toList, commit)
+          })
       }
 
       rev.release
@@ -138,6 +140,8 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
 
       list.toList
     }
+
+    val begin =  System.currentTimeMillis
 
     private def subTree(tw: TreeWalk, prefix: List[String], suffix: List[String]): TreeWalk = {
       logger.debug("Try to load source " + suffix + " tw -> " + tw.getFileMode(0).getObjectType)
@@ -152,10 +156,11 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
         }
         case Nil => tw
       }
+
     }
 
     def ls_cat(path: List[String], commit: String) = {
-      //logger.debug("Try to load source " + path)
+      logger.debug("ls_cat" + path)
       val reader = fs_repo.newObjectReader
       val rev = new RevWalk(reader)
 
@@ -174,7 +179,11 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
       if (walk.getFileMode(level).getObjectType == Constants.OBJ_BLOB) {
         logger.debug("Source founded. Try to load")
         val blobLoader = reader.open(walk.getObjectId(level), Constants.OBJ_BLOB)
-        result = scala.io.Source.fromInputStream(blobLoader.openStream).mkString
+
+        val scanner = (new java.util.Scanner(blobLoader.openStream)).useDelimiter("""\z""")
+        val builder = new scala.collection.mutable.StringBuilder
+        while(scanner.hasNext) builder.append(scanner.next)
+        result = builder.toString
 
       }
 

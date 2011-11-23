@@ -54,7 +54,12 @@ case class RepoAtCommitPage(userName: String, repoName: String, commit: String) 
 
 case class PullRequestRepoPage(userName: String, repoName: String, pullRequestId: String)  extends WithPullRequest with WithRepo
 
-case class SourceElementPage(userName: String, repoName: String, commit: String, path: List[String]) extends WithCommit
+case class SourceElementPage(userName: String, repoName: String, commit: String, path: List[String]) extends WithCommit {
+  
+  private lazy val reversedPath = path.reverse
+
+  lazy val elem = repo.flatMap(r => tryo { r.git.ls_tree(reversedPath.tail.reverse, commit).filter(_.basename == reversedPath.head).head } or {Empty})
+}
 
 
 

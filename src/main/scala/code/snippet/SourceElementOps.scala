@@ -52,16 +52,26 @@ class SourceElementOps(se: SourceElementPage) {
    ".source_element *" #> repo.git.ls_tree(se.path, se.commit).map(s => {
         val c = repo.git.log(se.commit, suffix(se.path, "", "/") + s.path).next
         ".name *" #> (s match {
-          case Tree(path, _) => <a href={repo.sourceTreeUrl(se.commit) + suffix(se.path) + "/" + path}>{path}/</a>
-          case Blob(path, _) => <a href={repo.sourceBlobUrl(se.commit) + suffix(se.path) + "/" + path}>{path}</a>
+          case t @ Tree(_) => <a href={repo.sourceTreeUrl(se.commit) + "/" + t.path}>{t.basename}/</a>
+          case b @ Blob(_, _) => <a href={repo.sourceBlobUrl(se.commit) + "/" + b.path}>{b.basename}</a>
         } ) &
         ".date *" #> (tryo {SnippetHelper.dateFormatter.format(c.getAuthorIdent.getWhen) }).openOr { "" }&
         ".last_commit *" #> (tryo { c.getShortMessage }).openOr { "" }
           
  })}}
 
- def renderBlob = w(se.repo){repo => 
-    ".source_code" #> Text(repo.git.ls_cat(se.path.map(p => java.net.URLDecoder.decode(p, "UTF-8")), se.commit))
+ def renderBlob = w(se.elem){_ match {
+      case b @ Blob(_,_) => {
+       if(b.viewable_? && !b.generated_? && !b.vendored_?) ".source_code" #> b.data 
+       else if(b.generated_?) ".source_code" #> "File is generated and not will be shown"
+       else if(b.vendored_?) ".source_code" #> "Seems that no need to show this file"
+       else if(b.image_?) ".source_code" #> "This is image"
+       else if(b.binary_?) ".source_code" #> "This is binary file"
+       else ".source_code" #> NodeSeq.Empty
+      }
+      case _ => ".source_code" #> NodeSeq.Empty
+    }
+    
   }
 
 }
