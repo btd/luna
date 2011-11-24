@@ -75,7 +75,7 @@ class AdminRepoOps(urp: WithRepo) extends Loggable with SshKeyUI with Repository
 
 
   def renderUpdateRepoForm = w(urp.repo) {repo => {
-    repositoryForm(repo, "Update", saveRepo(repo, r => S.redirectTo("/admin" + r.homePageUrl))) }}
+    repositoryForm(repo, "Update", updateRepo(repo, r => S.redirectTo("/admin" + r.homePageUrl))) }}
 
   
 

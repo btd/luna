@@ -39,6 +39,17 @@ trait RepositoryUI {
       postUpdate(record)
     }
 
+    def updateRepo(repo: RepositoryDoc, postUpdate: (RepositoryDoc) => Any)(): Any = {
+      if(repo.name.get != name) repo.name(name)
+      if(repo.open_?.get != open_?) repo.open_?(open_?)
+      
+      repo.fields.filter(_.dirty_?).flatMap(_.validate) match {
+        case Nil => { repo.update; postUpdate(repo) }
+        case l => l.foreach(fe => S.error("repo", fe.msg))
+      }
+      
+    }
+
     def deleteRepo(repo: RepositoryDoc, postDelete: (RepositoryDoc) => Any)() = { 
 
       repo.deleteDependend

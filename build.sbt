@@ -1,4 +1,4 @@
-name := "GitoChtoTo"
+name := "luna-tool"
 
 version := "0.7-SNAPSHOT"
 

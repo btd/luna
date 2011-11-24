@@ -81,6 +81,18 @@ trait UserUI extends Loggable{
     
   }
 
+  def updateUser(user:UserDoc, postUpdate: (UserDoc) => Any)():Any = {
+    if(user.login.get != login) user.login(login)
+    if(user.email.get != email) user.email(email)
+    if(!password.isEmpty) user.password(password)
+
+    user.fields.filter(_.dirty_?).flatMap(_.validate) match {
+      case Nil => { user.update; postUpdate(user) }
+      case l => l.foreach(fe => S.error("person", fe.msg))
+    }
+    
+  }
+
   def deleteUser(user: UserDoc)() = {
       user.deleteDependend
       user.delete_!
