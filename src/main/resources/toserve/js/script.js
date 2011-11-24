@@ -62,7 +62,19 @@ $(function() {
 
     $(".selectmenu").selectmenu();
 
-    if (hljs) { hljs.initHighlightingOnLoad(); }
+    $(".blob").each(function(i, el) {
+        var code = $("pre code", el)
+        var lines = code.text().split("\n");
+        var rawLN = ""
+        code.empty();
+        for(var i in lines){
+            code.append("<span class='line'>"+ lines[i] +"<br/></span>");
+            rawLN += "<span class='line_number'>"+ i +"</span>\n"
+        }
+        hljs.highlightBlock(code[0], null, true)
+        $(el).append("<div class='source_container'><div class='line_numbers'><pre >"+rawLN+"</pre></div><div class='source'></div></div");
+        $(".source", el).append($("pre", el)[0])
+    });
 });
 
 

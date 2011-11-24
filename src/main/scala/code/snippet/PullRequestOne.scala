@@ -13,7 +13,8 @@ import Helpers._
 import code.model.{UserDoc, PullRequestDoc, RepositoryDoc}
 import code.snippet.SnippetHelper._
 import bootstrap.liftweb._
-import xml.{NodeSeq, Text}
+import xml._
+import Utility._
 
 class PullRequestOneOps(pr: WithPullRequest) extends Loggable {
 
@@ -38,7 +39,7 @@ class PullRequestOneOps(pr: WithPullRequest) extends Loggable {
 
       ".commits_list *" #> diff.map(lc =>
         <div class="commit">
-          <pre class="commit_msg">{lc.getFullMessage}</pre>
+          <pre class="commit_msg">{escape(lc.getFullMessage)}</pre>
 
           <p class="commit_author">
             {lc.getAuthorIdent.getName}
@@ -50,7 +51,7 @@ class PullRequestOneOps(pr: WithPullRequest) extends Loggable {
         </div>
       ) &
       ".blob *" #> pullRequest.srcRepoId.obj.get.git.diff(diff.head.getName + "^1", diff.last.getName)._2.map(
-        d => ".source_code" #> d
+        d => ".source_code" #> escape(d)
       )
     }
     case _ => PassThru

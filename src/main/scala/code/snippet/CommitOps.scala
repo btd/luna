@@ -13,6 +13,7 @@ import SnippetHelper._
 import bootstrap.liftweb._
 import util._
 import xml._
+import Utility._
 import code.model._
 
 /**
@@ -35,7 +36,7 @@ class CommitOps(c: WithCommit) {
         ".day *" #>  groupCommitsByDate(repo.git.log(c.commit)).map(p => {
         ".date *" #> p._1 &
         ".commit *" #> p._2.map(lc => {
-          ".commit_msg *" #> lc.getFullMessage &
+          ".commit_msg *" #> escape(lc.getFullMessage) &
           ".commit_author *" #> (lc.getAuthorIdent.getName + " at " + SnippetHelper.timeFormatter.format(lc.getAuthorIdent.getWhen)) &
           ".source_tree_link *" #> a(repo.sourceTreeUrl(lc.getName), Text("Source tree")) &
           ".diff_link *" #> a(repo.commitUrl(lc.getName), Text(lc.getName))
@@ -57,7 +58,7 @@ class CommitOps(c: WithCommit) {
               case  Renamed(op, np) => <li class="modified">{op} -> {np}</li>
             }
           )) & 
-          ".blob *" #> (diff._2.map(d => ".source_code" #> d) )
+          ".blob *" #> (diff._2.map(d => ".source_code" #> escape(d))) 
         }
    }
 }

@@ -11,7 +11,8 @@ import http._
 import common._
 import util._
 import Helpers._
-import scala.xml._
+import xml._
+import Utility._
 import code.model._
 import code.snippet.SnippetHelper._
 
@@ -111,7 +112,7 @@ class PullRequestOps(urp: WithRepo) extends Loggable {
       ".to" #> a(pr.destRepoId.obj.get.sourceTreeUrl(pr.srcRef.get), Text(pr.destRepoId.obj.get.owner.login.get + "/" + pr.destRepoId.obj.get.name.get + "@" + pr.destRef)) &
       ".whom" #> a(pr.creatorId.obj.get.homePageUrl, Text(pr.creatorId.obj.get.login.get)) &
       ".when" #> SnippetHelper.dateFormatter.format(pr.creationDate.get) &
-      ".msg" #> a(pr.homePageUrl, Text(if(!pr.description.get.isEmpty) pr.description.get else "No description"))
+      ".msg" #> a(pr.homePageUrl, Text(if(!pr.description.get.isEmpty) escape(pr.description.get) else "No description"))
       })
   }
 

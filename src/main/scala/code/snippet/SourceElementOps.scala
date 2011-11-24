@@ -19,6 +19,7 @@ import util.Helpers._
 import code.model._
 import util._
 import xml._
+import Utility._
 import SnippetHelper._
 
 /**
@@ -55,14 +56,14 @@ class SourceElementOps(se: SourceElementPage) {
           case t @ Tree(_) => <a href={repo.sourceTreeUrl(se.commit) + "/" + t.path}>{t.basename}/</a>
           case b @ Blob(_, _) => <a href={repo.sourceBlobUrl(se.commit) + "/" + b.path}>{b.basename}</a>
         } ) &
-        ".date *" #> (tryo {SnippetHelper.dateFormatter.format(c.getAuthorIdent.getWhen) }).openOr { "" }&
-        ".last_commit *" #> (tryo { c.getShortMessage }).openOr { "" }
+        ".date *" #> (tryo {escape(SnippetHelper.dateFormatter.format(c.getAuthorIdent.getWhen)) }).openOr { "" }&
+        ".last_commit *" #> (tryo { escape(c.getShortMessage) }).openOr { "" }
           
  })}}
 
  def renderBlob = w(se.elem){_ match {
       case b @ Blob(_,_) => {
-       if(b.viewable_? && !b.generated_? && !b.vendored_?) ".source_code" #> b.data 
+       if(b.viewable_? && !b.generated_? && !b.vendored_?) ".source_code" #> escape(b.data)
        else if(b.generated_?) ".source_code" #> "File is generated and not will be shown"
        else if(b.vendored_?) ".source_code" #> "Seems that no need to show this file"
        else if(b.image_?) ".source_code" #> "This is image"
