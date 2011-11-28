@@ -308,7 +308,7 @@ class Boot extends Loggable {
         case _ => Templates("404" :: Nil) openOr NodeSeq.Empty
       })
 
-    val signInPage = Menu.i("Sign In") / "user" / "m" / "signin"
+    val signInPage = Menu.i("Sign In") / "user" / "m" / "signin" >> If(() => !UserDoc.loggedIn_?, () => RedirectResponse(UserDoc.currentUser.get.homePageUrl))
 
     val loginPage = Menu.i("Log In") / "user" / "m" / "login"
 
