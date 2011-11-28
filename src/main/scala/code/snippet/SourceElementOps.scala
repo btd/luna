@@ -66,7 +66,7 @@ class SourceElementOps(se: SourceElementPage) {
        if(b.viewable_? && !b.generated_? && !b.vendored_?) ".source_code" #> escape(b.data)
        else if(b.generated_?) ".source_code" #> "File is generated and not will be shown"
        else if(b.vendored_?) ".source_code" #> "Seems that no need to show this file"
-       else if(b.image_?) ".blob *" #> <img src={se.repo.get.homePageUrl + "/raw/" + se.commit + "/" + b.path}/>
+       else if(b.image_?) ".blob *" #> <div class="img"><img src={se.repo.get.homePageUrl + "/raw/" + se.commit + "/" + b.path}/></div>
        else if(b.binary_?) ".source_code" #> "This is binary file"
        else ".source_code" #> NodeSeq.Empty
       }

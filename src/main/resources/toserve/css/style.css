@@ -747,6 +747,9 @@ ul.clone-urls li.selected>a {
     margin: 0;
     padding: 0;
 }
+.blob .img {
+    text-align: center;
+}
 
 .source_container {
     position: relative;
