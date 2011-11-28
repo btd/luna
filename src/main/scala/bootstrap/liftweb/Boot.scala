@@ -332,12 +332,12 @@ class Boot extends Loggable {
       newPullRequestPage,
       allPullRequestPage,
       onePullRequestPage)
-    //Menu.i("Home") / "index", // the simple way to declare a menu
-    //Menu.i("New User") / "new",
+    
 
-    //)
+    LiftRules.dispatch.append(code.snippet.RawFileStreamingSnippet)
+
     LiftRules.ajaxRetryCount = Full(1)
-     LiftRules.ajaxPostTimeout = 15000
+    LiftRules.ajaxPostTimeout = 15000
 
     LiftRules.statelessRewrite.append {
       case RewriteRequest(ParsePath("index" :: Nil, _, _, true), _, _) =>

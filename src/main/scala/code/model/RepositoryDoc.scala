@@ -26,7 +26,7 @@ import net.liftweb.util.Helpers._
 import org.eclipse.jgit.api.Git
 import collection.immutable.Nil
 import org.eclipse.jgit.diff.DiffFormatter
-import java.io.{ByteArrayOutputStream, File}
+import java.io._
 import collection.mutable.{ListBuffer, ArrayBuffer}
 import org.eclipse.jgit.transport.{URIish, UploadPack, ReceivePack}
 
@@ -184,6 +184,38 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
         val builder = new scala.collection.mutable.StringBuilder
         while(scanner.hasNext) builder.append(scanner.next)
         result = builder.toString
+
+      }
+
+      rev.release
+      walk.release
+      reader.release
+
+      result
+    }
+
+    def blobStream(path: List[String], commit: String) = {
+      logger.debug("blobStream" + path)
+      val reader = fs_repo.newObjectReader
+      val rev = new RevWalk(reader)
+
+      val c = rev.parseCommit(fs_repo.resolve(commit))
+      var walk = new TreeWalk(reader)
+      walk.addTree(c.getTree)
+
+      val level = 0
+
+      walk = subTree(walk, Nil, path)
+
+      var result: org.eclipse.jgit.lib.ObjectStream = null
+
+      logger.debug("tw -> " + walk.getFileMode(level).getObjectType)
+
+      if (walk.getFileMode(level).getObjectType == Constants.OBJ_BLOB) {
+        logger.debug("Source founded. Try to load")
+        val blobLoader = reader.open(walk.getObjectId(level), Constants.OBJ_BLOB)
+
+        result = blobLoader.openStream
 
       }
 
