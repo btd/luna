@@ -39,7 +39,7 @@ class PullRequestOneOps(pr: WithPullRequest) extends Loggable {
 
       ".commits_list *" #> diff.map(lc =>
         <div class="commit">
-          <pre class="commit_msg">{escape(lc.getFullMessage)}</pre>
+          <pre class="commit_msg">{lc.getFullMessage}</pre>
 
           <p class="commit_author">
             {lc.getAuthorIdent.getName}
