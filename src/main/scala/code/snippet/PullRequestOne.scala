@@ -37,18 +37,9 @@ class PullRequestOneOps(pr: WithPullRequest) extends Loggable {
       val diff = srcHistory.diff(destHistory)
 
 
-      ".commits_list *" #> diff.map(lc =>
-        <div class="commit">
-          <pre class="commit_msg">{lc.getFullMessage}</pre>
-
-          <p class="commit_author">
-            {lc.getAuthorIdent.getName}
-            at
-            {SnippetHelper.timeFormatter.format(lc.getAuthorIdent.getWhen)}
-          </p>
-
-
-        </div>
+      ".commit *" #> diff.map(lc =>
+        ".commit_msg *" #> <span>{lc.getFullMessage.split("\n").map(m => <span>{m}</span><br/>)}</span> &
+        ".commit_author *" #> (lc.getAuthorIdent.getName + " at " + SnippetHelper.timeFormatter.format(lc.getAuthorIdent.getWhen))
       ) &
       ".blob *" #> pullRequest.srcRepoId.obj.get.git.diff(diff.head.getName + "^1", diff.last.getName)._2.map(
         d => ".source_code" #> escape(d)
