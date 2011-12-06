@@ -7,8 +7,10 @@ package code.model
 
 import net.liftweb.mongodb.record.{MongoMetaRecord, MongoRecord}
 import net.liftweb.record.field.{StringField, TextareaField}
-import net.liftweb.common.{Full}
+import net.liftweb.common._
 import net.liftweb.mongodb.record.field.{ObjectIdRefField, ObjectIdPk}
+import net.liftweb.util._
+import Helpers._
 
 /**
  * User: denis.bardadym
@@ -36,7 +38,8 @@ class SshKeyDoc private() extends MongoRecord[SshKeyDoc] with ObjectIdPk[SshKeyD
 
   private lazy val splitedRawValue = rawValue.get.split(" ")
 
-  lazy val comment = splitedRawValue(2)
+  lazy val algorithm = splitedRawValue(0)
+  lazy val comment = tryo { splitedRawValue(2) } openOr { "" }
   lazy val encodedKey = splitedRawValue(1)
 
   def meta = SshKeyDoc

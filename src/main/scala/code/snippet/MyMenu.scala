@@ -1,6 +1,7 @@
 package code.snippet
 
-import net.liftweb.common.Full
+import net.liftweb.common._
+import net.liftweb.http._
 import net.liftweb.util.Helpers._
 import xml.{Text, NodeSeq}
 import code.model.UserDoc
@@ -29,10 +30,10 @@ class MyMenu {
   }
 
   def signIn = {
-    "li *" #> (UserDoc.currentUser match {
-      case Full(u) => Text("")
-      case _ => <a href="/user/m/signin">Sign In</a>
-    })
+    UserDoc.currentUser match {
+      case Full(u) => "li *" #> SHtml.a(()=> { UserDoc.logoutCurrentUser; S.redirectTo(S.referer openOr "") }, Text("Log Out"))
+      case _ => "li" #> (<li><a href="/user/m/login">Log In</a></li> ++ <li><a href="/user/m/new">Register</a></li>)
+    }
 
   }
 }
