@@ -64,14 +64,13 @@ $(function() {
 
     $(".blob").each(function(i, el) {
         var code = $("pre code", el)
-        var lines = code.text().split("\n");
+        var linesCount = code.text().split("\n").length;
         var rawLN = ""
-        code.empty();
-        for(var i in lines){
-            code.append("<span class='line'>"+ lines[i] +"<br/></span>");
+        //code.empty();
+        for(var i = 0; i < linesCount; i++){
             rawLN += "<span class='line_number'>"+ i +"</span>\n"
         }
-        hljs.highlightBlock(code[0], null, true)
+        hljs.highlightBlock(code[0])
         $(el).append("<div class='source_container'><div class='line_numbers'><pre >"+rawLN+"</pre></div><div class='source'></div></div");
         $(".source", el).append($("pre", el)[0])
     });
