@@ -3,6 +3,17 @@ WARNING Ssh keys 18 Dec 2011
 
 Ssh keys are splited on two collections. To migrate from prev versions move all keys for users to collection ssh_keys_user and ssh keys for repos move to ssh_keys_repo.
 
+Using mongo client:
+
+```javascript
+db grt;
+db.createCollection("ssh_keys_repo");
+db.createCollection("ssh_keys_user");
+db.ssh_keys.find({ownerRepoId:{$exists: false}}).forEach( function(x){db.ssh_keys_user.insert(x)} );
+db.ssh_keys.find({ownerRepoId:{$exists: true}}).forEach( function(x){db.ssh_keys_repo.insert({_id:x._id, rawValue:x.rawValue, ownerId:x.ownerRepoId})} );
+db.ssh_keys.drop();
+```
+
 LUNA-TOOL
 =========
 
