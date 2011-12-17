@@ -9,7 +9,7 @@ import java.security.PublicKey
 import org.apache.commons.codec.binary.Base64
 import org.eclipse.jgit.lib.Constants
 import org.apache.sshd.common.util.Buffer
-import code.model.SshKeyDoc
+import code.model.SshKeyBase
 
 /**
  * Created by IntelliJ IDEA.
@@ -21,7 +21,7 @@ import code.model.SshKeyDoc
 
 object SshUtil {
 
-  def parse(key:SshKeyDoc): PublicKey = {
+  def parse(key:SshKeyBase[_]): PublicKey = {
     val bin = Base64.decodeBase64(Constants.encodeASCII(key.encodedKey))
     new Buffer(bin).getRawPublicKey();
   }

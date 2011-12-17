@@ -4,7 +4,7 @@ import net.liftweb._
 import common.{Full, Loggable}
 import util.Helpers._
 import http._
-import code.model.{UserDoc, SshKeyDoc}
+import code.model._
 import SnippetHelper._
 import com.foursquare.rogue.Rogue._
 
@@ -23,7 +23,7 @@ class AuthOps extends Loggable with UserUI with SshKeyUI {
 
   def renderNewUserForm = {
     val newUser = UserDoc.createRecord
-    val newKey = SshKeyDoc.createRecord.ownerId(newUser.id.get)
+    val newKey = SshKeyUserDoc.createRecord.ownerId(newUser.id.get)
 
     userForm(newUser) &
     sshKeyForm(newKey) &

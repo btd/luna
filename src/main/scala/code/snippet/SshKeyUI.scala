@@ -19,7 +19,7 @@ import org.bson.types.ObjectId
 trait SshKeyUI extends Loggable {
 	protected var ssh_key = "" 
 
-	def keysTable(keys: Seq[SshKeyDoc]): NodeSeq => NodeSeq = 
+	def keysTable(keys: Seq[SshKeyBase[_]]): NodeSeq => NodeSeq = 
 		".keys" #> keys.map(key => {
 			".key [id]" #> key.id.get.toString &
 			".key *" #> (".key_name *" #> (key.algorithm + " " + key.encodedKey.substring(0, 10) + "... " + key.comment) &
@@ -29,21 +29,21 @@ trait SshKeyUI extends Loggable {
 
           })
 	
-	def sshKeyForm(key: SshKeyDoc): CssSel = {
+	def sshKeyForm(key: SshKeyBase[_]): CssSel = {
     "name=ssh_key" #>
       SHtml.textarea(key.rawValue.get, v => ssh_key = v.replaceAll("""^\s+""", ""), "placeholder" -> "Enter your ssh key",
       "class" -> "textfield",
       "cols" -> "40", "rows" -> "20")      
   	}
 
-  def sshKeyForm(key: SshKeyDoc, buttonText: String, onSubmit: () => Any): NodeSeq => NodeSeq = 
+  def sshKeyForm(key: SshKeyBase[_], buttonText: String, onSubmit: () => Any): NodeSeq => NodeSeq = 
     sshKeyForm(key) & button(buttonText, onSubmit)
 
-  def fillKey(key: SshKeyDoc) = key.rawValue(ssh_key)
+  def fillKey(key: SshKeyBase[_]) = key.rawValue(ssh_key)
 
-  def saveSshKey(key: SshKeyDoc)() = {
-    val record = key.rawValue(ssh_key)
-    logger.debug(record)
+  def saveSshKey(key: SshKeyBase[_])() = {
+    val record = key.rawValue(ssh_key).asInstanceOf[SshKeyBase[_]]
+    //logger.debug(record)
     record.validate match {
       case Nil => record.save
       case l => l.foreach(fe => S.error("keys", fe.msg))

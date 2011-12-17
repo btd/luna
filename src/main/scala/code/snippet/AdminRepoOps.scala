@@ -54,7 +54,7 @@ class AdminRepoOps(urp: WithRepo) extends Loggable with SshKeyUI with Repository
 
 
   def renderAddKeyForm = w(urp.repo) {repo => {
-    val newKey = SshKeyDoc.createRecord.ownerId(repo.ownerId.is).ownerRepoId(repo.id.is)
+    val newKey = SshKeyRepoDoc.createRecord.ownerId(repo.id.get)
     sshKeyForm(newKey, "Add", saveSshKey(newKey))
   }}
 

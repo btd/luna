@@ -91,7 +91,7 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
 
   def collaborators = CollaboratorDoc.findAll("repoId", id.get).flatMap(c => c.userId.obj)
 
-  def keys = SshKeyDoc.findAll("ownerRepoId", id.is)
+  def keys = SshKeyRepoDoc.findAll("ownerId", id.is)
 
   def pullRequests: List[PullRequestDoc] = PullRequestDoc where (_.destRepoId eqs id.get) fetch
 
@@ -140,8 +140,6 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
 
       list.toList
     }
-
-    val begin =  System.currentTimeMillis
 
     private def subTree(tw: TreeWalk, prefix: List[String], suffix: List[String]): TreeWalk = {
       logger.debug("Try to load source " + suffix + " tw -> " + tw.getFileMode(0).getObjectType)
@@ -385,7 +383,7 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
 
       PullRequestDoc where (_.srcRepoId eqs id.get) bulkDelete_!!
 
-      SshKeyDoc where (_.ownerRepoId eqs id.get) bulkDelete_!!
+      SshKeyRepoDoc where (_.ownerId eqs id.get) bulkDelete_!!
 
       RepositoryDoc where (_.forkOf eqs id.get) modify (_.forkOf setTo null) updateMulti
   }

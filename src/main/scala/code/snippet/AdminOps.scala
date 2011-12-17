@@ -39,7 +39,7 @@ class AdminUserOps(up: WithUser) extends Loggable with SshKeyUI with UserUI {
 
  
   def renderAddKeyForm = w(up.user) {user => {
-  	val newKey = SshKeyDoc.createRecord.ownerId(user.id.get)
+  	val newKey = SshKeyUserDoc.createRecord.ownerId(user.id.get)
   	sshKeyForm(newKey, "Add", saveSshKey(newKey))
   }}
   

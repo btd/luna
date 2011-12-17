@@ -71,7 +71,7 @@ class UserDoc private() extends MongoRecord[UserDoc] with ObjectIdPk[UserDoc] {
 
   def meta = UserDoc
 
-  def keys = SshKeyDoc where (_.ownerId eqs id.get) fetch
+  def keys = SshKeyUserDoc where (_.ownerId eqs id.get) fetch
 
   def repos = RepositoryDoc where (_.ownerId eqs id.get) fetch
 
@@ -91,7 +91,7 @@ class UserDoc private() extends MongoRecord[UserDoc] with ObjectIdPk[UserDoc] {
 
     CollaboratorDoc where (_.userId eqs id.get) bulkDelete_!!
 
-    SshKeyDoc where (_.ownerId eqs id.get) bulkDelete_!!
+    SshKeyUserDoc where (_.ownerId eqs id.get) bulkDelete_!!
 
     PullRequestDoc where (_.creatorId eqs id.get) bulkDelete_!!
   }

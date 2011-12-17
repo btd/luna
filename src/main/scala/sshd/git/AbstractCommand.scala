@@ -13,7 +13,7 @@ import org.apache.sshd.server.{SessionAware, Environment, ExitCallback, Command 
 import org.apache.sshd.server.session.ServerSession
 import sshd.DatabasePubKeyAuth
 import org.eclipse.jgit.lib.{Repository => JRepository, Constants}
-import code.model.{RepositoryDoc, UserDoc, SshKeyDoc}
+import code.model._
 
 abstract sealed class AbstractCommand extends SshCommand with SessionAware with Loggable {
 
@@ -26,7 +26,7 @@ abstract sealed class AbstractCommand extends SshCommand with SessionAware with 
   protected var onExit: Int = EXIT_SUCCESS
 
   protected var user: UserDoc = null
-  protected var keys: Seq[SshKeyDoc] = null
+  protected var keys: Seq[SshKeyBase[_]] = null
 
   val EXIT_SUCCESS = 0
   val EXIT_ERROR = 127
@@ -88,7 +88,7 @@ case class Command[A](factory: (RepositoryDoc, InputStream, OutputStream, Output
       case repoName :: Nil => {
         user.repos.filter(_.name.get == repoName).headOption match {
           case Some(r) => {
-            if (!keys.filter(_.acceptableFor_?(r)).isEmpty) {
+            if (!keys.filter(_.acceptableFor(r)).isEmpty) {
               factory(r, in, out, err)
             } else sendError("You have no permisson")
           }
