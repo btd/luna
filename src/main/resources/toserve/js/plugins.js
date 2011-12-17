@@ -1,3 +1,48 @@
+window.fDomLoaded=false;
+document.head=document.getElementsByTagName("head")[0];
+if(document.all&&!document.getElementById){
+    document.getParent=function(A){
+        return A.parentElement
+    }
+}else{
+    document.getParent=function(A){
+        return A.parentNode
+    }
+}
+function detectBrowser(){
+    window.ie=(document.all&&!window.opera);
+    if(navigator&&navigator.userAgent){
+        var A=navigator.userAgent;
+        window.webkit=(A.indexOf("WebKit/")!=-1);
+        if(window.webkit){
+            window.versionMajorWebKit=0;
+            window.versionMinorWebKit=0;
+            var C=/WebKit\/(\d)(\d\d)?/;
+            var B=C.exec(A);
+            if(B){
+                window.versionMajorWebKit=parseInt(B[1]);
+                if(B[2]){
+                    window.versionMinorWebKit=parseInt(B[2])
+                }
+            }
+            window.chrome=(A.indexOf("Chrome/")!=-1);
+            window.safari=!window.chrome&&(A.indexOf("Safari/")!=-1);
+            window.webkitPre31=window.versionMajorWebKit<5||(window.versionMajorWebKit==5&&window.versionMinorWebKit<25);
+            window.webkitMobile=/ Mobile\//.test(A)
+        }
+        if(window.ie){
+            window.ie9=(A.indexOf("MSIE 9")!=-1);
+            window.ie8=(A.indexOf("MSIE 8")!=-1);
+            window.ie7=(A.indexOf("MSIE 7")!=-1);
+            window.ie6=(window.ie&&!window.ie7&&!window.ie8&&!window.ie9);
+            window.legacyie=(window.ie&&(window.ie6||window.ie7||window.ie8))
+        }
+        window.mozilla=(!window.ie&&!window.webkit&&!window.opera&&(A.indexOf("Mozilla")!=-1));
+        window.ff3=(window.mozilla&&A.indexOf("Firefox/3")!=-1);
+        window.macintosh=(A.indexOf("Macintosh")!=-1)
+    }
+}
+detectBrowser();
 (function(){
     var A=window.Util={
         nScrollerWidth:null,
@@ -156,6 +201,76 @@
         }
     };
 
+})();
+(function(){
+    var C=window.DiffHeader={
+        sSavedHeader:null,
+        rgnDiffPositions:[],
+        init:function(){
+            if(0==$("#floatingChangesetDiffHeader").length){
+                return
+            }
+            $("#floatingChangesetDiffHeader").hide();
+            $(window).scroll(function(){
+                if(C.updateHeader()){
+            // DiffUtil.removeHighlight()
+            }
+            });
+            $(window).load(C.cacheDiffPositions);
+            $(window).resize(function(){
+                C.cacheDiffPositions();
+                C.updateHeader(true)
+            });
+            C.window=window.webkit?$("body"):$("html")
+        },
+        cacheDiffPositions:function(){
+            var J=$(".blob");
+            var I=J.length;
+            for(var H=0;H<I;H++){
+                C.rgnDiffPositions[H]=J.eq(H).offset().top
+            }
+        },
+        updateHeader:function(H){
+            var O=$(".blob");
+            var L=O.length;
+            if(L==0){
+                return;
+            }
+            var K=C.window.scrollTop()+(window.ie?0:C.window.offset().top);
+            if(C.rgnDiffPositions[0]>K){
+                $("#floatingChangesetDiffHeader").hide();
+                return true;
+            }
+            for(var J=0;J<L;J++){
+                if(C.rgnDiffPositions[J]<K&&(J+1==L||C.rgnDiffPositions[J+1]>K+40)){
+                    $("#floatingChangesetDiffHeader").show();
+                    var N=O.eq(J).find(".blob_header");
+                    if(N.attr("id")!=C.sSavedHeader||H){
+                        C.sSavedHeader=N.attr("id");
+                        var M=N.clone(true);
+                        M.attr("path",M.attr("id"));
+                        M.attr("id","");
+                        $("#floatingChangesetDiffHeader").css({
+                            top: $(".top_menu").height() + 10,
+                            left: N.offset().left,
+                            width: N.width() + 30
+                        });
+                        $("#floatingChangesetDiffHeader .blob_header").replaceWith(M).css({
+                            width:"auto"
+                        });
+                        return true;
+                    }
+                    return;
+                }
+                if(C.rgnDiffPositions[J]>K+100){
+                    break
+                }
+            }
+            var I=$("#floatingChangesetDiffHeader").is(":visible");
+            $("#floatingChangesetDiffHeader").hide();
+            return I;
+        }
+    };
 })();
 // usage: log('inside coolFunc', this, arguments);
 window.log = function(){

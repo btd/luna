@@ -78,6 +78,7 @@ $(function() {
     });
 
     CodeScrolling.initFloatingScrollbars($(window));
+    DiffHeader.init();
     //CodeScrolling.init();
     
 });

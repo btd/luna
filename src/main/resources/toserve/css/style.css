@@ -820,32 +820,42 @@ ul.clone-urls li.selected>a {
     margin-right: 15px;
 }
 
-.blob.diff .header {
+.blob.diff .blob_header,#floatingChangesetDiffHeader .blob_header  {
     padding: 5px 0 5px 30px;
+    border-bottom: 2px solid #dcdcdc;
 }
 
-.blob.diff .status {
+.blob.diff .status,#floatingChangesetDiffHeader .status {
     font-size: 16px;
 }
 
-.blob.diff .status::before {
+.blob.diff .status::before,#floatingChangesetDiffHeader .status::before {
     margin-right: 15px;
 }
 
-.blob.diff .modified {
+.blob.diff .modified,#floatingChangesetDiffHeader .modified {
     color: #599bdc;
 }
-.blob.diff .modified::before { content: "M" }
+.blob.diff .modified::before,#floatingChangesetDiffHeader .modified::before { content: "M" }
 
-.blob.diff .new {
+.blob.diff .new,#floatingChangesetDiffHeader .new {
     color: #00cc33;
 }
-.blob.diff .new::before { content: "A" }
+.blob.diff .new::before,#floatingChangesetDiffHeader .new::before { content: "A" }
 
-.blob.diff .deleted {
+.blob.diff .deleted,#floatingChangesetDiffHeader .deleted {
     color: #ff0000;
 }
-.blob.diff .deleted::before { content: "R" }
+.blob.diff .deleted::before,#floatingChangesetDiffHeader .deleted::before { content: "R" }
+
+#floatingChangesetDiffHeader {
+    display: none;
+    position: fixed;
+    top: 30px;
+    left: 26px;
+    background-color: white;
+    z-index: 101;
+}
 
 .pull_request_box .repo_selector {
     width: 200px;
