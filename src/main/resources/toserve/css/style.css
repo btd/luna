@@ -727,9 +727,7 @@ ul.clone-urls li.selected>a {
 
 .blob {
     width: 1000px;
-    overflow-x: scroll;
-    overflow-y: hidden;
-    padding-bottom: 1em;
+    overflow: hidden;
     border: 2px solid #dcdcdc;
     border-radius: 3px;
     -webkit-border-radius: 3px;
@@ -756,7 +754,14 @@ ul.clone-urls li.selected>a {
 .blob .img {
     text-align: center;
 }
-
+.jFloatingScroller {
+    position: fixed;
+    bottom: 0;
+    overflow: auto;
+}
+.blob .source {
+    overflow: auto;
+}
 .source_container {
     position: relative;
     padding-left: 30px;

@@ -61,19 +61,25 @@ $(function() {
     });
 
     $(".selectmenu").selectmenu();
+    
 
     $(".blob").each(function(i, el) {
-        var code = $("pre code", el)
+        var code = $("pre code", el);
         var linesCount = code.text().split("\n").length;
-        var rawLN = ""
+        var rawLN = "";
         //code.empty();
         for(var i = 0; i < linesCount; i++){
-            rawLN += "<span class='line_number'>"+ i +"</span>\n"
+            rawLN += "<span class='line_number'>"+ i +"</span>\n";
         }
-        hljs.highlightBlock(code[0])
+        hljs.highlightBlock(code[0]);
         $(el).append("<div class='source_container'><div class='line_numbers'><pre >"+rawLN+"</pre></div><div class='source'></div></div");
-        $(".source", el).append($("pre", el)[0])
+        $(".source", el).append($("pre", el)[0]);
+        $(".source_container").css("padding-left", $(".line_numbers").width());
     });
+
+    CodeScrolling.initFloatingScrollbars($(window));
+    //CodeScrolling.init();
+    
 });
 
 
