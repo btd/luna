@@ -1,7 +1,7 @@
 WARNING Ssh keys 18 Dec 2011
 -----------------------------
 
-Ssh keys are splited on two collections. Two migrate from previos versions move all keys for users to collection ssh_key_user and ssh keys for repos move to ssh_key_repo.
+Ssh keys are splited on two collections. To migrate from prev versions move all keys for users to collection ssh_keys_user and ssh keys for repos move to ssh_keys_repo.
 
 LUNA-TOOL
 =========
