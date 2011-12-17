@@ -273,46 +273,38 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
     def diff(commit1: String, commit2: String) = {
       import org.eclipse.jgit.diff.DiffEntry.ChangeType._
 
-      val diffList = new ListBuffer[String]
-      val statusList = tryo {
+      val diffList = new ListBuffer[(Change, String)]
+      try {
         val baos = new ByteArrayOutputStream
         val formatter = new DiffFormatter(baos)
         formatter.setRepository(fs_repo)
         formatter.setDetectRenames(true)
 
-
         val entries = scala.collection.JavaConversions.asScalaBuffer(formatter.scan(fs_repo.resolve(commit1), fs_repo.resolve(commit2)))
 
-        val sl = entries.map {
-          ent =>
-            formatter.format(ent)
+        for(entry <- entries) {
+            formatter.format(entry)
             formatter.flush
 
-            diffList += baos.toString("UTF-8")
+            diffList += (((entry.getChangeType match {
+                          case ADD => Added(entry.getNewPath)
+                          case DELETE => Deleted(entry.getOldPath)
+                          case MODIFY => Modified(entry.getNewPath)
+                          case COPY => Copied(entry.getOldPath, entry.getNewPath)
+                          case RENAME => Renamed(entry.getOldPath, entry.getNewPath)
+                        }),baos.toString("UTF-8"))) 
 
-            baos.reset
-
-            ent.getChangeType match {
-              case ADD => Added(ent.getNewPath)
-              case DELETE => Deleted(ent.getOldPath)
-              case MODIFY => Modified(ent.getNewPath)
-              case COPY => Copied(ent.getOldPath, ent.getNewPath)
-              case RENAME => Renamed(ent.getOldPath, ent.getNewPath)
-            }
+            baos.reset            
         }
 
-
         formatter.release
-
-        sl.toList
-      } openOr {
-        Nil
+      } catch {
+        case _ =>
       }
-
-      (statusList -> diffList.toList)
+      diffList.toList
     }
 
-    def diff(commit: String): Pair[List[Change], List[String]] = diff(commit + "^1", commit)
+    def diff(commit: String): List[(Change, String)] = diff(commit + "^1", commit)
 
     def clone(user: UserDoc): RepositoryDoc = {
       val uri = new URIish(fsPath)

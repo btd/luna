@@ -49,16 +49,16 @@ class CommitOps(c: WithCommit) {
   def renderDiffList =  w(c.repo){repo => {
           val diff = repo.git.diff(c.commit)
 
-          ".diff_status_list *" #> (diff._1.map(
-            _ match {
-              case  Added(p ) => <li class="new">{p}</li>
-              case  Deleted(p) => <li class="deleted">{p}</li>
-              case  Modified(p) => <li class="modified">{p}</li>
-              case  Copied(op, np) => <li class="modified">{op} -> {np}</li>
-              case  Renamed(op, np) => <li class="modified">{op} -> {np}</li>
-            }
-          )) & 
-          ".blob *" #> (diff._2.map(d => ".source_code" #> escape(d))) 
+          ".blob *" #> (diff.map(d => 
+              (".source_code" #> d._2 & 
+              ".header *" #> (d._1 match {
+                              case  Added(p ) => <span class="status new">{p}</span>
+                              case  Deleted(p) => <span class="status deleted">{p}</span>
+                              case  Modified(p) => <span class="status modified">{p}</span>
+                              case  Copied(op, np) => <span class="status modified">{op} -> {np}</span>
+                              case  Renamed(op, np) => <span class="status modified">{op} -> {np}</span>
+                            }))
+          ))
         }
    }
 }

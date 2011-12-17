@@ -820,31 +820,32 @@ ul.clone-urls li.selected>a {
     margin-right: 15px;
 }
 
-.diff_status_list {
-    list-style: none;
-    font-size: 1.3em;
-    margin: 0;
-    padding: 15px;
+.blob.diff .header {
+    padding: 5px 0 5px 30px;
 }
 
-.diff_status_list li::before {
-    margin-right: 30px;
+.blob.diff .status {
+    font-size: 16px;
 }
 
-.diff_status_list .modified {
+.blob.diff .status::before {
+    margin-right: 15px;
+}
+
+.blob.diff .modified {
     color: #599bdc;
 }
-.diff_status_list .modified::before { content: "M" }
+.blob.diff .modified::before { content: "M" }
 
-.diff_status_list .new {
+.blob.diff .new {
     color: #00cc33;
 }
-.diff_status_list .new::before { content: "A" }
+.blob.diff .new::before { content: "A" }
 
-.diff_status_list .deleted {
+.blob.diff .deleted {
     color: #ff0000;
 }
-.diff_status_list .deleted::before { content: "R" }
+.blob.diff .deleted::before { content: "R" }
 
 .pull_request_box .repo_selector {
     width: 200px;
