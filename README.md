@@ -6,7 +6,7 @@ Ssh keys are splited on two collections. To migrate from prev versions move all 
 Using mongo client:
 
 ```javascript
-db grt;
+use grt;
 db.createCollection("ssh_keys_repo");
 db.createCollection("ssh_keys_user");
 db.ssh_keys.find({ownerRepoId:{$exists: false}}).forEach( function(x){db.ssh_keys_user.insert(x)} );
