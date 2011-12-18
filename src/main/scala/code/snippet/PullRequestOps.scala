@@ -105,15 +105,19 @@ class PullRequestOps(urp: WithRepo) extends Loggable {
 
   def renderPullRequests = w(urp.repo){repo =>
    if(repo.pullRequests.isEmpty) 
-    ".pull_request" #> "No pull requests for this repository."
+    ".pull_request_list" #> "No pull requests for this repository."
    else
-    ".pull_request *" #> repo.pullRequests.map(pr => {
-      ".from" #> a(pr.srcRepoId.obj.get.sourceTreeUrl(pr.srcRef.get), Text(pr.srcRepoId.obj.get.owner.login.get + "/" + pr.srcRepoId.obj.get.name.get + "@" + pr.srcRef)) &
-      ".to" #> a(pr.destRepoId.obj.get.sourceTreeUrl(pr.srcRef.get), Text(pr.destRepoId.obj.get.owner.login.get + "/" + pr.destRepoId.obj.get.name.get + "@" + pr.destRef)) &
-      ".whom" #> a(pr.creatorId.obj.get.homePageUrl, Text(pr.creatorId.obj.get.login.get)) &
-      ".when" #> SnippetHelper.dateFormatter.format(pr.creationDate.get) &
-      ".msg" #> a(pr.homePageUrl, Text(if(!pr.description.get.isEmpty) escape(pr.description.get) else "No description"))
-      })
+    ".pull_request_list" #> repo.pullRequests.map(pr => {
+       ".pull_request [class+]" #> (if(pr.accepted_?.get) "closed_pr" else "opened_pr" ) &
+       ".pull_request *" #> (
+        ".from" #> a(pr.srcRepoId.obj.get.sourceTreeUrl(pr.srcRef.get), 
+            Text(pr.srcRepoId.obj.get.owner.login.get + "/" + pr.srcRepoId.obj.get.name.get + "@" + pr.srcRef)) &
+        ".to" #> a(pr.destRepoId.obj.get.sourceTreeUrl(pr.srcRef.get), 
+            Text(pr.destRepoId.obj.get.owner.login.get + "/" + pr.destRepoId.obj.get.name.get + "@" + pr.destRef)) &
+        ".whom" #> a(pr.creatorId.obj.get.homePageUrl, Text(pr.creatorId.obj.get.login.get)) &
+        ".when" #> SnippetHelper.dateFormatter.format(pr.creationDate.get) &
+        ".msg" #> a(pr.homePageUrl, Text(if(!pr.description.get.isEmpty) escape(pr.description.get) else "No description")))
+    })
   }
 
 }

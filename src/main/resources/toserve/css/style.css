@@ -422,11 +422,11 @@ input, textarea, button {
     font-weight: normal;
 }
 
-.repo.public {
+.repo.public, .opened_pr {
     border-color: #C3D69B;
     background-color: #EBF1DE;
 }
-.repo.private {
+.repo.private, .closed_pr {
     border-color: #D99694;
     background-color: #F2DCDB;
 }
