@@ -39,7 +39,7 @@ class RepoOps(urp: WithRepo) {
   }}  
 
   def renderPullRequestsLink = w(urp.repo){repo => {
-    val pullRequestCount = repo.pullRequests.size
+    val pullRequestCount = repo.pullRequests.filter(!_.accepted_?.get).size
     def text = {
       if(pullRequestCount == 0) Text("Pull requests")
       else Text("Pull requests (%d)" format pullRequestCount)
