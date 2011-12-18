@@ -39,9 +39,14 @@ class RepoOps(urp: WithRepo) {
   }}  
 
   def renderPullRequestsLink = w(urp.repo){repo => {
+    val pullRequestCount = repo.pullRequests.size
+    def text = {
+      if(pullRequestCount == 0) Text("Pull requests")
+      else Text("Pull requests (%d)" format pullRequestCount)
+    }
     ".repo_menu_link *" #> (S.attr("current") match {
-      case Full(_) => Text("Pull requests") 
-      case _ => a(repo.pullRequestsUrl, Text("Pull requests"))
+      case Full(_) => text
+      case _ => a(repo.pullRequestsUrl, text)
     })
   }} 
 
