@@ -10,7 +10,7 @@ import http._
 import common._
 import util._
 import Helpers._
-import code.model.{UserDoc, PullRequestDoc, RepositoryDoc}
+import code.model._
 import code.snippet.SnippetHelper._
 import bootstrap.liftweb._
 import xml._
@@ -36,12 +36,26 @@ class PullRequestOneOps(pr: WithPullRequest) extends Loggable {
 
       val diff = srcHistory.diff(destHistory)
 
+      val diffCount = diff.size // bad
+
 
       ".commit *" #> diff.map(lc =>
         ".commit_msg *" #> <span>{lc.getFullMessage.split("\n").map(m => <span>{m}</span><br/>)}</span> &
         ".commit_author *" #> (lc.getAuthorIdent.getName + " at " + SnippetHelper.timeFormatter.format(lc.getAuthorIdent.getWhen))
       ) &
-      ".blob *" #> pullRequest.srcRepoId.obj.get.git.diff(diff.head.getName + "^1", diff.last.getName).map(d => ".source_code" #> d._2)
+      ".blob *" #> (pullRequest.srcRepoId.obj.get.git.diff(diff.head.getName + "^1", diff.last.getName).zipWithIndex.map(d => 
+              (".blob_header [id]" #> ("diff" + d._2) &
+                ".source_code" #> d._1._2 & 
+              ".blob_header *" #> ((d._1._1 match {
+                                            case  Added(p ) => (".status [class+]" #> "new" & ".status *" #> p)
+                                            case  Deleted(p) => (".status [class+]" #> "deleted" & ".status *" #> p)
+                                            case  Modified(p) => (".status [class+]" #> "modified" & ".status *" #> p)
+                                            case  Copied(op, np) => (".status [class+]" #> "modified" & ".status *" #> (op + " -> " + np))
+                                            case  Renamed(op, np) => (".status [class+]" #> "modified" & ".status *" #> (op + " -> " + np))
+                                          }) &
+                            ".prev [href]" #> (if(0 <= d._2 - 1)"#diff" + (d._2 - 1) else "") &
+                            ".next [href]" #> (if(diffCount > d._2 + 1)"#diff" + (d._2 + 1) else "") ))
+          ))
     }
     case _ => PassThru
   }

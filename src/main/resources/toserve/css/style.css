@@ -820,12 +820,22 @@ ul.clone-urls li.selected>a {
 }
 
 .blob.diff .blob_header,#floatingChangesetDiffHeader .blob_header  {
-    padding: 5px 0 5px 30px;
+    padding: 5px 30px;
     border-bottom: 2px solid #dcdcdc;
 }
 
 .blob.diff .status,#floatingChangesetDiffHeader .status {
     font-size: 16px;
+    line-height: 26px;
+}
+
+.blob.diff .blob_header .manage,#floatingChangesetDiffHeader .blob_header .manage {
+    font-size: 20px;
+    float: right;
+}
+
+.blob.diff .blob_header .manage a,#floatingChangesetDiffHeader .blob_header .manage a{
+    text-decoration: none;
 }
 
 .blob.diff .status::before,#floatingChangesetDiffHeader .status::before {

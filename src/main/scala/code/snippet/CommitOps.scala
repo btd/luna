@@ -48,16 +48,21 @@ class CommitOps(c: WithCommit) {
 
   def renderDiffList =  w(c.repo){repo => {
           val diff = repo.git.diff(c.commit)
+
+          val diffCount = diff.size // bad
+
           ".blob *" #> (diff.zipWithIndex.map(d => 
               (".blob_header [id]" #> ("diff" + d._2) &
                 ".source_code" #> d._1._2 & 
-              ".blob_header *" #> (d._1._1 match {
-                              case  Added(p ) => <span class="status new">{p}</span>
-                              case  Deleted(p) => <span class="status deleted">{p}</span>
-                              case  Modified(p) => <span class="status modified">{p}</span>
-                              case  Copied(op, np) => <span class="status modified">{op} -> {np}</span>
-                              case  Renamed(op, np) => <span class="status modified">{op} -> {np}</span>
-                            }))
+              ".blob_header *" #> ((d._1._1 match {
+                                            case  Added(p ) => (".status [class+]" #> "new" & ".status *" #> p)
+                                            case  Deleted(p) => (".status [class+]" #> "deleted" & ".status *" #> p)
+                                            case  Modified(p) => (".status [class+]" #> "modified" & ".status *" #> p)
+                                            case  Copied(op, np) => (".status [class+]" #> "modified" & ".status *" #> (op + " -> " + np))
+                                            case  Renamed(op, np) => (".status [class+]" #> "modified" & ".status *" #> (op + " -> " + np))
+                                          }) &
+                            ".prev [href]" #> (if(0 <= d._2 - 1)"#diff" + (d._2 - 1) else "") &
+                            ".next [href]" #> (if(diffCount > d._2 + 1)"#diff" + (d._2 + 1) else "") ))
           ))
         }
    }

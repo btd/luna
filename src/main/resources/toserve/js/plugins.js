@@ -250,10 +250,11 @@ detectBrowser();
                         var M=N.clone(true);
                         M.attr("path",M.attr("id"));
                         M.attr("id","");
+                        var topMenu = $(".top_menu");
                         $("#floatingChangesetDiffHeader").css({
-                            top: $(".top_menu").height() + 10,
+                            top: topMenu.height() + parseInt(topMenu.css("padding-top")) + parseInt(topMenu.css("padding-bottom")),
                             left: N.offset().left,
-                            width: N.width() + 30
+                            width: N.width() + parseInt(N.css("padding-left")) + parseInt(N.css("padding-right"))
                         });
                         $("#floatingChangesetDiffHeader .blob_header").replaceWith(M).css({
                             width:"auto"
