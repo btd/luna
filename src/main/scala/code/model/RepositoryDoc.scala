@@ -32,7 +32,9 @@ import org.eclipse.jgit.transport.{URIish, UploadPack, ReceivePack}
 
 
 import com.foursquare.rogue.Rogue._
-import main._
+
+import org.lunatool.linguist._
+import Helper._
 
 /**
  * User: denis.bardadym
@@ -125,7 +127,7 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
 
       val list = new ArrayBuffer[SourceElement](50)
       while (walk.next) {
-        val fullPath = new String(walk.getRawPath, "UTF-8")
+        val fullPath = guessString(Some(walk.getRawPath)) getOrElse ""
 
         list +=
           (if (walk.getFileMode(level) == FileMode.TREE) Tree(fullPath)
@@ -170,7 +172,7 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
 
       walk = subTree(walk, Nil, path)
 
-      var result = ""
+      var result: Option[String] = None
 
       logger.debug("tw -> " + walk.getFileMode(level).getObjectType)
 
@@ -178,10 +180,12 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
         logger.debug("Source founded. Try to load")
         val blobLoader = reader.open(walk.getObjectId(level), Constants.OBJ_BLOB)
 
-        val scanner = (new java.util.Scanner(blobLoader.openStream)).useDelimiter("""\z""")
-        val builder = new scala.collection.mutable.StringBuilder
-        while(scanner.hasNext) builder.append(scanner.next)
-        result = builder.toString
+        val in = blobLoader.openStream
+        result = guessString(inputStreamToByteArray(in))
+
+        in.close
+        
+        
 
       }
 

@@ -23,7 +23,7 @@ libraryDependencies ++= Seq (
   "org.eclipse.jgit"    % "org.eclipse.jgit"      % "1.1.0.201109151100-r",
   "org.apache.mina"     % "mina-core"             % "2.0.4",
   "commons-codec"       % "commons-codec"         % "1.5",
-  "com.github.btd"      %% "scala-linguist"       % "1.0",
+  "org.lunatool"        %% "scala-linguist"       % "1.3",
   "junit"               % "junit"                 % "4.8"                   % "test",
   "net.liftweb"         %% "lift-webkit"          % "2.4-SNAPSHOT"          % "compile",
   "net.liftweb"         %% "lift-db"              % "2.4-SNAPSHOT"          % "compile",

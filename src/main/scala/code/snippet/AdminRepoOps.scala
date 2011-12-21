@@ -30,14 +30,14 @@ class AdminRepoOps(urp: WithRepo) extends Loggable with SshKeyUI with Repository
   private var collaborator_login = ""
 
   def renderCollaboratorsTable = w(urp.repo) { repo =>
-    ".collaborators" #> repo.collaborators.map(c => {
+    ".collaborator" #> repo.collaborators.map(c => {
       ".collaborator [id]" #> c.id.get.toString &
-      ".collaborator *" #> (".collaborator_name *" #> c.login.get &
-            ".collaborator_delete *" #> SHtml.a(Text("X")) {
+      ".collaborator_name *" #> c.login.get &
+      ".collaborator_delete *" #> SHtml.a(Text("X")) {
                                   (CollaboratorDoc where (_.userId eqs c.id.get) and (_.repoId eqs repo.id.get)).findAndDeleteOne
-                JqId(c.id.get.toString) ~> JqRemove()})
+                JqId(c.id.get.toString) ~> JqRemove()}
 
-          })
+      })
   }
 
   def renderSshKeysTable = w(urp.repo) {repo => keysTable(repo.keys)}

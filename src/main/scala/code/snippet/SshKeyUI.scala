@@ -20,12 +20,12 @@ trait SshKeyUI extends Loggable {
 	protected var ssh_key = "" 
 
 	def keysTable(keys: Seq[SshKeyBase[_]]): NodeSeq => NodeSeq = 
-		".keys" #> keys.map(key => {
+		".key" #> keys.map(key => {
 			".key [id]" #> key.id.get.toString &
-			".key *" #> (".key_name *" #> (key.algorithm + " " + key.encodedKey.substring(0, 10) + "... " + key.comment) &
-						".key_delete *" #> SHtml.a(Text("X")) {
+			".key_name *" #> (key.algorithm + " " + key.encodedKey.substring(0, 10) + "... " + key.comment) &
+			".key_delete *" #> SHtml.a(Text("X")) {
                 									key.delete_!
-                									JqId(key.id.get.toString) ~> JqRemove()})
+                									JqId(key.id.get.toString) ~> JqRemove()}
 
           })
 	

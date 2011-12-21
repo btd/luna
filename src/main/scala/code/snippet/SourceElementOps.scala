@@ -51,13 +51,13 @@ class SourceElementOps(se: SourceElementPage) {
    (if (se.path.isEmpty) ".parent" #> NodeSeq.Empty else ".parent *" #> (".name *" #> 
         <a href={repo.sourceTreeUrl(se.commit) + suffix(se.path.dropRight(1))}>..</a>)) &
    ".source_element *" #> repo.git.ls_tree(se.path, se.commit).map(s => {
-        val c = repo.git.log(se.commit, suffix(se.path, "", "/") + s.path).next
+        val c = tryo { repo.git.log(se.commit, suffix(se.path, "", "/") + s.path).next } or Empty
         ".name *" #> (s match {
           case t @ Tree(_) => <a href={repo.sourceTreeUrl(se.commit) + "/" + t.path}>{t.basename}/</a>
           case b @ Blob(_, _) => <a href={repo.sourceBlobUrl(se.commit) + "/" + b.path}>{b.basename}</a>
         } ) &
-        ".date *" #> (tryo {escape(SnippetHelper.dateFormatter.format(c.getAuthorIdent.getWhen)) }).openOr { "" }&
-        ".last_commit *" #> (tryo { escape(c.getShortMessage) }).openOr { "" }
+        ".date *" #> c.map(cc => escape(SnippetHelper.dateFormatter.format(cc.getAuthorIdent.getWhen))) &
+        ".last_commit *" #> c.map(cc => escape(cc.getShortMessage) )
           
  })}}
 
