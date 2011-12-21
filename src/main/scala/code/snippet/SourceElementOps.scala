@@ -51,7 +51,7 @@ class SourceElementOps(se: SourceElementPage) {
    (if (se.path.isEmpty) ".parent" #> NodeSeq.Empty else ".parent *" #> (".name *" #> 
         <a href={repo.sourceTreeUrl(se.commit) + suffix(se.path.dropRight(1))}>..</a>)) &
    ".source_element *" #> repo.git.ls_tree(se.path, se.commit).map(s => {
-        val c = tryo { repo.git.log(se.commit, suffix(se.path, "", "/") + s.path).next } or Empty
+        val c = tryo { repo.git.log(se.commit, s.path).next } or Empty
         ".name *" #> (s match {
           case t @ Tree(_) => <a href={repo.sourceTreeUrl(se.commit) + "/" + t.path}>{t.basename}/</a>
           case b @ Blob(_, _) => <a href={repo.sourceBlobUrl(se.commit) + "/" + b.path}>{b.basename}</a>

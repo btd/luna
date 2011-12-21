@@ -269,6 +269,7 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
     }
 
     def log(commit: String, path: String) = {
+      logger.debug("Try to get log for " + path)
       scala.collection.JavaConversions.asScalaIterator((new Git(fs_repo)).log.add(fs_repo.resolve(commit)).addPath(path).call.iterator)
     }
 
