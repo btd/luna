@@ -1,6 +1,6 @@
 name := "luna-tool"
 
-version := "0.7"
+version := "0.8-SNAPSHOT"
 
 seq(webSettings :_*)
 
