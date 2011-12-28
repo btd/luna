@@ -18,6 +18,7 @@ resolvers ++= Seq (
 
 
 libraryDependencies ++= Seq (
+  "net.databinder"      %% "dispatch-nio"         % "0.8.7",
   "org.mindrot"         % "jbcrypt"               % "0.3m",
   "org.apache.sshd"     % "sshd-core" 	          % "0.6.0",
   "org.eclipse.jgit"    % "org.eclipse.jgit"      % "1.1.0.201109151100-r",
