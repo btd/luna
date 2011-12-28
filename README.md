@@ -14,7 +14,7 @@ db.ssh_keys.find({ownerRepoId:{$exists: true}}).forEach( function(x){db.ssh_keys
 db.ssh_keys.drop();
 ```
 
-LUNA-TOOL
+Luna
 =========
 
 If you want to have something like github but on your own server (and you have no 5000$) you can use this application.
@@ -27,6 +27,13 @@ What it can
  + Repositories. Can be public or private. You can add collaborator to repository.
  + Forking. You can fork any visible for you repository and make pull requests for owner
  + Ssh read+write access, git protocol anonimous read access
+
+Todo
+---------------------
+
+ + SubGit integration (tmate guys said that help)
+ + One side notification (currently only mail, also possible xmpp, POST req and many others)
+ + Mailing lists for pull requests discussion (patch will be attached and url in letters)
 
 Installation
 ---------------------
