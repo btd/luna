@@ -32,6 +32,7 @@ Todo
 ---------------------
 
  + SubGit integration (tmate guys said that help)
+ + Smart HTTP protocol support
  + One side notification (currently only mail, also possible xmpp, POST req and many others)
  + Mailing lists for pull requests discussion (patch will be attached and url in letters)
 
