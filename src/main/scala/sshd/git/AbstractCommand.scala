@@ -5,6 +5,7 @@
 
 package sshd.git
 
+import notify.client._
 import java.io.{OutputStream, InputStream}
 import actors.Actor
 import org.eclipse.jgit.transport.{ReceivePack, UploadPack}
@@ -131,7 +132,14 @@ object Receive {
 
   def createPack(repo: RepositoryDoc, in: InputStream, out: OutputStream,
                  err: OutputStream) = {
-    repo.git.receive_pack.receive(in, out, err)
+    
+    import scala.collection.JavaConverters._
+    
+    val receivePack = repo.git.receive_pack
+    
+    receivePack.receive(in, out, err)
+    //TODO
+    NotifyActor ! PushEvent(repo, Empty, receivePack.getRefLogIdent, () => { receivePack.getRevWalk.asScala.toList }) 
   }
 }
 

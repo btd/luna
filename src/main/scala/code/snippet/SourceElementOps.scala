@@ -5,6 +5,8 @@
 
 package code.snippet
 
+import notify.client._
+
 import bootstrap.liftweb._
 import net.liftweb._
 import common._

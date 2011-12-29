@@ -1,1 +1,2 @@
 repoDir = ./repo/
+notify.url = http://localhost:8081

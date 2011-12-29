@@ -29,6 +29,8 @@ class NotifySubscriptionDoc extends MongoRecord[NotifySubscriptionDoc]
   
   object who extends ObjectIdRefField(this, UserDoc)
 
+  object repo extends ObjectIdRefField(this, RepositoryDoc)
+
   object onWhat extends EnumField(this, NotifyEvents)
 
   object output extends JsonObjectField[NotifySubscriptionDoc, NotifyOptions](this, NotifyOptions) {
