@@ -57,7 +57,7 @@ object NotifyActor extends LiftActor {
 
 	lazy val h = new nio.Http
 
-	def onShutdown() = {
+	def onShutdown() = {//TODO add to LiftRules
 		h.shutdown
 	}
 
