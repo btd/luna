@@ -236,7 +236,7 @@ detectBrowser();
             if(L==0){
                 return;
             }
-            var K=C.window.scrollTop()+(window.ie?0:C.window.offset().top);
+            var K=C.window.scrollTop();
             if(C.rgnDiffPositions[0]>K){
                 $("#floatingChangesetDiffHeader").hide();
                 return true;

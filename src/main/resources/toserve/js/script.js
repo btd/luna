@@ -74,7 +74,7 @@ $(function() {
         hljs.highlightBlock(code[0]);
         $(el).append("<div class='source_container'><div class='line_numbers'><pre >"+rawLN+"</pre></div><div class='source'></div></div");
         $(".source", el).append($("pre", el)[0]);
-        $(".source_container").css("padding-left", $(".line_numbers").width());
+        $(".source_container", el).css("padding-left", $(".line_numbers", el).width());
     });
 
     CodeScrolling.initFloatingScrollbars($(window));
