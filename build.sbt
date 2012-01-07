@@ -30,7 +30,7 @@ libraryDependencies ++= Seq (
   "net.liftweb"         %% "lift-db"              % "2.4-SNAPSHOT"          % "compile",
   "net.liftweb"         %% "lift-mongodb"         % "2.4-SNAPSHOT"          % "compile",
   "net.liftweb"         %% "lift-mongodb-record"  % "2.4-SNAPSHOT"          % "compile",
-  "com.foursquare"      %% "rogue"                % "1.0.27"                intransitive(),
+  "com.foursquare"      %% "rogue"                % "1.0.29"                intransitive(),
   "org.eclipse.jetty"   % "jetty-webapp"          % "8.0.0.v20110901"       % "jetty",
   "ch.qos.logback"      % "logback-classic"       % "1.0.0"
   )

@@ -5,7 +5,12 @@
 
 package code.model
 
+
+import notify.client._
+
 import net.liftweb._
+import json.{Formats, DefaultFormats, ShortTypeHints, Serialization}
+import json.JsonAST._
 import mongodb.{JsonObjectMeta, JsonObject}
 import mongodb.record._
 import field._
@@ -13,15 +18,23 @@ import common._
 import record.field._
 import util._
 
-import notify.client._
+class Email extends BsonRecord[Email] {
+  def meta = Email
+  
+  object to extends MongoListField[Email, String](this)
 
-case class Email(to: List[String])
-
-case class NotifyOptions(email: Box[Email]) extends JsonObject[NotifyOptions] {
-	def meta = NotifyOptions
+  object activated extends BooleanField(this, false)
 }
 
-object NotifyOptions extends JsonObjectMeta[NotifyOptions]
+object Email extends Email with BsonMetaRecord[Email]
+
+class NotifyOptions extends BsonRecord[NotifyOptions] {
+	def meta = NotifyOptions
+
+  object email extends BsonRecordField(this, Email)
+}
+
+object NotifyOptions extends NotifyOptions with BsonMetaRecord[NotifyOptions]
 
 
 class NotifySubscriptionDoc extends MongoRecord[NotifySubscriptionDoc] 
@@ -31,11 +44,9 @@ class NotifySubscriptionDoc extends MongoRecord[NotifySubscriptionDoc]
 
   object repo extends ObjectIdRefField(this, RepositoryDoc)
 
-  object onWhat extends EnumField(this, NotifyEvents)
+  object onWhat extends EnumNameField(this, NotifyEvents)
 
-  object output extends JsonObjectField[NotifySubscriptionDoc, NotifyOptions](this, NotifyOptions) {
-  	def defaultValue = NotifyOptions(Empty)
-  }
+  object output extends BsonRecordField(this, NotifyOptions) 
 
   def meta = NotifySubscriptionDoc
 }

@@ -40,13 +40,16 @@ object NotifyActor extends LiftActor {
 	private def subscribers(t: NotifyEvents.Value, repo: RepositoryDoc) = {
 		import com.foursquare.rogue.Rogue._
 
-		for { subscription <- (NotifySubscriptionDoc where (_.onWhat eqs t) and (_.repo eqs repo.id.get) fetch) 
+		ActorLogger.debug(NotifySubscriptionDoc where (_.repo eqs repo.id.get) and (_.onWhat eqs t) toString)
+
+		for { subscription <- (NotifySubscriptionDoc where (_.repo eqs repo.id.get) and (_.onWhat eqs t) fetch) 
 						user <- subscription.who.obj} 
-				yield {(user, subscription.output.get)}
+				yield {ActorLogger.debug(subscription); (user, subscription.output.get)}
 	}
 
 	implicit def asJValue(pi: PersonIdent): JValue =
-		JObject(JField("name", pi.getName) :: JField("date", formatter.format(pi.getWhen)) :: JField("email", pi.getEmailAddress) :: Nil)
+		if(pi == null) JObject(Nil)
+		else JObject(JField("name", pi.getName) :: JField("date", formatter.format(pi.getWhen)) :: JField("email", pi.getEmailAddress) :: Nil)
 
 	implicit def asJValue(cl: List[RevCommit]): JValue =
 		JArray(cl.map(commit => JObject(JField("msg", commit.getFullMessage) :: JField("author", commit.getAuthorIdent) :: Nil).asInstanceOf[JValue]))
@@ -55,21 +58,21 @@ object NotifyActor extends LiftActor {
 	def messageHandler = {
 		case PushEvent(repo, user, ident, commitSeq) => 
 			notifyServerUrl.map(urlAddress => {
-				logger.debug("Notify url is " + urlAddress)
+				ActorLogger.debug("Notify url is " + urlAddress)
+				ActorLogger.debug("Repo id is " + repo.id.get)
+
 				val subs = subscribers(NotifyEvents.Push, repo)
+				ActorLogger.debug("Subscribers " + subs)
 				if(!subs.isEmpty) {
-					logger.debug("Found subscribers")
+					ActorLogger.debug("Found subscribers")
 					for(subscriber <- subs) {
-						subscriber._2 match {
-							case NotifyOptions(Full(Email(emails))) => {
-								h(:/(urlAddress) / "mail" / "push" <<< (
-									("to", subscriber._1.email.get :: emails) ~
+						if(subscriber._2.email.get.activated.get) {
+							h(:/(urlAddress) / "mail" / "push" <<< (
+									("to", subscriber._1.email.get :: subscriber._2.email.get.to.get) ~
 									("repo", repo.asJValue) ~ 
 									("user", user.map(_.asJValue) openOr (JNothing)) ~
 									("pusher", ident) ~ 
 									("commits", commitSeq())).toString >|)
-							}
-							case _ =>
 						}
 					}
 					
