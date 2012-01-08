@@ -5,11 +5,16 @@
 
 package main
 
-import sshd.SshDaemon
 import net.liftweb.util.Props
-import net.liftweb.util.Helpers._
+
 
 object Main extends App {
   lazy val repoDir = Props.get("repoDir", "./repo/") //Эта хрень обязана кончаться на /
   lazy val serverName = Props.get("serverName", "localhost")
+}
+
+object Constants {
+	val SSHD_PORT_OPTION = "daemon.sshd.port"
+
+	val GITD_PORT_OPTION = "daemon.gitd.port"
 }

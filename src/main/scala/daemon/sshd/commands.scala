@@ -3,16 +3,16 @@
  * Distributed under Apache License.
  */
 
-package sshd.git
+package daemon.sshd
 
-import notify.client._
+import notification.client._
 import java.io.{OutputStream, InputStream}
 import actors.Actor
 import org.eclipse.jgit.transport.{ReceivePack, UploadPack}
 import net.liftweb.common._
 import org.apache.sshd.server.{SessionAware, Environment, ExitCallback, Command => SshCommand}
 import org.apache.sshd.server.session.ServerSession
-import sshd.DatabasePubKeyAuth
+
 import org.eclipse.jgit.lib.{Repository => JRepository, Constants}
 import code.model._
 
@@ -55,14 +55,14 @@ abstract sealed class AbstractCommand extends SshCommand with SessionAware with 
         try {
           run(env)
         } finally {
-          in.close();
-          out.close();
-          err.close();
-          callback.onExit(onExit);
+          in.close
+          out.close
+          err.close
+          callback.onExit(onExit)
         }
       }
 
-    }.start();
+    }.start
   }
 
 
@@ -97,17 +97,14 @@ case class Command[A](factory: (RepositoryDoc, InputStream, OutputStream, Output
         }
       }
       case userName :: repoName :: Nil => {
-        UserDoc.find("login", userName) match {
-          case Full(u) => {
-            u.repos.filter(_.name.get == repoName).headOption match {
-              case Some(r) =>
+        RepositoryDoc.byUserLoginAndRepoName(userName, repoName) match {
+          case Some(r) =>
                 if (!r.collaborators.filter(_.login.get == user.login.get).isEmpty) {
                   factory(r, in, out, err)
                 } else sendError("You have no permission")
-              case _ => sendError("Repository not founded")
-            }
-          }
-          case _ => sendError("User not founded")
+              
+          
+          case _ => sendError("User or repo not founded")
         }
       }
       case _ => sendError("Invalid repo address")

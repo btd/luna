@@ -3,7 +3,7 @@
  * Distributed under Apache License.
  */
 
-package sshd
+package daemon.sshd
 
 import java.security.PublicKey
 import org.apache.commons.codec.binary.Base64

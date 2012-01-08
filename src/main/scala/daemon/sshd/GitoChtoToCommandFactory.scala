@@ -3,9 +3,8 @@
  * Distributed under Apache License.
  */
 
-package sshd
+package daemon.sshd
 
-import git.{Command, UnRecognizedCommand, Receive, Upload}
 import org.apache.sshd.server.{Command => SshCommand, CommandFactory}
 import net.liftweb.common.Loggable
 

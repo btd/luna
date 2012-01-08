@@ -3,10 +3,10 @@
  * Distributed under Apache License.
  */
 
-package sshd
+package daemon.sshd
 
 import org.apache.sshd.common.Factory
-import org.apache.sshd.server.{ExitCallback, Environment, Command}
+import org.apache.sshd.server.{ExitCallback, Environment, Command => SshCommand}
 import java.io.{InputStream, OutputStream}
 import org.eclipse.jgit.lib.Constants
 
@@ -18,8 +18,8 @@ import org.eclipse.jgit.lib.Constants
  * To change this template use File | Settings | File Templates.
  */
 
-class NoShell extends Factory[Command] {
-  def create(): Command = new Command {
+class NoShell extends Factory[SshCommand] {
+  def create(): SshCommand = new SshCommand {
     private var in: InputStream = null
     private var out: OutputStream = null
     private var err: OutputStream = null

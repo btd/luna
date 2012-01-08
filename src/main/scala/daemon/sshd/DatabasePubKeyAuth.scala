@@ -3,7 +3,7 @@
  * Distributed under Apache License.
  */
 
-package sshd
+package daemon.sshd
 
 import org.apache.sshd.server.PublickeyAuthenticator
 import org.apache.sshd.server.session.ServerSession

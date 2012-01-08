@@ -6,7 +6,7 @@
 package code.model
 
 
-import notify.client._
+import notification.client._
 
 import net.liftweb._
 import json.{Formats, DefaultFormats, ShortTypeHints, Serialization}

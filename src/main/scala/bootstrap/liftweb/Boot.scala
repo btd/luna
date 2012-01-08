@@ -8,10 +8,10 @@ import sitemap._
 import Loc._
 import util.Helpers._
 import sitemap.LocPath._
-import sshd.SshDaemon
+import daemon.sshd.SshDaemon
 import actors.Actor
 import xml.{NodeSeq, Text}
-import sshd.git.GitDaemon
+import daemon.git.GitDaemon
 import com.mongodb.Mongo
 import code.model.{PullRequestDoc, UserDoc}
 
@@ -72,17 +72,8 @@ class Boot extends Loggable {
   def boot {
     MongoDB.defineDb(DefaultMongoIdentifier, new Mongo, "grt") //TODO както секюрно надо это делать
 
-    new Actor {
-      def act() {
-        SshDaemon.start
-      }
-    }.start()
-
-    new Actor {
-      def act() {
-        GitDaemon.start
-      }
-    }.start()
+    SshDaemon.init
+    GitDaemon.init
 
     ResourceServer.allow {
       case "css" :: _ => true

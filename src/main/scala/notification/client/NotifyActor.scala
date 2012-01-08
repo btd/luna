@@ -1,4 +1,4 @@
-package notify.client
+package notification.client
 
 import net.liftweb._
 import util._

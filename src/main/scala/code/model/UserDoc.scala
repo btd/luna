@@ -158,4 +158,6 @@ object UserDoc extends UserDoc with MongoMetaRecord[UserDoc] {
 
   def currentUser: Box[UserDoc] = curUser.is
 
+  def byName(name: String) = UserDoc where (_.login eqs name) get
+
 }

@@ -3,17 +3,19 @@
  * Distributed under Apache License.
  */
 
-package sshd.git
+package daemon.git
 
 import net.liftweb._
 import util._
 import Helpers._
 import common._
 import code.model.{RepositoryDoc, UserDoc }
+import main.Constants
 
 import java.net.InetSocketAddress
 import java.io._
-import actors.Actor
+
+import actors.Actor //TODO ExecutorService
 
 import org.eclipse.jgit.lib.Repository 
 import org.eclipse.jgit.transport._
@@ -26,8 +28,6 @@ import org.apache.mina.core.session._
 import org.apache.mina.core.buffer._
 import org.apache.mina.handler.stream._
 
-import com.foursquare.rogue.Rogue._
-
 
 
 /**
@@ -36,13 +36,25 @@ import com.foursquare.rogue.Rogue._
  * Time: 3:07 PM
  */
 
-object GitDaemon {
-  
-  private lazy val daemon = new Daemon(RepositoryResolver.get)
+object GitDaemon extends daemon.Service {
 
-  def start = daemon.start
+  def init() {
+    acceptor.getFilterChain.addLast( "logger", new LoggingFilter )
 
-  def stop = daemon.stop
+    acceptor.setHandler(  new GitServerHandler(RepositoryResolver.get) )
+
+    acceptor.setReuseAddress(true)
+
+    acceptor.bind(new InetSocketAddress(Props.getInt(Constants.GITD_PORT_OPTION, DEFAULT_PORT)))
+    
+  }
+
+  def shutdown() = acceptor.unbind
+
+  val DEFAULT_PORT = 9418
+
+  private val acceptor = new NioSocketAcceptor
+
 }
 
 class GitServerHandler(resolver: (String) => Box[RepositoryDoc]) extends StreamIoHandler with Loggable
@@ -80,37 +92,13 @@ class GitServerHandler(resolver: (String) => Box[RepositoryDoc]) extends StreamI
     }
 }
 
-class Daemon(resolver: (String) => Box[RepositoryDoc]) {
-
-  val DEFAULT_PORT = 9418
-
-  private val acceptor = new NioSocketAcceptor
-
-  acceptor.getFilterChain.addLast( "logger", new LoggingFilter )
-
-  acceptor.setHandler(  new GitServerHandler(resolver) )
-
-  acceptor.setReuseAddress(true)
-
-
-  def start = acceptor.bind(new InetSocketAddress(DEFAULT_PORT))
-
-  def stop = acceptor.unbind
-  
-}
 
 object RepositoryResolver extends Loggable {
   def get(name: String): Box[RepositoryDoc] = {
     logger.debug("Get anonymous request %s".format(name))
 
     name.split("/").toList.filter(s => !s.isEmpty) match {
-      case user :: repoName :: Nil => {
-        tryo {
-          (UserDoc where (_.login eqs user) get).get.repos.filter(_.name.get == repoName).head
-        } or {
-          Empty
-        }
-      }
+      case user :: repoName :: Nil => RepositoryDoc.byUserLoginAndRepoName(user, repoName)
       case _ => Empty
     }
   }

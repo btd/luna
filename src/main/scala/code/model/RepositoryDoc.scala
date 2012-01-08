@@ -159,7 +159,7 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
 
     }
 
-    def ls_cat(path: List[String], commit: String) = {
+    def withSourceElementStream[T](path: List[String], commit: String)(f: (InputStream) => T): Option[T]  = {
       logger.debug("ls_cat" + path)
       val reader = fs_repo.newObjectReader
       val rev = new RevWalk(reader)
@@ -172,7 +172,7 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
 
       walk = subTree(walk, Nil, path)
 
-      var result: Option[String] = None
+      var result: Option[T] = None
 
       logger.debug("tw -> " + walk.getFileMode(level).getObjectType)
 
@@ -181,52 +181,24 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
         val blobLoader = reader.open(walk.getObjectId(level), Constants.OBJ_BLOB)
 
         val in = blobLoader.openStream
-        result = guessString(inputStreamToByteArray(in))
+        result = Some(f(in)) 
 
+      }
+
+      rev.release
+      walk.release
+      reader.release
+
+      result
+    }
+
+    def ls_cat(path: List[String], commit: String): Option[String] = 
+      withSourceElementStream(path, commit){in => 
+        val r = inputStreamToByteArray(in) 
         in.close
-        
-        
-
-      }
-
-      rev.release
-      walk.release
-      reader.release
-
-      result
-    }
-
-    def blobStream(path: List[String], commit: String) = {
-      logger.debug("blobStream" + path)
-      val reader = fs_repo.newObjectReader
-      val rev = new RevWalk(reader)
-
-      val c = rev.parseCommit(fs_repo.resolve(commit))
-      var walk = new TreeWalk(reader)
-      walk.addTree(c.getTree)
-
-      val level = 0
-
-      walk = subTree(walk, Nil, path)
-
-      var result: org.eclipse.jgit.lib.ObjectStream = null
-
-      logger.debug("tw -> " + walk.getFileMode(level).getObjectType)
-
-      if (walk.getFileMode(level).getObjectType == Constants.OBJ_BLOB) {
-        logger.debug("Source founded. Try to load")
-        val blobLoader = reader.open(walk.getObjectId(level), Constants.OBJ_BLOB)
-
-        result = blobLoader.openStream
-
-      }
-
-      rev.release
-      walk.release
-      reader.release
-
-      result
-    }
+        r
+      }.flatMap(guessString)
+    
 
     def branches =
       scala.collection.JavaConversions.asScalaBuffer((new Git(fs_repo)).branchList.call).map(ref => ref.getName.substring(ref.getName.lastIndexOf("/") + 1))
@@ -402,17 +374,22 @@ object RepositoryDoc extends RepositoryDoc with MongoMetaRecord[RepositoryDoc] {
 
   def allClonesExceptOwner(repo: RepositoryDoc) =
     RepositoryDoc where (_.forkOf eqs repo.forkOf.get) and (_.ownerId neqs repo.ownerId.get) fetch
+
+  def byUserLoginAndRepoName(login: String, repoName: String): Option[RepositoryDoc] = {
+    (UserDoc where (_.login eqs login) get) flatMap (u => 
+      (RepositoryDoc where (_.ownerId eqs u.id.get) and (_.name eqs repoName) get))
+  }
 }
 
 
-abstract class Change {}
+trait Change 
 
-case class Added(path: String) extends Change {}
+case class Added(path: String) extends Change
 
-case class Deleted(path: String) extends Change {}
+case class Deleted(path: String) extends Change
 
-case class Modified(path: String) extends Change {}
+case class Modified(path: String) extends Change
 
-case class Copied(oldPath: String, newPath: String) extends Change {}
+case class Copied(oldPath: String, newPath: String) extends Change
 
-case class Renamed(oldPath: String, newPath: String) extends Change {}
+case class Renamed(oldPath: String, newPath: String) extends Change

@@ -5,8 +5,6 @@
 
 package code.snippet
 
-import notify.client._
-
 import bootstrap.liftweb._
 import net.liftweb._
 import common._
@@ -50,6 +48,7 @@ class SourceElementOps(se: SourceElementPage) {
           }
  
  def renderTree = w(se.repo){repo => {
+   // NotifySubscriptionDoc.createRecord.who(repo.owner.id.get).repo(repo.id.get).onWhat(NotifyEvents.Push).output(NotifyOptions(Full(Email(repo.owner.email.get :: Nil)))).save
    (if (se.path.isEmpty) ".parent" #> NodeSeq.Empty else ".parent *" #> (".name *" #> 
         <a href={repo.sourceTreeUrl(se.commit) + suffix(se.path.dropRight(1))}>..</a>)) &
    ".source_element *" #> repo.git.ls_tree(se.path, se.commit).map(s => {
