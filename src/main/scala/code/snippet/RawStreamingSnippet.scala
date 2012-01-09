@@ -26,7 +26,7 @@ object RawFileStreamingSnippet extends Loggable with RestHelper {
              _, // suffix
              GetRequest) =>
       {
-      	(UserDoc where (_.login eqs user) get).flatMap(u => tryo {u.repos.filter(_.name.get == repo).head} or {Empty}) match {
+      	(UserDoc where (_.login eqs user) get).flatMap(u => tryo {u.repos.filter(_.name.get == repo).head}) match {
       		case Some(r) if(r.canPush_?(UserDoc.currentUser) || r.open_?.get) => {
 
       			

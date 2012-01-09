@@ -26,8 +26,8 @@ class DatabasePubKeyAuth extends PublickeyAuthenticator with Loggable {
    */
   def authenticate(username: String, key: PublicKey, session: ServerSession): Boolean = {
     logger.debug("User " + username + " tried to authentificate")
-    UserDoc.find("login", username) match {
-      case Full(u) => {
+    UserDoc.byName(username) match {
+      case Some(u) => {
         tryo {
           val keys = (u.keys ++ u.repos.flatMap(_.keys))
                 .filter(SshUtil.parse((_: SshKeyBase[_])) == key)

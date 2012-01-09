@@ -92,6 +92,25 @@ class GitServerHandler(resolver: (String) => Box[RepositoryDoc]) extends StreamI
     }
 }
 
+trait Resolver {
+
+  self: Loggable =>
+
+  def get(args: List[String]) = {
+    args match {
+      case arg :: Nil => arg match {
+          case Repo1(userName, repoName) => logger.debug("get a repository %s/%s".format(userName, repoName))
+
+          case _ => logger.debug("Unrecognized argument")
+        }
+      case _ => logger.debug("No arguments - no repo")
+    }
+  }
+  val Repo1 = """(?:\s+)?'?(\w+)/(\w+)'?(?:\s+)?""".r
+  val Repo2 = """(?:\s+)?'?(\w+)'?(?:\s+)?""".r
+}
+
+
 
 object RepositoryResolver extends Loggable {
   def get(name: String): Box[RepositoryDoc] = {
