@@ -24,19 +24,9 @@ import code.model._
 
 class RepoOps(urp: WithRepo) {
 
-  def renderSourceTreeDefaultLink = w(urp.repo){repo => {
-    ".repo_menu_link *" #> (S.attr("current") match {
-      case Full(_) => Text("Sources")
-      case _ => a(repo.sourceTreeUrl, Text("Sources"))
-    })
-  }} 
+  def renderSourceTreeDefaultLink = w(urp.repo)(renderSourceTreeLink(_, None))
 
-  def renderCommitsDefaultLink = w(urp.repo){repo => {
-    ".repo_menu_link *" #> (S.attr("current") match {
-      case Full(_) => Text("Commits")
-      case _ => a(repo.commitsUrl, Text("Commits"))
-    })
-  }}  
+  def renderCommitsDefaultLink = w(urp.repo)(renderCommitsLink(_, None))
 
   def renderPullRequestsLink = w(urp.repo){repo => {
     val pullRequestCount = repo.pullRequests.filter(!_.accepted_?.get).size

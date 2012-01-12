@@ -105,6 +105,18 @@ object SnippetHelper extends Loggable{
     groupedList.toList
   }
 
+  def renderSourceTreeLink(repo:RepositoryDoc, branch: Box[String]) = 
+    ".repo_menu_link *" #> (S.attr("current") match {
+      case Full(_) => Text("Sources")
+      case _ => a( branch.map(repo.sourceTreeUrl(_)).openOr(repo.sourceTreeUrl), Text("Sources"))
+    })
+
+
+  def renderCommitsLink(repo:RepositoryDoc, branch: Box[String]) = 
+    ".repo_menu_link *" #> (S.attr("current") match {
+      case Full(_) => Text("Commits")
+      case _ => a( branch.map(repo.commitsUrl(_)).openOr(repo.commitsUrl), Text("Commits"))
+    })
 
 
 }

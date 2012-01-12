@@ -34,7 +34,7 @@ class SourceElementOps(se: SourceElementPage) {
     ".current_branch" #>
           SHtml.ajaxSelect(repo.git.branches.zip(repo.git.branches),
             if(repo.git.branches.contains(se.commit)) Full(se.commit) else Empty,
-            value => S.redirectTo(repo.sourceTreeUrl(se.commit)+suffix(se.path)))
+            value => S.redirectTo(repo.sourceTreeUrl(value)+suffix(se.path)))
   }
 
   def renderBreadcrumbs = w(se.repo){repo => 
