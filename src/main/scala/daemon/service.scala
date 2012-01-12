@@ -54,7 +54,16 @@ trait Resolver {
 
   val uploadPack = (r: RepositoryDoc) => { r.git.upload_pack.upload _ }
 
-  val receivePack = (r: RepositoryDoc) => { r.git.receive_pack.receive _ }
+  val receivePack = (r: RepositoryDoc) => {
+    import scala.collection.JavaConverters._
+    import notification.client._
+    
+    val receivePack = r.git.receive_pack
+  
+    //TODO
+    NotifyActor ! PushEvent(r, Empty, receivePack.getRefLogIdent, () => { receivePack.getRevWalk.asScala.toList }) 
+ 
+    receivePack.receive _ }
   
   val Repo1 = """'?/?([a-zA-Z\.-]+)/([a-zA-Z\.-]+)'?""".r
   val Repo2 =  """'?/?([a-zA-Z\.-]+)'?""".r
