@@ -36,16 +36,22 @@ import org.apache.mina.handler.stream._
  * Time: 3:07 PM
  */
 
-object GitDaemon extends daemon.Service {
+object GitDaemon extends daemon.Service with Loggable {
 
   def init() {
     acceptor.getFilterChain.addLast( "logger", new LoggingFilter )
 
-    acceptor.setHandler(  new GitServerHandler(RepositoryResolver.get) )
+    acceptor.setHandler( new GitServerHandler )
 
     acceptor.setReuseAddress(true)
 
-    acceptor.bind(new InetSocketAddress(Props.getInt(Constants.GITD_PORT_OPTION, DEFAULT_PORT)))
+    val port = Props.getInt(Constants.GITD_PORT_OPTION, DEFAULT_PORT)
+    new Actor {
+      def act = {
+        logger.debug("Git daemon started on port %s".format(port))
+        acceptor.bind(new InetSocketAddress(port))
+      }
+    }.start    
     
   }
 
@@ -57,38 +63,34 @@ object GitDaemon extends daemon.Service {
 
 }
 
-class GitServerHandler(resolver: (String) => Box[RepositoryDoc]) extends StreamIoHandler with Loggable
+class GitServerHandler extends StreamIoHandler with Resolver with Loggable
 {
     override def processStreamIo(session:IoSession, in: InputStream, out: OutputStream ) {
-        new Actor {
-          def act = {
-            var cmd = new PacketLineIn(in).readStringRaw
-            var nul = cmd.indexOf('\0')
-            if (nul >= 0) {
-              // Newer clients hide a "host" header behind this byte.
-              // Currently we don't use it for anything, so we ignore
-              // this portion of the command.
-              //
-              cmd = cmd.substring(0, nul)
-            }
-
-            val list = cmd.trim.split(" ").toList 
-
-            list match {
-              case "git-upload-pack" :: path :: Nil => {
-                resolver(path) match {
-                  case Full(repo) => {
-                    logger.debug("Begin upload")
-                    repo.git.upload_pack.upload(in, out, null)
-                  } 
-                  case _ => logger.debug("No repository for this path")
-                }
-              }
-              case _ => 
-            }
+      new Actor {
+        def act = {
+                  
+          var cmd = new PacketLineIn(in).readStringRaw
+          
+          var nul = cmd.indexOf('\0')
+          if (nul >= 0) {
+            // Newer clients hide a "host" header behind this byte.
+            // Currently we don't use it for anything, so we ignore
+            // this portion of the command.
+            cmd = cmd.substring(0, nul)
           }
-        }.start
-        
+          logger.debug("Read command %s".format(cmd))
+
+          cmd.trim.split(" ").toList match {
+            case GIT_UPLOAD_PACK :: path :: Nil => 
+              for(proc <- packProcessing(repoByPath(path), uploadPack)) {
+                logger.debug(proc)
+                proc(in, out, null)
+              }
+
+            case _ => logger.debug("This command is not supported")
+          }  
+        }
+      }.start        
     }
 }
 
@@ -96,29 +98,42 @@ trait Resolver {
 
   self: Loggable =>
 
-  def get(args: List[String]) = {
-    args match {
-      case arg :: Nil => arg match {
-          case Repo1(userName, repoName) => logger.debug("get a repository %s/%s".format(userName, repoName))
+  val GIT_UPLOAD_PACK = "git-upload-pack"
 
-          case _ => logger.debug("Unrecognized argument")
-        }
-      case _ => logger.debug("No arguments - no repo")
+  val GIT_RECEIVE_PACK = "git-receive-pack"
+
+  type packProcessor = (InputStream, OutputStream, OutputStream) => Unit
+
+  def packProcessing(r: Box[RepositoryDoc], 
+                     processor: (RepositoryDoc) => packProcessor,
+                     accessible: (RepositoryDoc) => Boolean = (r) => {true}):
+      Box[packProcessor] = {
+    for{repo <- r; if(accessible(repo))} yield {
+        logger.debug("Get parallel version of processor")
+       (in: InputStream, out: OutputStream, err: OutputStream) => inParallel(in, out, err)(processor(repo))
+    }
+  }  
+
+  private def inParallel(in: InputStream, out: OutputStream, err: OutputStream)
+      (f: packProcessor) = {
+        new Actor {
+          def act = f(in, out, err)
+        }.start
+      }
+
+  def repoByPath(arg: String, user: Option[UserDoc] = None) = {
+
+    arg match { 
+      case Repo1(userName, repoName) => RepositoryDoc.byUserLoginAndRepoName(userName, repoName)
+  
+      case Repo2(repoName) => user.flatMap(_.repos.filter(_.name.get == repoName).headOption)
+  
+      case _ => None
     }
   }
-  val Repo1 = """(?:\s+)?'?(\w+)/(\w+)'?(?:\s+)?""".r
-  val Repo2 = """(?:\s+)?'?(\w+)'?(?:\s+)?""".r
-}
 
-
-
-object RepositoryResolver extends Loggable {
-  def get(name: String): Box[RepositoryDoc] = {
-    logger.debug("Get anonymous request %s".format(name))
-
-    name.split("/").toList.filter(s => !s.isEmpty) match {
-      case user :: repoName :: Nil => RepositoryDoc.byUserLoginAndRepoName(user, repoName)
-      case _ => Empty
-    }
-  }
+  val uploadPack = (r: RepositoryDoc) => {logger.debug("Uploading"); r.git.upload_pack.upload _}
+  
+  val Repo1 = """'?/?([a-zA-Z\.-]+)/([a-zA-Z\.-]+)'?""".r
+  val Repo2 =  """'?/?([a-zA-Z\.-]+)'?""".r
 }
