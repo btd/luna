@@ -29,7 +29,7 @@ import xml.{Node, Text, NodeSeq}
  * Time: 5:20 PM
  */
 
-object SnippetHelper extends Loggable{
+object SnippetHelper {
 
 
   def cleanAll: NodeSeq => NodeSeq = "*" #> NodeSeq.Empty
@@ -88,11 +88,9 @@ object SnippetHelper extends Loggable{
     var commitsListAtLastDate = new ListBuffer[RevCommit]
     commits.foreach {
       c => {
-        logger.debug("Begin process commit at " + c.getAuthorIdent.getWhen)
         if (lastDate == null) lastDate = c.getAuthorIdent.getWhen
 
         if (!eqDay(lastDate, c.getAuthorIdent.getWhen)) {
-          logger.debug("Not the same date ")
           groupedList += dateFormatter.format(lastDate) -> commitsListAtLastDate.toList
 
           lastDate = c.getAuthorIdent.getWhen
@@ -105,6 +103,18 @@ object SnippetHelper extends Loggable{
     groupedList.toList
   }
 
+  def renderSourceTreeLink(repo:RepositoryDoc, branch: Box[String]) = 
+    ".repo_menu_link *" #> (S.attr("current") match {
+      case Full(_) => Text("Sources")
+      case _ => a( branch.map(repo.sourceTreeUrl(_)).openOr(repo.sourceTreeUrl), Text("Sources"))
+    })
+
+
+  def renderCommitsLink(repo:RepositoryDoc, branch: Box[String]) = 
+    ".repo_menu_link *" #> (S.attr("current") match {
+      case Full(_) => Text("Commits")
+      case _ => a( branch.map(repo.commitsUrl(_)).openOr(repo.commitsUrl), Text("Commits"))
+    })
 
 
 }

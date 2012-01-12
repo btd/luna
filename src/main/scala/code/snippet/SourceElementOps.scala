@@ -28,13 +28,13 @@ import SnippetHelper._
  * Time: 12:27 PM
  */
 
-class SourceElementOps(se: SourceElementPage) {
+class SourceElementOps(se: SourceElementPage) extends Loggable {
   
   def renderBrancheSelector = w(se.repo){repo => 
     ".current_branch" #>
           SHtml.ajaxSelect(repo.git.branches.zip(repo.git.branches),
             if(repo.git.branches.contains(se.commit)) Full(se.commit) else Empty,
-            value => S.redirectTo(repo.sourceTreeUrl(se.commit)+suffix(se.path)))
+            value => S.redirectTo(repo.sourceTreeUrl(value)+suffix(se.path)))
   }
 
   def renderBreadcrumbs = w(se.repo){repo => 
@@ -51,16 +51,19 @@ class SourceElementOps(se: SourceElementPage) {
    // NotifySubscriptionDoc.createRecord.who(repo.owner.id.get).repo(repo.id.get).onWhat(NotifyEvents.Push).output(NotifyOptions(Full(Email(repo.owner.email.get :: Nil)))).save
    (if (se.path.isEmpty) ".parent" #> NodeSeq.Empty else ".parent *" #> (".name *" #> 
         <a href={repo.sourceTreeUrl(se.commit) + suffix(se.path.dropRight(1))}>..</a>)) &
-   ".source_element *" #> repo.git.ls_tree(se.path, se.commit).map(s => {
-        val c = tryo { repo.git.log(se.commit, s.path).next } or Empty
-        ".name *" #> (s match {
-          case t @ Tree(_) => <a href={repo.sourceTreeUrl(se.commit) + "/" + t.path}>{t.basename}/</a>
-          case b @ Blob(_, _) => <a href={repo.sourceBlobUrl(se.commit) + "/" + b.path}>{b.basename}</a>
-        } ) &
-        ".date *" #> c.map(cc => escape(SnippetHelper.dateFormatter.format(cc.getAuthorIdent.getWhen))) &
-        ".last_commit *" #> c.map(cc => escape(cc.getShortMessage) )
-          
- })}}
+    tryo(repo.git.ls_tree(se.path, se.commit)).map(sourceList => 
+     ".source_element *" #> sourceList.map(s => {
+          val c = tryo { repo.git.log(se.commit, s.path).next } 
+          ".name *" #> (s match {
+            case t @ Tree(_) => <a href={repo.sourceTreeUrl(se.commit) + "/" + t.path}>{t.basename}/</a>
+            case b @ Blob(_, _) => <a href={repo.sourceBlobUrl(se.commit) + "/" + b.path}>{b.basename}</a>
+          } ) &
+          ".date *" #> c.map(cc => escape(SnippetHelper.dateFormatter.format(cc.getAuthorIdent.getWhen))) &
+          ".last_commit *" #> c.map(cc => escape(cc.getShortMessage) )
+        })
+     ).openOr(".source_element" #> NodeSeq.Empty)
+      
+ }}
 
  def renderBlob = w(se.elem){_ match {
       case b @ Blob(_,_) => {
