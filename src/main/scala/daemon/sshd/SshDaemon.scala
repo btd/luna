@@ -16,7 +16,8 @@ import org.apache.sshd.server.session.SessionFactory
 import org.apache.mina.transport.socket.SocketSessionConfig
 
 
-import net.liftweb.util.Props
+import net.liftweb.util._
+import net.liftweb.common._
 
 import main.Constants
 
@@ -30,17 +31,20 @@ import daemon.Service
  * To change this template use File | Settings | File Templates.
  */
 
-object SshDaemon extends Service {
+object SshDaemon extends Service with Loggable {
   val DEFAULT_PORT = 22
   private val sshd = SshServer.setUpDefaultServer
 
   def init() = {
-    sshd.setPort(Props.getInt(Constants.SSHD_PORT_OPTION, DEFAULT_PORT))
+    val port = Props.getInt(Constants.SSHD_PORT_OPTION, DEFAULT_PORT)
+    logger.debug("Ssh daemon started on port %s".format(port))
+    
+    sshd.setPort(port)
     sshd.setReuseAddress(true)
     sshd.setKeyPairProvider(new SimpleGeneratorHostKeyProvider("keycert"))//TODO move Props + Constants
     sshd.setUserAuthFactories(Arrays.asList(new UserAuthPublicKey.Factory))
     sshd.setPublickeyAuthenticator(new DatabasePubKeyAuth())
-    sshd.setCommandFactory(new GitoChtoToCommandFactory())
+    sshd.setCommandFactory(new CommandFactory())
     sshd.setShellFactory(new NoShell())
     sshd.setCompressionFactories(Arrays.asList(new CompressionNone.Factory()))
     sshd.setChannelFactories(Arrays.asList(new ChannelSession.Factory(), new ChannelDirectTcpip.Factory()))

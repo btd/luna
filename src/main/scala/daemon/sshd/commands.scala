@@ -16,18 +16,20 @@ import org.apache.sshd.server.session.ServerSession
 import org.eclipse.jgit.lib.{Repository => JRepository, Constants}
 import code.model._
 
-abstract sealed class AbstractCommand extends SshCommand with SessionAware with Loggable {
+trait CommandBase extends SshCommand with SessionAware with Loggable with daemon.Resolver {
 
-  protected var in: InputStream = null
-  protected var out: OutputStream = null
-  protected var err: OutputStream = null
+  val repoPath: String
 
-  protected var callback: ExitCallback = null
+  protected var in: InputStream = _
+  protected var out: OutputStream = _
+  protected var err: OutputStream = _
+
+  protected var callback: ExitCallback = _
 
   protected var onExit: Int = EXIT_SUCCESS
 
-  protected var user: UserDoc = null
-  protected var keys: Seq[SshKeyBase[_]] = null
+  protected var user: UserDoc = _
+  protected var keys: Seq[SshKeyBase[_]] = _
 
   val EXIT_SUCCESS = 0
   val EXIT_ERROR = 127
@@ -77,70 +79,42 @@ abstract sealed class AbstractCommand extends SshCommand with SessionAware with 
   }
 
   protected def sendError(message: String) {
-    err.write(Constants.encode(message + "\n"));
-    err.flush();
+    err.write(Constants.encode(message + "\n"))
+    err.flush
     onExit = EXIT_ERROR
   }
 }
 
-case class Command[A](factory: (RepositoryDoc, InputStream, OutputStream, OutputStream) => A, repoPath: String) extends AbstractCommand {
+class UploadPackCommand(val repoPath: String) extends CommandBase {
+  logger.debug("Upload pack command executed")
   def run(env: Environment) = {
-    repoPath.split("/").toList match {
-      case repoName :: Nil => {
-        user.repos.filter(_.name.get == repoName).headOption match {
-          case Some(r) => {
-            if (!keys.filter(_.acceptableFor(r)).isEmpty) {
-              factory(r, in, out, err)
-            } else sendError("You have no permisson")
-          }
-          case _ => sendError("Repository not founded")
-        }
-      }
-      case userName :: repoName :: Nil => {
-        RepositoryDoc.byUserLoginAndRepoName(userName, repoName) match {
-          case Some(r) =>
-                if (!r.collaborators.filter(_.login.get == user.login.get).isEmpty) {
-                  factory(r, in, out, err)
-                } else sendError("You have no permission")
-              
-          
-          case _ => sendError("User or repo not founded")
-        }
-      }
-      case _ => sendError("Invalid repo address")
+    for(proc <- packProcessing(repoByPath(repoPath, Some(user)), uploadPack))  {
+          proc(in, out, err)
+    } 
+  }
+}
+
+class ReceivePackCommand(val repoPath: String) extends CommandBase {
+  def run(env: Environment) = {
+    for(proc <- packProcessing(repoByPath(repoPath, Some(user)), receivePack, checkRepositoryAccess)) {
+          proc(in, out, err)
+    } 
+  }
+
+  def checkRepositoryAccess(r: RepositoryDoc) = {
+    if(user.id.get == r.ownerId.get) { // user@server:repo 
+      !keys.filter(_.acceptableFor(r)).isEmpty
+    } else {// cuser@server:user/repo
+      !r.collaborators.filter(_.login.get == user.login.get).isEmpty
     }
   }
-
-
 }
 
 
-object Upload {
 
-  def createPack(repo: RepositoryDoc, in: InputStream, out: OutputStream,
-                 err: OutputStream) = {
-    repo.git.upload_pack.upload(in, out, err)
-  }
+class UnrecognizedCommand extends CommandBase {
+  val repoPath = ""
 
-}
-
-
-object Receive {
-
-  def createPack(repo: RepositoryDoc, in: InputStream, out: OutputStream,
-                 err: OutputStream) = {
-    
-    import scala.collection.JavaConverters._
-    
-    val receivePack = repo.git.receive_pack
-    
-    receivePack.receive(in, out, err)
-    //TODO
-    NotifyActor ! PushEvent(repo, Empty, receivePack.getRefLogIdent, () => { receivePack.getRevWalk.asScala.toList }) 
-  }
-}
-
-case class UnRecognizedCommand() extends AbstractCommand {
   def run(env: Environment) = {
     sendError("This command doesn't supported by this server");
   }

@@ -46,13 +46,8 @@ object GitDaemon extends daemon.Service with Loggable {
     acceptor.setReuseAddress(true)
 
     val port = Props.getInt(Constants.GITD_PORT_OPTION, DEFAULT_PORT)
-    new Actor {
-      def act = {
-        logger.debug("Git daemon started on port %s".format(port))
-        acceptor.bind(new InetSocketAddress(port))
-      }
-    }.start    
-    
+    logger.debug("Git daemon started on port %s".format(port))
+    acceptor.bind(new InetSocketAddress(port))   
   }
 
   def shutdown() = acceptor.unbind
@@ -63,7 +58,7 @@ object GitDaemon extends daemon.Service with Loggable {
 
 }
 
-class GitServerHandler extends StreamIoHandler with Resolver with Loggable
+class GitServerHandler extends StreamIoHandler with daemon.Resolver with Loggable
 {
     override def processStreamIo(session:IoSession, in: InputStream, out: OutputStream ) {
       new Actor {
@@ -83,7 +78,6 @@ class GitServerHandler extends StreamIoHandler with Resolver with Loggable
           cmd.trim.split(" ").toList match {
             case GIT_UPLOAD_PACK :: path :: Nil => 
               for(proc <- packProcessing(repoByPath(path), uploadPack)) {
-                logger.debug(proc)
                 proc(in, out, null)
               }
 
@@ -94,46 +88,3 @@ class GitServerHandler extends StreamIoHandler with Resolver with Loggable
     }
 }
 
-trait Resolver {
-
-  self: Loggable =>
-
-  val GIT_UPLOAD_PACK = "git-upload-pack"
-
-  val GIT_RECEIVE_PACK = "git-receive-pack"
-
-  type packProcessor = (InputStream, OutputStream, OutputStream) => Unit
-
-  def packProcessing(r: Box[RepositoryDoc], 
-                     processor: (RepositoryDoc) => packProcessor,
-                     accessible: (RepositoryDoc) => Boolean = (r) => {true}):
-      Box[packProcessor] = {
-    for{repo <- r; if(accessible(repo))} yield {
-        logger.debug("Get parallel version of processor")
-       (in: InputStream, out: OutputStream, err: OutputStream) => inParallel(in, out, err)(processor(repo))
-    }
-  }  
-
-  private def inParallel(in: InputStream, out: OutputStream, err: OutputStream)
-      (f: packProcessor) = {
-        new Actor {
-          def act = f(in, out, err)
-        }.start
-      }
-
-  def repoByPath(arg: String, user: Option[UserDoc] = None) = {
-
-    arg match { 
-      case Repo1(userName, repoName) => RepositoryDoc.byUserLoginAndRepoName(userName, repoName)
-  
-      case Repo2(repoName) => user.flatMap(_.repos.filter(_.name.get == repoName).headOption)
-  
-      case _ => None
-    }
-  }
-
-  val uploadPack = (r: RepositoryDoc) => {logger.debug("Uploading"); r.git.upload_pack.upload _}
-  
-  val Repo1 = """'?/?([a-zA-Z\.-]+)/([a-zA-Z\.-]+)'?""".r
-  val Repo2 =  """'?/?([a-zA-Z\.-]+)'?""".r
-}
