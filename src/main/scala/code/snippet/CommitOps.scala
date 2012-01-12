@@ -24,11 +24,15 @@ import code.model._
 
 class CommitOps(c: WithCommit) {
 
+  def renderSourceTreeDefaultLink = w(c.repo)(renderSourceTreeLink(_, Full(c.commit)))
+
+  def renderCommitsDefaultLink = w(c.repo)(renderCommitsLink(_, Full(c.commit)))
+
   def renderBranchSelector = w(c.repo){repo => 
     ".current_branch" #>
           SHtml.ajaxSelect(repo.git.branches.zip(repo.git.branches),
-            Full(c.commit),
-            value => S.redirectTo(repo.commitsUrl(c.commit)))
+            if(repo.git.branches.contains(c.commit)) Full(c.commit) else Empty,
+            value => S.redirectTo(repo.commitsUrl(value)))
   }
 
 
