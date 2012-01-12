@@ -95,6 +95,7 @@ class UploadPackCommand(val repoPath: String) extends CommandBase {
 }
 
 class ReceivePackCommand(val repoPath: String) extends CommandBase {
+  logger.debug("Receive pack command executed")
   def run(env: Environment) = {
     for(proc <- packProcessing(repoByPath(repoPath, Some(user)), receivePack, checkRepositoryAccess)) {
           proc(in, out, err)
