@@ -35,9 +35,7 @@ libraryDependencies ++= Seq (
   "net.liftweb"         %% "lift-mongodb"         % "2.4-SNAPSHOT"          % "compile",
   "net.liftweb"         %% "lift-mongodb-record"  % "2.4-SNAPSHOT"          % "compile",
   "com.foursquare"      %% "rogue"                % "1.0.29"                intransitive(),
-  "org.mortbay.jetty"   %  "jetty"                % "6.1.22"                % "container",
+  "org.eclipse.jetty"   % "jetty-webapp"          % "8.0.1.v20110908"       % "container",
   "com.github.siasia"   %% "xsbt-web-plugin"      % "0.2.10",
   "ch.qos.logback"      % "logback-classic"       % "1.0.0"
 )
-  
-addSbtPlugin("com.github.mpeltonen" % "sbt-idea" % "0.11.0")
