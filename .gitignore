@@ -5,3 +5,4 @@ target
 ^repo
 *.sublime-project
 *.sublime-workspacerepo
+.history
