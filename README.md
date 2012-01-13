@@ -44,9 +44,9 @@ Assume you already have a server with any java web server (i use jetty) and mong
 Source building
 
 ``` bash
-$ git clone git://github.com/btd/gct.git
-$ cd gct
-$ ./sbt package-war
+$ git clone git://github.com/btd/luna.git
+$ cd luna
+$ ./sbt package
 ```
 
 Now use ./target/scala-2.9.1.final/luna-tool_2.9.1-{VERSION}.war.
