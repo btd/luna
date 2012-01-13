@@ -13,9 +13,12 @@ checksums := Nil
 resolvers ++= Seq (
   "jgit-repository" at "http://download.eclipse.org/jgit/maven",
   "scala-tools snapshots" at "http://scala-tools.org/repo-snapshots",
-  "my github repo" at "http://btd.github.com/maven2"
-  )
+  "my github repo" at "http://btd.github.com/maven2",
+  "Web plugin repo" at "http://siasia.github.com/maven2",
+  Resolver.url("Typesafe repository", new java.net.URL("http://typesafe.artifactoryonline.com/typesafe/ivy-releases/"))(Resolver.defaultIvyPatterns)
+)
 
+libraryDependencies <+= sbtVersion(v => "com.github.siasia" %% "xsbt-web-plugin" % (v + "-0.2.10"))
 
 libraryDependencies ++= Seq (
   "net.databinder"      %% "dispatch-nio"         % "0.8.7",
@@ -31,6 +34,7 @@ libraryDependencies ++= Seq (
   "net.liftweb"         %% "lift-mongodb"         % "2.4-SNAPSHOT"          % "compile",
   "net.liftweb"         %% "lift-mongodb-record"  % "2.4-SNAPSHOT"          % "compile",
   "com.foursquare"      %% "rogue"                % "1.0.29"                intransitive(),
-  "org.eclipse.jetty"   % "jetty-webapp"          % "8.0.0.v20110901"       % "jetty",
+  "org.eclipse.jetty"   % "jetty-webapp"          % "8.0.1.v20110908"       % "container",
+  "com.github.siasia"   %% "xsbt-web-plugin"      % "0.2.10",
   "ch.qos.logback"      % "logback-classic"       % "1.0.0"
-  )
+)
