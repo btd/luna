@@ -4,4 +4,4 @@ project/boot
 target
 ^repo
 *.sublime-project
-*.sublime-workspace
+*.sublime-workspacerepo

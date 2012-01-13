@@ -81,10 +81,15 @@ class GitServerHandler extends StreamIoHandler with daemon.Resolver with Loggabl
                 proc(in, out, null)
               }
 
+            case GIT_RECEIVE_PACK :: path :: Nil =>
+              for(proc <- packProcessing(repoByPath(path), receivePack)) {
+                proc(in, out, null)
+              }
+
             case _ => logger.debug("This command is not supported")
           }  
         }
-      }.start        
+      }.start
     }
 }
 
