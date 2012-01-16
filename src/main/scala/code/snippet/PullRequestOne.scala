@@ -68,6 +68,12 @@ class PullRequestOneOps(pr: WithPullRequest) extends Loggable {
     }
   }
 
-  def processPullRequestClose(pullRequest: PullRequestDoc)() =  pullRequest.accepted_?(true).save
+  def processPullRequestClose(pullRequest: PullRequestDoc)() = {
+    pullRequest
+      .accepted_?(true)
+      .srcRef(pullRequest.srcRepo.git.resolve(pullRequest.srcRef.get))
+      .destRef(pullRequest.destRepo.git.resolve(pullRequest.destRef.get))
+      .save
+  }
 
 }
