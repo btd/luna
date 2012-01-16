@@ -42,7 +42,6 @@ trait Resolver {
       }
 
   def repoByPath(arg: String, user: Option[UserDoc] = None) = {
-
     arg match { 
       case Repo1(userName, repoName) => RepositoryDoc.byUserLoginAndRepoName(userName, repoName)
   
@@ -64,7 +63,9 @@ trait Resolver {
     NotifyActor ! PushEvent(r, Empty, receivePack.getRefLogIdent, () => { receivePack.getRevWalk.asScala.toList }) 
  
     receivePack.receive _ }
+
+  val ident = """[0-9a-zA-Z\.-]+"""
   
-  val Repo1 = """'?/?([a-zA-Z\.-]+)/([a-zA-Z\.-]+)'?""".r
-  val Repo2 =  """'?/?([a-zA-Z\.-]+)'?""".r
+  val Repo1 = """'?/?(%s)/(%s)'?""".format(ident, ident).r
+  val Repo2 =  """'?/?(%s)'?""".format(ident).r
 }
