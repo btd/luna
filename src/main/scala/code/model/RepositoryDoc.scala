@@ -306,6 +306,8 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
       }
     }
 
+    def resolve(ref: String) = ObjectId.toString(fs_repo.resolve(ref))
+
   }
 
 
