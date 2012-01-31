@@ -1,2 +1,2 @@
 repoDir = ./repo/
-notify.url = http://localhost:8081
+notification.url = http://localhost:8081/luna/services

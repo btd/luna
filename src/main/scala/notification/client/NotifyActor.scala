@@ -16,6 +16,8 @@ import dispatch._
 
 import json.JsonDSL._
 import json.JsonAST._
+import json.Printer._
+
 
 object NotifyEvents extends Enumeration {
 	val Push = Value
@@ -33,23 +35,24 @@ object NotifyEvents extends Enumeration {
 case class PushEvent(where: RepositoryDoc, who: Box[UserDoc], pusher: PersonIdent, what: () => List[RevCommit])
 
 object NotifyActor extends LiftActor {
-	lazy val notifyServerUrl = Props.get("notify.url")
+	lazy val notifyServerUrl = Props.get("notification.url")
 
 	private val formatter = new java.text.SimpleDateFormat("yyyy.MM.dd HH:mm:ss")
 
 	private def subscribers(t: NotifyEvents.Value, repo: RepositoryDoc) = {
 		import com.foursquare.rogue.Rogue._
 
-		ActorLogger.debug(NotifySubscriptionDoc where (_.repo eqs repo.id.get) and (_.onWhat eqs t) toString)
-
 		for { subscription <- (NotifySubscriptionDoc where (_.repo eqs repo.id.get) and (_.onWhat eqs t) fetch) 
 						user <- subscription.who.obj} 
 				yield {ActorLogger.debug(subscription); (user, subscription.output.get)}
 	}
 
-	implicit def asJValue(pi: PersonIdent): JValue =
+	implicit def asJValue(pi: PersonIdent): JValue = {
+		import org.joda.time.DateTime
+
 		if(pi == null) JObject(Nil)
-		else JObject(JField("name", pi.getName) :: JField("date", formatter.format(pi.getWhen)) :: JField("email", pi.getEmailAddress) :: Nil)
+		else JObject(JField("name", pi.getName) :: JField("date", (new DateTime(pi.getWhen)).toString) :: JField("email", pi.getEmailAddress) :: Nil)
+	}
 
 	implicit def asJValue(cl: List[RevCommit]): JValue =
 		JArray(cl.map(commit => JObject(JField("msg", commit.getFullMessage) :: JField("author", commit.getAuthorIdent) :: Nil).asInstanceOf[JValue]))
@@ -58,8 +61,6 @@ object NotifyActor extends LiftActor {
 	def messageHandler = {
 		case PushEvent(repo, user, ident, commitSeq) => 
 			notifyServerUrl.map(urlAddress => {
-				ActorLogger.debug("Notify url is " + urlAddress)
-				ActorLogger.debug("Repo id is " + repo.id.get)
 
 				val subs = subscribers(NotifyEvents.Push, repo)
 				ActorLogger.debug("Subscribers " + subs)
@@ -67,12 +68,18 @@ object NotifyActor extends LiftActor {
 					ActorLogger.debug("Found subscribers")
 					for(subscriber <- subs) {
 						if(subscriber._2.email.get.activated.get) {
-							h(:/(urlAddress) / "mail" / "push" <<< (
-									("to", subscriber._1.email.get :: subscriber._2.email.get.to.get) ~
-									("repo", repo.asJValue) ~ 
-									("user", user.map(_.asJValue) openOr (JNothing)) ~
-									("pusher", ident) ~ 
-									("commits", commitSeq())).toString >|)
+							h((url(urlAddress + "/push") <<< 
+							compact(render(
+							("services", JArray("mail" :: Nil)) ~
+							("additionalHeaders", ("mail" , 
+								JObject(JField("To", 
+									(subscriber._1.email.get ::
+										subscriber._2.email.get.to.get).mkString(";")) :: Nil)))~
+							("repository", repo.asJValue) ~ 
+							("pusher", user.map(_.asJValue) openOr (JNothing)) ~
+							("gitPusher", ident) ~ 
+							("commits", commitSeq())
+								))) >|)
 						}
 					}
 					
