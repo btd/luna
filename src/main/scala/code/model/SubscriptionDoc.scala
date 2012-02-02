@@ -18,12 +18,24 @@ import common._
 import record.field._
 import util._
 
-class Email extends BsonRecord[Email] {
+trait NotificationService {
+  def activated: BooleanField[_]
+}
+
+class Email extends BsonRecord[Email] with NotificationService {
   def meta = Email
   
   object to extends MongoListField[Email, String](this)
 
   object activated extends BooleanField(this, false)
+
+  override def asJValue = {
+    if(activated.get) {
+        JObject(JField(to.name, JString(to.get.mkString(";"))) :: Nil)
+    } else {
+        JObject(Nil)
+    }
+  }
 }
 
 object Email extends Email with BsonMetaRecord[Email]

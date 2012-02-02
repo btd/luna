@@ -48,14 +48,23 @@ object NotifyActor extends LiftActor {
 	}
 
 	implicit def asJValue(pi: PersonIdent): JValue = {
-		import org.joda.time.DateTime
-
 		if(pi == null) JObject(Nil)
-		else JObject(JField("name", pi.getName) :: JField("date", (new DateTime(pi.getWhen)).toString) :: JField("email", pi.getEmailAddress) :: Nil)
+		else JObject(
+				JField("name", pi.getName) :: 
+				JField("email", pi.getEmailAddress) :: 
+				Nil)
 	}
 
-	implicit def asJValue(cl: List[RevCommit]): JValue =
-		JArray(cl.map(commit => JObject(JField("msg", commit.getFullMessage) :: JField("author", commit.getAuthorIdent) :: Nil).asInstanceOf[JValue]))
+	implicit def asJValue(cl: List[RevCommit]): JValue = {
+		import org.joda.time.DateTime
+
+		JArray(cl.map(commit => 
+			JObject(
+				JField("message", commit.getFullMessage) :: 
+				JField("author", commit.getAuthorIdent) :: 
+				JField("date", (new DateTime(commit.getAuthorIdent.getWhen)).toString) :: 
+				Nil).asInstanceOf[JValue]))
+		}
 	
 
 	def messageHandler = {
@@ -66,28 +75,21 @@ object NotifyActor extends LiftActor {
 				ActorLogger.debug("Subscribers " + subs)
 				if(!subs.isEmpty) {
 					ActorLogger.debug("Found subscribers")
-					for(subscriber <- subs) {
-						if(subscriber._2.email.get.activated.get) {
-							h((url(urlAddress + "/push") <<< 
-							compact(render(
-							("services", JArray("mail" :: Nil)) ~
-							("additionalHeaders", ("mail" , 
-								JObject(JField("To", 
-									(subscriber._1.email.get ::
-										subscriber._2.email.get.to.get).mkString(";")) :: Nil)))~
-							("repository", repo.asJValue) ~ 
-							("pusher", user.map(_.asJValue) openOr (JNothing)) ~
-							("gitPusher", ident) ~ 
-							("commits", commitSeq())
-								))) >|)
-						}
+	
+					for((user, output) <- subs) {
+						val outputJson = 
+
+						h((url(urlAddress + "/push") <<< compact(render(
+							("services", output.asJValue) ~
+							("repository", repo.asJValue) ~
+							("commits", commitSeq()) ~
+							("gitPusher", ident)
+						))) >|)
 					}
-					
 				}
 				
 			})			
 	}
-	
 
 	lazy val h = new nio.Http
 
