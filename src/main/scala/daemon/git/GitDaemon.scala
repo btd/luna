@@ -81,7 +81,12 @@ class GitServerHandler extends StreamIoHandler with daemon.Resolver with Loggabl
                 proc(in, out, null)
               }
 
-            case _ => logger.debug("This command is not supported")
+            case _ => {
+              logger.debug("This command is not supported")
+              in.close
+              out.close
+              session.close(true)
+            }
           }  
         }
       }.start        
