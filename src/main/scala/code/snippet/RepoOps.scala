@@ -46,27 +46,37 @@ class RepoOps(urp: WithRepo) {
         case Full(cu) if(repo.owner_?(Full(cu)))=> if(repo.open_?.get) "public" else "private"
         case _ => "public"
       }) &
-      ".repo *" #> (UserDoc.currentUser match {
-        case Full(cu) if (cu.login.get == u.login.get) => {
-            ".repo_name *" #> <span><a href={repo.owner.homePageUrl}>{repo.owner.login.get}</a>/{repo.name.get}</span> &
-            ".clone-url *" #> (repo.cloneUrlsForCurrentUser.map(url => "a" #> a(url._1, Text(url._2)))) &
-            ".admin_page *" #> a("/admin" + repo.homePageUrl, Text("admin")) & 
-            ".fork *" #> SHtml.a(makeFork(repo, cu) _, Text("fork it")) &
-            ".toggle_open *" #> SHtml.a(toggleOpen(repo) _, Text(if (repo.open_?.get) "make private" else "make public"))
-        }
-        case Full(cu) => {     
-            ".repo_name *" #> <span><a href={repo.owner.homePageUrl}>{repo.owner.login.get}</a>/{repo.name.get}</span> &
-            ".clone-url *" #> (repo.cloneUrlsForCurrentUser.map(url => "a" #> a(url._1, Text(url._2)))) &
-            ".admin_page" #> NodeSeq.Empty & 
-            ".fork *" #> SHtml.a(makeFork(repo, cu) _, Text("fork it")) &
-            ".toggle_open" #> NodeSeq.Empty
-          }
-        case _ => {
-            ".repo_name *" #> <span><a href={repo.owner.homePageUrl}>{repo.owner.login.get}</a>/{repo.name.get}</span> &
-            ".clone-url *" #> (repo.cloneUrlsForCurrentUser.map(url => "a" #> a(url._1, Text(url._2)))) &
-            ".admin" #> NodeSeq.Empty 
-        }
-    })
+      ".repo *" #> (
+          ".repo_name *" #> <span><a href={repo.owner.homePageUrl}>{repo.owner.login.get}</a>/{repo.name.get}</span> &
+          ".clone-url *" #> (repo.cloneUrlsForCurrentUser.map(url => "a" #> a(url._1, Text(url._2)))) &
+        (UserDoc.currentUser match {
+                case Full(cu) if (cu.login.get == u.login.get) => {
+                    
+                    ".admin_page *" #> a("/admin" + repo.homePageUrl, Text("admin")) & 
+                    ".fork *" #> SHtml.a(makeFork(repo, cu) _, Text("fork it")) &
+                    ".toggle_open *" #> SHtml.a(toggleOpen(repo) _, Text(if (repo.open_?.get) "make private" else "make public")) &
+                    (repo.forkOf.obj.map(fr => ".origin_link *" #> a(fr.homePageUrl, Text("origin"))) openOr 
+                          ".origin_link" #> NodeSeq.Empty)
+                }
+                case Full(cu) => {     
+                    ".admin_page" #> NodeSeq.Empty & 
+                    ".fork *" #> SHtml.a(makeFork(repo, cu) _, Text("fork it")) &
+                    ".toggle_open" #> NodeSeq.Empty &
+                    (repo.forkOf.obj.map(fr => ".origin_link *" #> a(fr.homePageUrl, Text("origin"))) openOr 
+                          ".origin_link" #> NodeSeq.Empty)
+                  }
+                case _ => {
+                    (repo.forkOf.obj match {
+                          case Full(fr) => {
+                            ".origin_link *" #> a(fr.homePageUrl, Text("origin")) &
+                            ".admin_page" #> NodeSeq.Empty & 
+                            ".toggle_open" #> NodeSeq.Empty &
+                            ".fork" #> NodeSeq.Empty
+                          }
+                          case _ =>  ".admin" #> NodeSeq.Empty 
+                        })
+                }
+            }))
   }} 
 
   

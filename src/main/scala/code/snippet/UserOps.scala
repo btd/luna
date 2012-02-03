@@ -42,20 +42,36 @@ class UserOps(up: WithUser) extends Loggable with RepositoryUI {
           case Full(cu) if (cu.login.get == u.login.get) => {
               ".admin_page *" #> a("/admin" + repo.homePageUrl, Text("admin")) & 
               ".fork *" #> SHtml.a(makeFork(repo, cu) _, Text("fork it")) & //later will be added js append
-              ".toggle_open *" #> SHtml.a(toggleOpen(repo) _, Text(if (repo.open_?.get) "make private" else "make public"))
+              ".toggle_open *" #> SHtml.a(toggleOpen(repo) _, Text(if (repo.open_?.get) "make private" else "make public")) &
+              (repo.forkOf.obj.map(fr => ".origin_link *" #> a(fr.homePageUrl, Text("origin"))) openOr 
+                  ".origin_link" #> NodeSeq.Empty)
+
           }
           case Full(cu) => {        
               ".admin_page" #> NodeSeq.Empty & 
               ".fork *" #> SHtml.a(makeFork(repo, cu) _, Text("fork it")) &
-              ".toggle_open" #> NodeSeq.Empty
+              ".toggle_open" #> NodeSeq.Empty &
+              (repo.forkOf.obj.map(fr => ".origin_link *" #> a(fr.homePageUrl, Text("origin"))) openOr 
+                  ".origin_link" #> NodeSeq.Empty)
             }
           case _ => {
-              ".admin" #> NodeSeq.Empty 
+              (repo.forkOf.obj match {
+                  case Full(fr) => {
+                    ".origin_link *" #> a(fr.homePageUrl, Text("origin")) &
+                    ".admin_page" #> NodeSeq.Empty & 
+                    ".toggle_open" #> NodeSeq.Empty &
+                    ".fork" #> NodeSeq.Empty
+                  }
+                  case _ =>  ".admin" #> NodeSeq.Empty 
+                })
+             
         }
       }) 
     }) ++
     (if(u.is(UserDoc.currentUser)) u.collaboratedRepos else Nil).map(repo => {
       ".repo [class+]" #> "collaborated" &
+      ".repo_name *" #> a(repo.sourceTreeUrl, Text(repo.name.get)) &
+      ".clone-url" #> (repo.cloneUrlsForCurrentUser.map(url => "a" #> a(url._1, Text(url._2)))) &
       ".admin_page" #> NodeSeq.Empty & 
       ".fork *" #> SHtml.a(makeFork(repo, UserDoc.currentUser.get) _, Text("fork it")) &
       ".toggle_open" #> NodeSeq.Empty
