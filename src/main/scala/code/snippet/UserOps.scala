@@ -36,36 +36,30 @@ class UserOps(up: WithUser) extends Loggable with RepositoryUI {
     else 
     ".repo" #> ((u.publicRepos ++ (if(u.is(UserDoc.currentUser)) u.privateRepos else Nil)).map(repo => {
       ".repo [class+]" #> (if(repo.open_?.get) "public" else "private" ) &
+        ".repo_name *" #> a(repo.sourceTreeUrl, Text(repo.name.get)) &
+        ".clone-url" #> (repo.cloneUrlsForCurrentUser.map(url => "a" #> a(url._1, Text(url._2)))) &
         (UserDoc.currentUser match {
           case Full(cu) if (cu.login.get == u.login.get) => {
-              ".repo_name *" #> a(repo.sourceTreeUrl, Text(repo.name.get)) &
-              ".clone-url" #> (repo.cloneUrlsForCurrentUser.map(url => "a" #> a(url._1, Text(url._2)))) &
               ".admin_page *" #> a("/admin" + repo.homePageUrl, Text("admin")) & 
               ".fork *" #> SHtml.a(makeFork(repo, cu) _, Text("fork it")) & //later will be added js append
               ".toggle_open *" #> SHtml.a(toggleOpen(repo) _, Text(if (repo.open_?.get) "make private" else "make public"))
           }
           case Full(cu) => {        
-              ".repo_name *" #> a(repo.sourceTreeUrl, Text(repo.name.get)) &
-              ".clone-url" #> (repo.cloneUrlsForCurrentUser.map(url => "a" #> a(url._1, Text(url._2)))) &
               ".admin_page" #> NodeSeq.Empty & 
               ".fork *" #> SHtml.a(makeFork(repo, cu) _, Text("fork it")) &
               ".toggle_open" #> NodeSeq.Empty
             }
           case _ => {
-          ".repo_name *" #> a(repo.sourceTreeUrl, Text(repo.name.get)) &
-          ".clone-url" #> (repo.cloneUrlsForCurrentUser.map(url => "a" #> a(url._1, Text(url._2)))) &
-          ".admin" #> NodeSeq.Empty 
+              ".admin" #> NodeSeq.Empty 
         }
       }) 
     }) ++
     (if(u.is(UserDoc.currentUser)) u.collaboratedRepos else Nil).map(repo => {
       ".repo [class+]" #> "collaborated" &
-        (     ".repo_name *" #> a(repo.sourceTreeUrl, Text(repo.name.get)) &
-              ".clone-url" #> (repo.cloneUrlsForCurrentUser.map(url => "a" #> a(url._1, Text(url._2)))) &
-              ".admin_page" #> NodeSeq.Empty & 
-              ".fork *" #> SHtml.a(makeFork(repo, UserDoc.currentUser.get) _, Text("fork it")) &
-              ".toggle_open" #> NodeSeq.Empty
-        ) 
+      ".admin_page" #> NodeSeq.Empty & 
+      ".fork *" #> SHtml.a(makeFork(repo, UserDoc.currentUser.get) _, Text("fork it")) &
+      ".toggle_open" #> NodeSeq.Empty
+        
     }) 
     )  
   }

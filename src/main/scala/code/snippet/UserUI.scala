@@ -36,26 +36,42 @@ trait UserUI extends Loggable{
   	userForm(user) & button(buttonText, onSubmit)
   }
 
- def userAuthForm = {
-   "name=email" #> SHtml.text(email, v => email = v.trim, "placeholder" -> "email@example.com") &
-   "name=password" #> SHtml.password(password, v => password = v.trim, "placeholder" -> "password") &
-   "button" #> SHtml.button("Enter", logUserIn)
- }
+  private object whence extends RequestVar[Box[String]](S.referer)
+
+   def userAuthForm = {
+      val w = whence.get
+
+     "name=email" #> SHtml.text(email, v => email = v.trim, "placeholder" -> "email or login") &
+     "name=password" #> (SHtml.password(password, v => password = v.trim, 
+              "placeholder" -> "password", "class" -> "textfield large") ++ 
+            SHtml.hidden(() => whence.set(w))) &
+     "button" #> SHtml.button("Enter", logUserIn)
+   }
+
+
 
  private def logUserIn() = {
+    def logIn(u: UserDoc) = {
+      UserDoc.logUserIn(u, () => {
+        //logger.debug(S.referer)
+        S.redirectTo(whence openOr u.homePageUrl)
+      })
+    }
+
     if (password.isEmpty) S.error("Password field is empty")
 
     if (email.isEmpty)
-      S.error("Email field is empty")
+      S.error("Email/login field is empty")
     else
-      UserDoc.find("email", email) match {
-        case Full(u) if (u.password.match_?(password)) => {
-          UserDoc.logUserIn(u, () => {
-            S.redirectTo(u.homePageUrl)
-          })
+      UserDoc where (_.email eqs email) get  match {
+        case Some(u) if (u.password.match_?(password)) => logIn(u)
+        case _ => {
+          UserDoc where (_.login eqs email) get match {
+            case Some(u) if (u.password.match_?(password)) => logIn(u)
+            case _ => S.error("User with such email or login doesn't exists or password is wrong")
+          }
         }
-        case _ =>
-          S.error("User with such email doesn't exists or password is wrong")
+          
 
 
       }
