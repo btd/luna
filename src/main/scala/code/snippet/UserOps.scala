@@ -29,8 +29,6 @@ class UserOps(up: WithUser) extends Loggable with RepositoryUI {
     if(u.login.get == cu.login.get) repositoryForm(repo, "Add", saveRepo(repo))
     else cleanAll
   }}}
- 
-
 
   def renderRepositoryList = w(up.user) {u => 
     if(u.repos.isEmpty)
