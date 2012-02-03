@@ -399,6 +399,11 @@ input, textarea, button {
 .large {
     font-size: 3em;
 }
+
+#login_form {
+    width: 700px;
+}
+
 .repo {
     border: 2px solid black;
     -webkit-border-radius: 3px;

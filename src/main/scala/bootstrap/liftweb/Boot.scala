@@ -91,7 +91,7 @@ class Boot extends Loggable {
     val userPage = Menu.param[UserPage]("userPage",
       new LinkText[UserPage](up => Text("User " + up.userName)),
       login => Full(UserPage(login)),
-      up => up.userName) / "list" / * >> Template(() => Templates("list" :: Nil) openOr NodeSeq.Empty)  >>
+      up => up.userName) / "list" / * >>
       ValueTemplate(up =>  up match {
         case Full(up1) => up1.user match {
           case Full(user) =>  Templates("list" :: Nil) openOr NodeSeq.Empty
