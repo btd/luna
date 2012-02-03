@@ -55,20 +55,20 @@ class RepoOps(urp: WithRepo) {
                     ".admin_page *" #> a("/admin" + repo.homePageUrl, Text("admin")) & 
                     ".fork *" #> SHtml.a(makeFork(repo, cu) _, Text("fork it")) &
                     ".toggle_open *" #> SHtml.a(toggleOpen(repo) _, Text(if (repo.open_?.get) "make private" else "make public")) &
-                    (repo.forkOf.obj.map(fr => ".origin_link *" #> a(fr.homePageUrl, Text("origin"))) openOr 
+                    (repo.forkOf.obj.map(fr => ".origin_link *" #> a(fr.sourceTreeUrl, Text("origin"))) openOr 
                           ".origin_link" #> NodeSeq.Empty)
                 }
                 case Full(cu) => {     
                     ".admin_page" #> NodeSeq.Empty & 
                     ".fork *" #> SHtml.a(makeFork(repo, cu) _, Text("fork it")) &
                     ".toggle_open" #> NodeSeq.Empty &
-                    (repo.forkOf.obj.map(fr => ".origin_link *" #> a(fr.homePageUrl, Text("origin"))) openOr 
+                    (repo.forkOf.obj.map(fr => ".origin_link *" #> a(fr.sourceTreeUrl, Text("origin"))) openOr 
                           ".origin_link" #> NodeSeq.Empty)
                   }
                 case _ => {
                     (repo.forkOf.obj match {
                           case Full(fr) => {
-                            ".origin_link *" #> a(fr.homePageUrl, Text("origin")) &
+                            ".origin_link *" #> a(fr.sourceTreeUrl, Text("origin")) &
                             ".admin_page" #> NodeSeq.Empty & 
                             ".toggle_open" #> NodeSeq.Empty &
                             ".fork" #> NodeSeq.Empty

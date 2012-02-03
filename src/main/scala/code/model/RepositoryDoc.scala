@@ -311,13 +311,13 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
   }
 
 
-  lazy val pullRequestsUrl = homePageUrl + "/pull-requests"
+  val pullRequestsUrl = homePageUrl + "/pull-requests"
 
-  lazy val homePageUrl = "/" + owner.login.get + "/" + name.get
+  val homePageUrl = "/" + owner.login.get + "/" + name.get
 
-  lazy val sourceTreeUrl = homePageUrl + "/tree/" + git.currentBranch
+  val sourceTreeUrl = homePageUrl + "/tree/" + git.currentBranch
 
-  lazy val commitsUrl = homePageUrl + "/commits/" + git.currentBranch
+  val commitsUrl = homePageUrl + "/commits/" + git.currentBranch
 
   def commitsUrl(commit: String) = homePageUrl + "/commits/" + commit
 
