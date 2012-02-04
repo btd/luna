@@ -32,7 +32,7 @@ object NotifyEvents extends Enumeration {
 	pusher - this will be who make a push from JGit identification
 	what - this is func that get me a seq of commits (i do not what ask sender convert for me a RevWalk to Seq)
 */
-case class PushEvent(where: RepositoryDoc, who: Box[UserDoc], pusher: PersonIdent, what: () => List[RevCommit])
+case class PushEvent(where: RepositoryDoc, pusher: PersonIdent, what: () => List[RevCommit])
 
 object NotifyActor extends LiftActor {
 	lazy val notifyServerUrl = Props.get("notification.url")
@@ -68,23 +68,25 @@ object NotifyActor extends LiftActor {
 	
 
 	def messageHandler = {
-		case PushEvent(repo, user, ident, commitSeq) => 
+		case PushEvent(repo, ident, commitSeq) =>
+
 			notifyServerUrl.map(urlAddress => {
+				val commits = commitSeq()
+				if(!commits.isEmpty) {
+					val subs = subscribers(NotifyEvents.Push, repo)
+					ActorLogger.debug("Subscribers " + subs)
+					if(!subs.isEmpty) {
+						ActorLogger.debug("Found subscribers")
+		
+						for((user, output) <- subs) {
 
-				val subs = subscribers(NotifyEvents.Push, repo)
-				ActorLogger.debug("Subscribers " + subs)
-				if(!subs.isEmpty) {
-					ActorLogger.debug("Found subscribers")
-	
-					for((user, output) <- subs) {
-						val outputJson = 
-
-						h((url(urlAddress + "/push") <<< compact(render(
-							("services", output.asJValue) ~
-							("repository", repo.asJValue) ~
-							("commits", commitSeq()) ~
-							("gitPusher", ident)
-						))) >|)
+							h((url(urlAddress + "/push") <<< compact(render(
+								("services", output.asJValue) ~
+								("repository", repo.asJValue) ~
+								("commits", commits) ~
+								("gitPusher", ident)
+							))) >|)
+						}
 					}
 				}
 				
