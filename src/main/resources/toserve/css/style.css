@@ -355,8 +355,11 @@ html, body {
     height: 100%;
 }
 
+#main {
+    padding: 50px 0;
+}
+
 #container {
-    padding-top:50px;
     height: 100%;
     width: 100%;
 
