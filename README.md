@@ -1,19 +1,3 @@
-WARNING Ssh keys 18 Dec 2011
------------------------------
-
-Ssh keys are splited on two collections. To migrate from prev versions move all keys for users to collection ssh_keys_user and ssh keys for repos move to ssh_keys_repo.
-
-Using mongo client:
-
-```javascript
-use grt;
-db.createCollection("ssh_keys_repo");
-db.createCollection("ssh_keys_user");
-db.ssh_keys.find({ownerRepoId:{$exists: false}}).forEach( function(x){db.ssh_keys_user.insert(x)} );
-db.ssh_keys.find({ownerRepoId:{$exists: true}}).forEach( function(x){db.ssh_keys_repo.insert({_id:x._id, rawValue:x.rawValue, ownerId:x.ownerRepoId})} );
-db.ssh_keys.drop();
-```
-
 Luna
 =========
 
@@ -27,14 +11,13 @@ What it can
  + Repositories. Can be public or private. You can add collaborator to repository.
  + Forking. You can fork any visible for you repository and make pull requests for owner
  + Ssh read+write access, git protocol anonimous read access
+ + Mail notification about push (in practice it is not difficult to add other)
 
 Todo
 ---------------------
 
  + SubGit integration (tmate guys said that help)
  + Smart HTTP protocol support
- + One side notification (currently only mail, also possible xmpp, POST req and many others)
- + Mailing lists for pull requests discussion (patch will be attached and url in letters)
 
 Installation
 ---------------------
