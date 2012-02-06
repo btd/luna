@@ -12,7 +12,6 @@ import util._
 import org.eclipse.jgit.lib.RepositoryCache.FileKey
 import org.eclipse.jgit.util.FS
 
-import main.Main
 import net.liftweb.http.S
 import org.apache.commons.codec.digest.DigestUtils
 import net.liftweb.mongodb.record.field.{ObjectIdRefField, ObjectIdPk}
@@ -220,7 +219,7 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
 
     private lazy val loc = FileKey.lenient(new File(fsPath), FS.DETECTED)
 
-    lazy val fsPath = Main.repoDir + fsName
+    lazy val fsPath = Props.get(main.Constants.REPOSITORIES_DIR, "./repo/") + fsName.get
 
     def upload_pack = new UploadPack(fs_repo)
 

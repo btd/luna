@@ -6,7 +6,6 @@ import org.eclipse.jgit.lib.RepositoryCache
 import org.eclipse.jgit.lib.RepositoryCache.FileKey
 import java.io.File
 import org.eclipse.jgit.util.FS
-import main.Main
 import net.liftweb.http.S
 import net.liftweb.common.{Full, Box}
 import net.liftweb.mongodb.record.{MongoMetaRecord, MongoRecord}
