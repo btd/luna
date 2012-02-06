@@ -5,8 +5,6 @@
 
 package main
 
-import net.liftweb.util.Props
-
 object Constants {
 	val SSHD_PORT_OPTION = "daemon.sshd.port"
 

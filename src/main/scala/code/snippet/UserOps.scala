@@ -31,14 +31,12 @@ class UserOps(up: WithUser) extends Loggable with RepositoryUI {
   }}}
 
   def renderRepositoryList = w(up.user) {u => 
-    logger.info(util.Props.props)
-
+    
     if(u.repos.isEmpty)
     ".repo" #> NodeSeq.Empty
     else 
     ".repo" #> ((u.publicRepos ++ (if(u.is(UserDoc.currentUser)) u.privateRepos else Nil)).map(repo => {
-      logger.info("Repository path :" + repo.git.fsPath)
-
+     
       ".repo [class+]" #> (if(repo.open_?.get) "public" else "private" ) &
         ".repo_name *" #> a(repo.sourceTreeUrl, Text(repo.name.get)) &
         ".clone-url" #> (repo.cloneUrlsForCurrentUser.map(url => "a" #> a(url._1, Text(url._2)))) &

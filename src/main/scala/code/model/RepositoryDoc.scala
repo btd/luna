@@ -202,6 +202,8 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
     def branches =
       scala.collection.JavaConversions.asScalaBuffer((new Git(fs_repo)).branchList.call).map(ref => ref.getName.substring(ref.getName.lastIndexOf("/") + 1))
 
+    def refsHeads = scala.collection.JavaConversions.asScalaBuffer((new Git(fs_repo)).branchList.call)
+
 
     private def fs_exists_? = FileKey.resolve(new File(fsPath), FS.DETECTED) != null
 
@@ -242,6 +244,13 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
     def log(commit: String, path: String) = {
       logger.debug("Try to get log for " + path)
       scala.collection.JavaConversions.asScalaIterator((new Git(fs_repo)).log.add(fs_repo.resolve(commit)).addPath(path).call.iterator)
+    }
+
+    def log(from: ObjectId, to: ObjectId) = {
+   
+      scala.collection.JavaConversions.asScalaIterator(
+        (new Git(fs_repo))
+          .log.addRange(from, to).call.iterator)
     }
 
     def diff(commit1: String, commit2: String) = {

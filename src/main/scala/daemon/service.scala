@@ -54,15 +54,19 @@ trait Resolver {
   def uploadPack(r: RepositoryDoc) = { r.git.upload_pack.upload _ }
 
   def receivePack(r: RepositoryDoc) = {
-    import scala.collection.JavaConverters._
+    import scala.collection.JavaConversions._
     import notification.client._
     
     val receivePack = r.git.receive_pack
-  
-    //TODO
-    NotifyActor ! PushEvent(r, receivePack.getRefLogIdent, () => { receivePack.getRevWalk.asScala.toList }) 
+
+    val advertisedRefs = receivePack.getAdvertisedRefs
+    val ident = receivePack.getRefLogIdent
  
-    receivePack.receive _ 
+    // he-he hide a real call
+    (in: InputStream, out: OutputStream, err: OutputStream) => {
+        receivePack.receive(in, out, err)
+        NotifyActor ! PushEvent(r, ident, advertisedRefs)
+    }
   }
 
   val ident = """[0-9a-zA-Z\.-]+"""
