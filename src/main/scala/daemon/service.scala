@@ -59,13 +59,13 @@ trait Resolver {
     
     val receivePack = r.git.receive_pack
 
-    val advertisedRefs = receivePack.getAdvertisedRefs
-    val ident = receivePack.getRefLogIdent
+    val oldHeads = r.git.refsHeads.map(ref => (ref.getName, ref)).toMap
+    val ident = receivePack.getRefLogIdent //TODO fill this
  
     // he-he hide a real call
     (in: InputStream, out: OutputStream, err: OutputStream) => {
         receivePack.receive(in, out, err)
-        NotifyActor ! PushEvent(r, ident, advertisedRefs)
+        NotifyActor ! PushEvent(r, ident, oldHeads)
     }
   }
 
