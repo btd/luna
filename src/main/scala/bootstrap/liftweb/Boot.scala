@@ -305,6 +305,19 @@ class Boot extends Loggable {
 
     val newUserPage = Menu.i("Registration") / "user" / "m" / "new"
 
+    val notifyPushPage = Menu.params[RepoPage]("notifyPushPage",
+      new LinkText[RepoPage](urp => Text("Repo " + urp.repoName)),
+      list => list match {
+        case login :: repo :: Nil => Full(RepoPage(login, repo))
+        case _ => Empty
+      },
+      urp => urp.userName :: urp.repoName :: Nil) / * / * / "notify" >>
+      ValueTemplate(rpBox =>
+        rpBox.flatMap(rp => rp.repo).filter(r => UserDoc.loggedIn_?).flatMap(r => Templates("notification" :: "push" :: Nil))
+          .openOr(Templates("404" :: Nil).openOr(NodeSeq.Empty))
+          
+      )
+
     // Build SiteMap
     val entries = List(
       indexPage,
@@ -322,7 +335,8 @@ class Boot extends Loggable {
       commitPage,
       newPullRequestPage,
       allPullRequestPage,
-      onePullRequestPage)
+      onePullRequestPage,
+      notifyPushPage)
     
 
     LiftRules.dispatch.append(code.snippet.RawFileStreamingSnippet)

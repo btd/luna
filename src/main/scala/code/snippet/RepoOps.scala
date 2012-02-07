@@ -22,7 +22,7 @@ import code.model._
  * Time: 2:14 PM
  */
 
-class RepoOps(urp: WithRepo) {
+class RepoOps(urp: WithRepo) extends Loggable {
 
   def renderSourceTreeDefaultLink = w(urp.repo)(renderSourceTreeLink(_, None))
 
@@ -40,6 +40,30 @@ class RepoOps(urp: WithRepo) {
     })
   }} 
 
+  def notifyEmailForm = w(UserDoc.currentUser){ u => w(urp.repo) { r =>
+    import notification.client._
+    import com.foursquare.rogue.Rogue._
+
+    val settings = (NotifySubscriptionDoc where (_.who eqs u.id.get) and (_.repo eqs r.id.get) and (_.onWhat eqs NotifyEvents.Push) get) 
+        .getOrElse(NotifySubscriptionDoc.createRecord.who(u.id.get).repo(r.id.get).onWhat(NotifyEvents.Push))
+    emailForm(settings.output.get.email.get, u) &
+    "button" #> SHtml.button("Update settings", saveNotifySettings(settings) _)
+  }}
+
+  private def saveNotifySettings(s : NotifySubscriptionDoc)() {
+    s.save
+  }
+
+  private def emailForm(emailOutput: Email, user: UserDoc): CssSel = {
+    var emails:List[String] = emailOutput.to.get
+
+    if(emails.isEmpty) emails = user.email.get :: Nil
+
+    "name=emails" #> SHtml.text(emails.mkString("; "), v => emailOutput.to(v.split(";").map(_.trim).toList),
+      "class" -> "textfield large") &
+    "name=activated" #> SHtml.checkbox(emailOutput.activated.get, v => emailOutput.activated(v))
+  }
+
   def renderRepositoryBlock = w(urp.user){u =>  w(urp.repo){repo => 
       ".repo [class+]" #> (UserDoc.currentUser match {
         case Full(cu) if(!repo.owner_?(Full(cu)) && repo.canPush_?(Full(cu))) => "collaborated"
@@ -54,6 +78,7 @@ class RepoOps(urp: WithRepo) {
                     
                     ".admin_page *" #> a("/admin" + repo.homePageUrl, Text("admin")) & 
                     ".fork *" #> SHtml.a(makeFork(repo, cu) _, Text("fork it")) &
+                    ".notification_page *" #> a(repo.homePageUrl + "/notify", Text("notify")) &
                     ".toggle_open *" #> SHtml.a(toggleOpen(repo) _, Text(if (repo.open_?.get) "make private" else "make public")) &
                     (repo.forkOf.obj.map(fr => ".origin_link *" #> a(fr.sourceTreeUrl, Text("origin"))) openOr 
                           ".origin_link" #> NodeSeq.Empty)
@@ -62,6 +87,7 @@ class RepoOps(urp: WithRepo) {
                     ".admin_page" #> NodeSeq.Empty & 
                     ".fork *" #> SHtml.a(makeFork(repo, cu) _, Text("fork it")) &
                     ".toggle_open" #> NodeSeq.Empty &
+                    ".notification_page *" #> a(repo.homePageUrl + "/notify", Text("notify")) &
                     (repo.forkOf.obj.map(fr => ".origin_link *" #> a(fr.sourceTreeUrl, Text("origin"))) openOr 
                           ".origin_link" #> NodeSeq.Empty)
                   }
@@ -71,7 +97,8 @@ class RepoOps(urp: WithRepo) {
                             ".origin_link *" #> a(fr.sourceTreeUrl, Text("origin")) &
                             ".admin_page" #> NodeSeq.Empty & 
                             ".toggle_open" #> NodeSeq.Empty &
-                            ".fork" #> NodeSeq.Empty
+                            ".fork" #> NodeSeq.Empty &
+                            ".notification_page" #> NodeSeq.Empty
                           }
                           case _ =>  ".admin" #> NodeSeq.Empty 
                         })

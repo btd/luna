@@ -44,6 +44,7 @@ class UserOps(up: WithUser) extends Loggable with RepositoryUI {
           case Full(cu) if (cu.login.get == u.login.get) => {
               ".admin_page *" #> a("/admin" + repo.homePageUrl, Text("admin")) & 
               ".fork *" #> SHtml.a(makeFork(repo, cu) _, Text("fork it")) & //later will be added js append
+              ".notification_page *" #> a(repo.homePageUrl + "/notify", Text("notify")) &
               ".toggle_open *" #> SHtml.a(toggleOpen(repo) _, Text(if (repo.open_?.get) "make private" else "make public")) &
               (repo.forkOf.obj.map(fr => ".origin_link *" #> a(fr.sourceTreeUrl, Text("origin"))) openOr 
                   ".origin_link" #> NodeSeq.Empty)
@@ -53,6 +54,7 @@ class UserOps(up: WithUser) extends Loggable with RepositoryUI {
               ".admin_page" #> NodeSeq.Empty & 
               ".fork *" #> SHtml.a(makeFork(repo, cu) _, Text("fork it")) &
               ".toggle_open" #> NodeSeq.Empty &
+              ".notification_page *" #> a(repo.homePageUrl + "/notify", Text("notify")) &
               (repo.forkOf.obj.map(fr => ".origin_link *" #> a(fr.sourceTreeUrl, Text("origin"))) openOr 
                   ".origin_link" #> NodeSeq.Empty)
             }
@@ -62,6 +64,7 @@ class UserOps(up: WithUser) extends Loggable with RepositoryUI {
                     ".origin_link *" #> a(fr.sourceTreeUrl, Text("origin")) &
                     ".admin_page" #> NodeSeq.Empty & 
                     ".toggle_open" #> NodeSeq.Empty &
+                    ".notification_page" #> NodeSeq.Empty &
                     ".fork" #> NodeSeq.Empty
                   }
                   case _ =>  ".admin" #> NodeSeq.Empty 
