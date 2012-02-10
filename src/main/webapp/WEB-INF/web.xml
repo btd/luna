@@ -12,9 +12,19 @@
         <filter-name>LiftFilter</filter-name>
         <url-pattern>/*</url-pattern>
     </filter-mapping>
+
     <error-page>
         <error-code>404</error-code>
         <location>/404.html</location>
     </error-page>
+
+    <servlet>
+        <servlet-name>LunaGitServlet</servlet-name>
+        <servlet-class>daemon.http.LunaGitServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>LunaGitServlet</servlet-name>
+        <url-pattern>/*</url-pattern>
+    </servlet-mapping>
 
 </web-app>

@@ -71,6 +71,6 @@ trait Resolver {
 
   val ident = """[0-9a-zA-Z\.-]+"""
   
-  val Repo1 = """'?/?(%s)/(%s)'?""".format(ident, ident).r
-  val Repo2 =  """'?/?(%s)'?""".format(ident).r
+  val Repo1 = """'?/?(%s)/(%s)\.git'?""".format(ident, ident).r
+  val Repo2 =  """'?/?(%s)\.git'?""".format(ident).r
 }

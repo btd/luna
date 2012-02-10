@@ -204,11 +204,24 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
 
     def refsHeads = scala.collection.JavaConversions.asScalaBuffer((new Git(fs_repo)).branchList.call)
 
+    def setCurrentBranch(newBranch: org.eclipse.jgit.lib.Ref) = {
+      import org.eclipse.jgit.lib._
+
+      val head = fs_repo.updateRef(Constants.HEAD)
+      head.setNewObjectId(newBranch.getObjectId)
+      head.setDetachingSymbolicRef
+      val res = head.update
+      if(res == RefUpdate.Result.FAST_FORWARD) {
+        fs_repo.getRefDatabase.refresh
+      }
+      res
+    }
+
 
     private def fs_exists_? = FileKey.resolve(new File(fsPath), FS.DETECTED) != null
 
     def inited_? = {
-      //TODO сделать получше
+      //TODO сделать получше getRef(Constants.HEAD).getObjectId == null ?
       val rev = new RevWalk(fs_repo)
       val res = tryo {
         rev.parseCommit(fs_repo.resolve(currentBranch))

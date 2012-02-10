@@ -18,19 +18,21 @@ resolvers ++= Seq (
 
 
 libraryDependencies ++= Seq (
-  "net.databinder"      %% "dispatch-nio"         % "0.8.7",
-  "org.mindrot"         % "jbcrypt"               % "0.3m",
-  "org.apache.sshd"     % "sshd-core" 	          % "0.6.0",
-  "org.eclipse.jgit"    % "org.eclipse.jgit"      % "1.2.0.201112221803-r",
-  "org.apache.mina"     % "mina-core"             % "2.0.4",
-  "commons-codec"       % "commons-codec"         % "1.5",
-  "org.lunatool"        %% "scala-linguist"       % "1.3",
-  "junit"               % "junit"                 % "4.8"                   % "test",
-  "net.liftweb"         %% "lift-webkit"          % "2.5-SNAPSHOT"          % "compile",
-  "net.liftweb"         %% "lift-db"              % "2.5-SNAPSHOT"          % "compile",
-  "net.liftweb"         %% "lift-mongodb"         % "2.5-SNAPSHOT"          % "compile",
-  "net.liftweb"         %% "lift-mongodb-record"  % "2.5-SNAPSHOT"          % "compile",
-  "com.foursquare"      %% "rogue"                % "1.1.2"                intransitive(),
-  "org.eclipse.jetty"   % "jetty-webapp"          % "8.0.4.v20111024"       % "container",
-  "ch.qos.logback"      % "logback-classic"       % "1.0.0"
+  "net.databinder"      %% "dispatch-nio"                 % "0.8.7",
+  "org.mindrot"         % "jbcrypt"                       % "0.3m",
+  "org.eclipse.jgit"    % "org.eclipse.jgit"              % "1.2.0.201112221803-r",
+  "org.eclipse.jgit"    % "org.eclipse.jgit.http.server"  % "1.2.0.201112221803-r",
+  "javax.servlet"       % "servlet-api"                   % "2.5"                    % "provided",
+  "org.apache.sshd"     % "sshd-core"                     % "0.6.0",
+  "org.apache.mina"     % "mina-core"                     % "2.0.4",
+  "commons-codec"       % "commons-codec"                 % "1.5",
+  "org.lunatool"        %% "scala-linguist"               % "1.3",
+  "junit"               % "junit"                         % "4.8"                    % "test",
+  "net.liftweb"         %% "lift-webkit"                  % "2.5-SNAPSHOT"           % "compile",
+  "net.liftweb"         %% "lift-db"                      % "2.5-SNAPSHOT"           % "compile",
+  "net.liftweb"         %% "lift-mongodb"                 % "2.5-SNAPSHOT"           % "compile",
+  "net.liftweb"         %% "lift-mongodb-record"          % "2.5-SNAPSHOT"           % "compile",
+  "com.foursquare"      %% "rogue"                        % "1.1.2"                  intransitive(),
+  "org.eclipse.jetty"   % "jetty-webapp"                  % "8.0.4.v20111024"        % "container",
+  "ch.qos.logback"      % "logback-classic"               % "1.0.0"
   )

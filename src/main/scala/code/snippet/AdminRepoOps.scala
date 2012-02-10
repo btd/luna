@@ -8,6 +8,7 @@ package code.snippet
 import bootstrap.liftweb._
 import net.liftweb._
 import http._
+import js.JsCmds
 import js.jquery._
 import JqJE._
 import JqJsCmds._
@@ -83,5 +84,13 @@ class AdminRepoOps(urp: WithRepo) extends Loggable with SshKeyUI with Repository
       "button" #> SHtml.button("Delete", deleteRepo(repo, r => S.redirectTo(repo.owner.homePageUrl)), "class" -> "button")
   }
 
-  
+  def renderBranchSelector = w(urp.repo) {repo => 
+      ".current_branch" #> SHtml.ajaxSelectObj(repo.git.refsHeads.zip(repo.git.branches), Empty, //TODO if inited than set
+            (value : org.eclipse.jgit.lib.Ref) => {
+              logger.debug("try to set current branch to " + value.getName)
+              val res = repo.git.setCurrentBranch(value)//TODO successfull ?
+              logger.debug(res)
+
+               JsCmds.Noop })
+  }
 }
