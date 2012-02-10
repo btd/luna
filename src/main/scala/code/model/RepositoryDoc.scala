@@ -207,14 +207,7 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
     def setCurrentBranch(newBranch: org.eclipse.jgit.lib.Ref) = {
       import org.eclipse.jgit.lib._
 
-      val head = fs_repo.updateRef(Constants.HEAD)
-      head.setNewObjectId(newBranch.getObjectId)
-      head.setDetachingSymbolicRef
-      val res = head.update
-      if(res == RefUpdate.Result.FAST_FORWARD) {
-        fs_repo.getRefDatabase.refresh
-      }
-      res
+      fs_repo.updateRef(Constants.HEAD, false).link(newBranch.getName)
     }
 
 

@@ -828,7 +828,7 @@ ul.clone-urls li.selected>a {
     margin-right: 15px;
 }
 
-.blob.diff .blob_header,#floatingChangesetDiffHeader .blob_header  {
+.blob .blob_header,#floatingChangesetDiffHeader .blob_header  {
     padding: 5px 30px;
     border-bottom: 2px solid #dcdcdc;
     background-color: white;
@@ -839,12 +839,12 @@ ul.clone-urls li.selected>a {
     line-height: 26px;
 }
 
-.blob.diff .blob_header .manage,#floatingChangesetDiffHeader .blob_header .manage {
+.blob .blob_header .manage,#floatingChangesetDiffHeader .blob_header .manage {
     font-size: 20px;
     float: right;
 }
 
-.blob.diff .blob_header .manage a,#floatingChangesetDiffHeader .blob_header .manage a{
+.blob .blob_header .manage a,#floatingChangesetDiffHeader .blob_header .manage a{
     text-decoration: none;
 }
 

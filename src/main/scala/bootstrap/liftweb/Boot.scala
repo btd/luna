@@ -357,31 +357,10 @@ class Boot extends Loggable {
 
     def repoName_?(s: String) = s.endsWith(".git")
 
-    LiftRules.httpAuthProtectedResource.append{
-      case Req(user :: repo :: _, _, _)  => { 
-        logger.debug("Try to check auth")
-        Empty
-      }
+    LiftRules.liftRequest.append {
+      case Req(user :: repo :: _, _, _) if(repoName_?(repo)) => false
+      case Req("images" :: _, _, _) => false
     }
-
-    LiftRules.authentication = HttpBasicAuthentication("lift") {
-      case (user, password, Req(userName :: repoName :: _, _, _)) if(repoName_?(repoName)) => {
-        logger.debug("Try to auth user " + user + " " + password )
-        if (UserDoc.byName(user).map(u => u.password.match_?(password)).getOrElse(false) ) {
-          logger.debug("Matched" )
-          userRoles(AuthRole("user"))
-          true
-        } else {
-          logger.debug("Not matched" )
-          false
-        }
-        
-      }
-    }
-
-   // LiftRules.liftRequest.append {
-   //   case Req(user :: repo :: _, _, _) if(repoName_?(repo)) => false
-   // }
 
 
     // set the sitemap.  Note if you don't want access control for

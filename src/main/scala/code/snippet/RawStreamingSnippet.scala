@@ -38,7 +38,7 @@ object RawFileStreamingSnippet extends Loggable with RestHelper {
 					case Full(b @ Blob(_, size)) => {
 						r.git.withSourceElementStream(path, ref) { in => 
 							StreamingResponse(in, () => {in.close()}, size, List("Content-Type" -> (if (b.image_?) "image/" + b.extname else if(b.binary_?) "application/octet-stream" else "text/plain"),
-						        "Content-Disposition" -> ("attachment; filename=export" + b.extname)), Nil, 200)
+						        "Content-Disposition" -> ("attachment; filename=" + b.basename)), Nil, 200)
 						    }
 					}
 						
