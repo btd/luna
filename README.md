@@ -10,14 +10,8 @@ What it can
  + Manage ssh public keys. You can add any number of keys for yourself or only for one repo
  + Repositories. Can be public or private. You can add collaborator to repository.
  + Forking. You can fork any visible for you repository and make pull requests for owner
- + Ssh read+write access, git protocol anonimous read access
+ + Ssh read+write access, http read+write access (use HTTPS!!!), git protocol read access
  + Mail notification about push (in practice it is not difficult to add other)
-
-Todo
----------------------
-
- + SubGit integration (tmate guys said that help)
- + Smart HTTP protocol support
 
 Installation
 ---------------------
