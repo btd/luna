@@ -8,8 +8,24 @@
         <filter-class>net.liftweb.http.LiftFilter</filter-class>
     </filter>
 
+    
+
     <filter-mapping>
         <filter-name>LiftFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+
+     <filter>
+        <filter-name>BasicAuthFilter</filter-name>
+        <filter-class>daemon.http.BasicAuthFilter</filter-class>
+        <init-param>
+          <param-name>realm</param-name>
+          <param-value>smart-http-luna-git</param-value>
+        </init-param>
+    </filter>
+
+    <filter-mapping>
+        <filter-name>BasicAuthFilter</filter-name>
         <url-pattern>/*</url-pattern>
     </filter-mapping>
 

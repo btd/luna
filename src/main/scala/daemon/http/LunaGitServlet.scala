@@ -2,7 +2,7 @@ package daemon.http
 
 import javax.servlet.http.HttpServletRequest
 
-import org.eclipse.jgit.transport.resolver.RepositoryResolver
+import org.eclipse.jgit.lib.PersonIdent
 import org.eclipse.jgit.lib.Repository
 import org.eclipse.jgit.http.server._
 import resolver._
@@ -15,11 +15,18 @@ import daemon.Resolver
 
 import code.model.UserDoc
 
-class LunaGitServlet extends GitServlet with RepositoryResolver[HttpServletRequest] with Resolver with Loggable {
+import org.eclipse.jgit.transport.resolver.RepositoryResolver
+import org.eclipse.jgit.transport.resolver.ReceivePackFactory
+import org.eclipse.jgit.transport.ReceivePack
+
+class LunaGitServlet extends GitServlet 
+	with RepositoryResolver[HttpServletRequest] 
+	with ReceivePackFactory[HttpServletRequest] with Resolver with Loggable {
 
 	setAsIsFileService(AsIsFileService.DISABLED)
 
 	setRepositoryResolver(this)
+	setReceivePackFactory(this)
 
 	def open(req: HttpServletRequest, path: String): Repository = {
 		logger.debug("try to open repository by path: " + path)
@@ -29,6 +36,13 @@ class LunaGitServlet extends GitServlet with RepositoryResolver[HttpServletReque
 			case _ => throw new RepositoryNotFoundException(path)
 		}
 
+	}
+
+	def create(req: HttpServletRequest, repo: Repository): ReceivePack = {
+		val rp = new ReceivePack(repo)
+		rp.setRefLogIdent(new PersonIdent(req.getAttribute("username").toString, req.getAttribute("email").toString))
+
+		rp
 	}
 
 	logger.debug("Http started")
