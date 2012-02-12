@@ -340,40 +340,37 @@ class Boot extends Loggable {
       onePullRequestPage,
       notifyPushPage)
     
+    LiftRules.setSiteMap(SiteMap(entries: _*))
 
     LiftRules.dispatch.append(code.snippet.RawFileStreamingSnippet)
 
     LiftRules.ajaxRetryCount = Full(1)
     LiftRules.ajaxPostTimeout = 15000
 
+    def repoName_?(s: String) = s.endsWith(".git")
+
+    LiftRules.statelessDispatchTable.prepend {
+      case r @ Req(repo :: l, _, _) if(repoName_?(repo)) => () => Full(PermRedirectResponse("/git" + r.uri, r))
+      case r @ Req(user :: repo :: l, _, _) if(repoName_?(repo) && user != "git") => () => Full(PermRedirectResponse("/git" + r.uri, r))
+    }
+
     LiftRules.statelessRewrite.append {
       case RewriteRequest(ParsePath("index" :: Nil, _, _, true), _, _) =>
 
         RewriteResponse("user" :: "m" :: "signin" :: Nil, true)
+
       case RewriteRequest(ParsePath(user :: Nil, _, _, false), _, _) =>
 
         RewriteResponse("list" :: user :: Nil, Map[String, String]())
-    }
 
-    def repoName_?(s: String) = s.endsWith(".git")
+    }   
+
+    
 
     LiftRules.liftRequest.append {
-      case Req(user :: repo :: _, _, _) if(repoName_?(repo)) => false
+      case Req("git" :: _, _, _) => false
       case Req("images" :: _, _, _) => false
     }
-
-
-    // set the sitemap.  Note if you don't want access control for
-    // each page, just comment this line out.
-    LiftRules.setSiteMap(SiteMap(entries: _*))
-
-    //Show the spinny image when an Ajax call starts
-    LiftRules.ajaxStart =
-      Full(() => LiftRules.jsArtifacts.show("ajax-loader").cmd)
-
-    // Make the spinny image go away when it ends
-    LiftRules.ajaxEnd =
-      Full(() => LiftRules.jsArtifacts.hide("ajax-loader").cmd)
 
     // Use jQuery 1.4
     LiftRules.jsArtifacts = net.liftweb.http.js.jquery.JQuery14Artifacts

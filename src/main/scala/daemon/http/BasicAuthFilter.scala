@@ -7,7 +7,9 @@ import org.apache.commons.codec.binary.Base64
 
 import code.model.UserDoc
 
-class BasicAuthFilter extends Filter {
+import net.liftweb.common._
+
+class BasicAuthFilter extends Filter with Loggable {
 
 	var realmName: String = _
 
@@ -21,13 +23,14 @@ class BasicAuthFilter extends Filter {
 		val request = req.asInstanceOf[HttpServletRequest]
         val response = res.asInstanceOf[HttpServletResponse]
 
+        logger.debug(request.getRequestURL.toString)
+
         val user = authPassed_?(request)
 
 		user match {
 			case Some(u) => {
 				val wrapped = new HttpServletRequestWrapper(request)
-				wrapped.setAttribute("username", u.login.get)
-				wrapped.setAttribute("email", u.email.get)
+				wrapped.setAttribute("user", u)
     			chain.doFilter(wrapped, response)
 			}
 			case _ => {

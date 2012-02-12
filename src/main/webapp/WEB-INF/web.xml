@@ -26,7 +26,7 @@
 
     <filter-mapping>
         <filter-name>BasicAuthFilter</filter-name>
-        <url-pattern>/*</url-pattern>
+        <url-pattern>/git/*</url-pattern>
     </filter-mapping>
 
     <error-page>
@@ -40,7 +40,7 @@
     </servlet>
     <servlet-mapping>
         <servlet-name>LunaGitServlet</servlet-name>
-        <url-pattern>/*</url-pattern>
+        <url-pattern>/git/*</url-pattern>
     </servlet-mapping>
 
 </web-app>

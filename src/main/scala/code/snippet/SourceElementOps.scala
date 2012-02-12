@@ -58,7 +58,7 @@ class SourceElementOps(se: SourceElementPage) extends Loggable {
             case t @ Tree(_) => <a href={repo.sourceTreeUrl(se.commit) + "/" + t.path}>{t.basename}/</a>
             case b @ Blob(_, _) => <a href={repo.sourceBlobUrl(se.commit) + "/" + b.path}>{b.basename}</a>
           } ) &
-          ".date *" #> c.map(cc => escape(SnippetHelper.dateFormatter.format(cc.getAuthorIdent.getWhen))) &
+          ".date *" #> c.map(cc => escape(SnippetHelper.dateFormatter.format(cc.getCommitterIdent.getWhen))) &
           ".last_commit *" #> c.map(cc => escape(cc.getShortMessage) )
         })
      ).openOr(".source_element" #> NodeSeq.Empty)

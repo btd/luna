@@ -31,7 +31,7 @@ class LunaGitServlet extends GitServlet
 	def open(req: HttpServletRequest, path: String): Repository = {
 		logger.debug("try to open repository by path: " + path)
 
-		repoByPath(path, UserDoc byName (req.getRemoteUser)) match {
+		repoByPath(path, UserDoc byName (req.getAttribute("user").asInstanceOf[UserDoc].login.get)) match {
 			case Some(repoDoc) => repoDoc.git.fs_repo_!
 			case _ => throw new RepositoryNotFoundException(path)
 		}
@@ -40,7 +40,8 @@ class LunaGitServlet extends GitServlet
 
 	def create(req: HttpServletRequest, repo: Repository): ReceivePack = {
 		val rp = new ReceivePack(repo)
-		rp.setRefLogIdent(new PersonIdent(req.getAttribute("username").toString, req.getAttribute("email").toString))
+		val user = req.getAttribute("user").asInstanceOf[UserDoc]
+		rp.setRefLogIdent(new PersonIdent(user.login.get, user.email.get))
 
 		rp
 	}

@@ -341,14 +341,17 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
 
   def sourceBlobUrl(commit: String) = homePageUrl + "/blob/" + commit
 
-  lazy val publicGitUrl = "git://" + S.hostName + "/" + owner.login.get + "/" + name.get
-
-  lazy val privateSshUrl = owner.login.get + "@" + S.hostName + ":" + name.get
+  lazy val publicGitUrl = "git://" + S.hostName + "/" + owner.login.get + "/" + name.get + ".git"
 
   def privateSshUrl(user: Box[UserDoc]): String = owner_?(user) match {
-    case true => privateSshUrl
-    case false => user.get.login.is + "@" + S.hostName + ":" + owner.login.get + "/" + name.get
+    case true => owner.login.get + "@" + S.hostName + ":" + name.get + ".git"
+    case false => user.get.login.get + "@" + S.hostName + ":" + owner.login.get + "/" + name.get + ".git"
   }
+
+  def privateHttpUrl(user: Box[UserDoc]): String = owner_?(user) match {
+      case true => "http://" + owner.login.get + "@" + S.hostName + "/" + name.get + ".git"
+      case false => "http://" + user.get.login.get + "@" + S.hostName + "/" + owner.login.get + "/" + name.get + ".git"
+    }
 
   def canPush_?(user: Box[UserDoc]) = {
     //logger.debug(user)
@@ -360,7 +363,7 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
   }
 
   def cloneUrlsForCurrentUser = canPush_?(UserDoc.currentUser) match {
-    case true => (publicGitUrl, "Git") :: (privateSshUrl(UserDoc.currentUser), "Ssh") :: Nil
+    case true => (publicGitUrl, "Git") :: (privateSshUrl(UserDoc.currentUser), "Ssh") :: (privateHttpUrl(UserDoc.currentUser), "Http") :: Nil
     case _ => (publicGitUrl, "Git") :: Nil
   }
 
