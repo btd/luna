@@ -347,13 +347,6 @@ class Boot extends Loggable {
     LiftRules.ajaxRetryCount = Full(1)
     LiftRules.ajaxPostTimeout = 15000
 
-    def repoName_?(s: String) = s.endsWith(".git")
-
-    LiftRules.statelessDispatchTable.prepend {
-      case r @ Req(repo :: l, _, _) if(repoName_?(repo)) => () => Full(PermRedirectResponse("/git" + r.uri, r))
-      case r @ Req(user :: repo :: l, _, _) if(repoName_?(repo) && user != "git") => () => Full(PermRedirectResponse("/git" + r.uri, r))
-    }
-
     LiftRules.statelessRewrite.append {
       case RewriteRequest(ParsePath("index" :: Nil, _, _, true), _, _) =>
 
@@ -364,13 +357,6 @@ class Boot extends Loggable {
         RewriteResponse("list" :: user :: Nil, Map[String, String]())
 
     }   
-
-    
-
-    LiftRules.liftRequest.append {
-      case Req("git" :: _, _, _) => false
-      case Req("images" :: _, _, _) => false
-    }
 
     // Use jQuery 1.4
     LiftRules.jsArtifacts = net.liftweb.http.js.jquery.JQuery14Artifacts

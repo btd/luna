@@ -348,11 +348,6 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
     case false => user.get.login.get + "@" + S.hostName + ":" + owner.login.get + "/" + name.get + ".git"
   }
 
-  def privateHttpUrl(user: Box[UserDoc]): String = owner_?(user) match {
-      case true => "http://" + owner.login.get + "@" + S.hostName + "/" + name.get + ".git"
-      case false => "http://" + user.get.login.get + "@" + S.hostName + "/" + owner.login.get + "/" + name.get + ".git"
-    }
-
   def canPush_?(user: Box[UserDoc]) = {
     //logger.debug(user)
     user match {
@@ -363,7 +358,7 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
   }
 
   def cloneUrlsForCurrentUser = canPush_?(UserDoc.currentUser) match {
-    case true => (publicGitUrl, "Git") :: (privateSshUrl(UserDoc.currentUser), "Ssh") :: (privateHttpUrl(UserDoc.currentUser), "Http") :: Nil
+    case true => (publicGitUrl, "Git") :: (privateSshUrl(UserDoc.currentUser), "Ssh") :: Nil
     case _ => (publicGitUrl, "Git") :: Nil
   }
 
