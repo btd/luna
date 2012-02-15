@@ -107,7 +107,7 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
       }
     }
 
-    def currentBranch = fs_repo.getBranch
+    
 
     def ls_tree(path: List[String], commit: String) = {
       logger.debug("ls_tree" + path)
@@ -197,10 +197,10 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
         in.close
         r
       }.flatMap(guessString)
-    
 
-    def branches =
-      scala.collection.JavaConversions.asScalaBuffer((new Git(fs_repo)).branchList.call).map(ref => ref.getName.substring(ref.getName.lastIndexOf("/") + 1))
+    def currentBranch: String = if(inited_?) fs_repo.getBranch else ""
+
+    def branches = refsHeads.map(ref => ref.getName.substring(ref.getName.lastIndexOf("/") + 1))
 
     def refsHeads = scala.collection.JavaConversions.asScalaBuffer((new Git(fs_repo)).branchList.call)
 
@@ -213,16 +213,21 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
 
     private def fs_exists_? = FileKey.resolve(new File(fsPath), FS.DETECTED) != null
 
+    def headSetted_? = fs_repo.getRef(Constants.HEAD).getObjectId != null
+
     def inited_? = {
-      //TODO сделать получше getRef(Constants.HEAD).getObjectId == null ?
-      val rev = new RevWalk(fs_repo)
-      val res = tryo {
-        rev.parseCommit(fs_repo.resolve(currentBranch))
-      } or {
-        Empty
+      headSetted_? match {
+        //not inited
+        case false => {
+          for { newHead <- refsHeads.headOption } {
+            setCurrentBranch(newHead)
+          } 
+          //try again
+          headSetted_?
+        }
+
+        case true => true
       }
-      rev.release
-      res != Empty
     }
 
     private lazy val loc = FileKey.lenient(new File(fsPath), FS.DETECTED)
@@ -329,7 +334,7 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
 
   lazy val homePageUrl = "/" + owner.login.get + "/" + name.get
 
-  lazy val sourceTreeUrl = homePageUrl + "/tree/" + git.currentBranch
+  lazy val sourceTreeUrl = homePageUrl + "/tree" + (if(git.currentBranch == "") "" else ("/" + git.currentBranch))
 
   lazy val commitsUrl = homePageUrl + "/commits/" + git.currentBranch
 
