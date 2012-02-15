@@ -94,6 +94,10 @@ class UserDoc private() extends MongoRecord[UserDoc] with ObjectIdPk[UserDoc] {
     SshKeyUserDoc where (_.ownerId eqs id.get) bulkDelete_!!
 
     PullRequestDoc where (_.creatorId eqs id.get) bulkDelete_!!
+
+    UserDoc.logoutCurrentUser
+
+    S.redirectTo("/")
   }
   
 }
