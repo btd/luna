@@ -58,38 +58,37 @@ object GitDaemon extends daemon.Service with Loggable {
 
 }
 
-class GitServerHandler extends StreamIoHandler with daemon.Resolver with Loggable
-{
+class GitServerHandler extends StreamIoHandler with daemon.Resolver with Loggable {
     override def processStreamIo(session:IoSession, in: InputStream, out: OutputStream ) {
-      new Actor {
-        def act = {
+      Actor.actor {
                   
-          var cmd = new PacketLineIn(in).readStringRaw
-          
-          var nul = cmd.indexOf('\0')
-          if (nul >= 0) {
-            // Newer clients hide a "host" header behind this byte.
-            // Currently we don't use it for anything, so we ignore
-            // this portion of the command.
-            cmd = cmd.substring(0, nul)
-          }
-          logger.debug("Read command %s".format(cmd))
-
-          cmd.trim.split(" ").toList match {
-            case GIT_UPLOAD_PACK :: path :: Nil => 
-              for(proc <- packProcessing(repoByPath(path), uploadPack)) {
-                proc(in, out, null)
-              }
-
-            case _ => {
-              logger.debug("This command is not supported")
-              in.close
-              out.close
-              session.close(true)
+          try {        
+            var cmd = new PacketLineIn(in).readStringRaw
+            
+            var nul = cmd.indexOf('\0')
+            if (nul >= 0) {
+              // Newer clients hide a "host" header behind this byte.
+              // Currently we don't use it for anything, so we ignore
+              // this portion of the command.
+              cmd = cmd.substring(0, nul)
             }
-          }  
-        }
-      }.start        
+            logger.debug("Read command %s".format(cmd))
+
+            cmd.trim.split(" ").toList match {
+              case GIT_UPLOAD_PACK :: path :: Nil => 
+                for(proc <- packProcessing(repoByPath(path), uploadPack)) {
+                  proc(in, out, null)
+                } 
+
+              case _ => logger.debug("This command is not supported")
+            }  
+          } finally {
+            in.close
+            out.close
+            session.close(true)
+          }
+         
+      }
     }
 }
 
