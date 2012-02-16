@@ -355,6 +355,8 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
     }
   }
 
+  def canPull_?(user: Box[UserDoc]) = open_?.get || canPush_?(user)
+
   def cloneUrlsForCurrentUser = canPush_?(UserDoc.currentUser) match {
     case true => (daemon.sshd.SshDaemon.repoUrlForCurrentUser(this), "Ssh") :: (code.snippet.GitHttpSnippet.repoUrlForCurrentUser(this), "Http") :: (daemon.git.GitDaemon.repoUrlForCurrentUser(this), "Git") :: Nil
     case _ => (daemon.git.GitDaemon.repoUrlForCurrentUser(this), "Git") :: (code.snippet.GitHttpSnippet.repoUrlForCurrentUser(this), "Http") :: Nil

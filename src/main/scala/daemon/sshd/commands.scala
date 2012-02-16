@@ -83,15 +83,24 @@ trait CommandBase extends SshCommand with SessionAware with Loggable with daemon
     err.flush
     onExit = EXIT_ERROR
   }
+
+  def checkRepositoryAccess(r: RepositoryDoc) = {
+    if(user.id.get == r.ownerId.get) { // user@server:repo 
+      !keys.filter(_.acceptableFor(r)).isEmpty
+    } else {// cuser@server:user/repo
+      !r.collaborators.filter(_.login.get == user.login.get).isEmpty
+    }
+  }
 }
 
 class UploadPackCommand(val repoPath: String) extends CommandBase {
   logger.debug("Upload pack command executed")
   def run(env: Environment) = {
-    for(proc <- packProcessing(repoByPath(repoPath, Some(user)), uploadPack)) {
+    for(proc <- packProcessing(repoByPath(repoPath, Some(user)), uploadPack, checkRepositoryAccess)) {
           proc(in, out, err)
     } 
   }
+ 
 }
 
 class ReceivePackCommand(val repoPath: String) extends CommandBase {
@@ -102,13 +111,7 @@ class ReceivePackCommand(val repoPath: String) extends CommandBase {
     } 
   }
 
-  def checkRepositoryAccess(r: RepositoryDoc) = {
-    if(user.id.get == r.ownerId.get) { // user@server:repo 
-      !keys.filter(_.acceptableFor(r)).isEmpty
-    } else {// cuser@server:user/repo
-      !r.collaborators.filter(_.login.get == user.login.get).isEmpty
-    }
-  }
+  
 }
 
 
