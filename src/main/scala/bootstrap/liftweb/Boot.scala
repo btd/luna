@@ -14,7 +14,7 @@ import actors.Actor
 import xml.{NodeSeq, Text}
 import daemon.git.GitDaemon
 import com.mongodb.Mongo
-import code.model.{PullRequestDoc, UserDoc}
+import code.model._
 
 trait WithUser {
   def userName: String
@@ -343,6 +343,7 @@ class Boot extends Loggable {
     LiftRules.setSiteMap(SiteMap(entries: _*))
 
     LiftRules.dispatch.append(code.snippet.RawFileStreamingSnippet)
+    LiftRules.dispatch.append(code.snippet.GitHttpSnippet)
 
     LiftRules.ajaxRetryCount = Full(1)
     LiftRules.ajaxPostTimeout = 15000
@@ -356,7 +357,39 @@ class Boot extends Loggable {
 
         RewriteResponse("list" :: user :: Nil, Map[String, String]())
 
-    }   
+    }
+
+    def open_?(userName: String, repoName: String):Boolean = {
+      RepositoryDoc.byUserLoginAndRepoName(userName, repoName.substring(0, repoName.length - 4)) match {
+        case Some(r) => r.open_?.get
+        case _ => false
+      }
+    }
+
+    LiftRules.httpAuthProtectedResource.prepend{ 
+      case Req(userName :: repoName :: "info" :: "refs" :: Nil, _, _) 
+        if(repoName.endsWith(".git") && 
+          !S.param("service").isEmpty && (
+              S.param("service").get == "git-receive-pack" || 
+              !open_?(userName, repoName))) => Empty
+      case Req(userName :: repoName :: "git-receive-pack" :: Nil, _, PostRequest) 
+        if(repoName.endsWith(".git")) => Empty
+      case Req(userName :: repoName :: "git-upload-pack" :: Nil, _, PostRequest) 
+        if(repoName.endsWith(".git") && !open_?(userName, repoName)) => Empty 
+    } 
+
+    LiftRules.authentication = HttpBasicAuthentication("lift") { 
+      case (username, password, Req(userName :: repoName :: _, _, _)) if repoName.endsWith(".git") => { 
+        UserDoc.byName(username) match { 
+          case Some(user) if user.password.match_?(password) => 
+            RepositoryDoc.byUserLoginAndRepoName(userName, repoName.substring(0, repoName.length - 4)) match {
+              case Some(r) => r.canPush_?(Some(user))
+              case _ => false
+            }
+          case _ => false 
+        } 
+      } 
+    } 
 
     // Use jQuery 1.4
     LiftRules.jsArtifacts = net.liftweb.http.js.jquery.JQuery14Artifacts
