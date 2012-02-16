@@ -16,12 +16,16 @@ import org.apache.sshd.server.session.SessionFactory
 import org.apache.mina.transport.socket.SocketSessionConfig
 
 
-import net.liftweb.util._
-import net.liftweb.common._
+import net.liftweb._
+import util._
+import common._
+import http.S
 
 import main.Constants
 
 import daemon.Service
+
+import code.model.{UserDoc, RepositoryDoc}
 
 /**
  * Created by IntelliJ IDEA.
@@ -35,8 +39,10 @@ object SshDaemon extends Service with Loggable {
   val DEFAULT_PORT = 22
   private val sshd = SshServer.setUpDefaultServer
 
+  lazy val port = Props.getInt(Constants.SSHD_PORT_OPTION, DEFAULT_PORT)
+
   def init() = {
-    val port = Props.getInt(Constants.SSHD_PORT_OPTION, DEFAULT_PORT)
+    
     logger.debug("Ssh daemon started on port %s".format(port))
     
     sshd.setPort(port)
@@ -64,5 +70,12 @@ object SshDaemon extends Service with Loggable {
   }
 
   def shutdown() = sshd.stop
+
+  def repoUrlForCurrentUser(r: RepositoryDoc):String = r.owner_?(UserDoc.currentUser) match {
+    case true if(port == DEFAULT_PORT) => r.owner.login.get + "@" + S.hostName + ":" + r.name.get + ".git"
+    case true =>  "ssh://" + r.owner.login.get + "@" + S.hostName + ":" + port + "/" + r.owner.login.get + "/" + r.name.get + ".git"
+    case false if(port == DEFAULT_PORT) => UserDoc.currentUser.map(user => user.login.get + "@" + S.hostName + ":" + r.owner.login.get + "/" + r.name.get + ".git").openOr("")
+    case false  => UserDoc.currentUser.map(user => "ssh://" + user.login.get + "@" + S.hostName + ":" + port + "/" + r.owner.login.get + "/" + r.name.get + ".git").openOr("")
+  }
 
 }

@@ -23,7 +23,7 @@ class PullRequestOneOps(pr: WithPullRequest) extends Loggable {
     ".shell *" #> ("$ git remote add %s %s\n" +
       "$ git fetch %s\n" +
       "$ git merge %s/%s\n").format(pullRequest.srcRepoId.obj.get.owner.login.get,
-        pullRequest.srcRepoId.obj.get.publicGitUrl,
+        daemon.git.GitDaemon.repoUrlForCurrentUser(pullRequest.srcRepoId.obj.get),
         pullRequest.srcRepoId.obj.get.owner.login.get,
         pullRequest.srcRepoId.obj.get.owner.login.get,
         pullRequest.srcRef.get      )

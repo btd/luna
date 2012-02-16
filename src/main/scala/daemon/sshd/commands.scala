@@ -88,7 +88,7 @@ trait CommandBase extends SshCommand with SessionAware with Loggable with daemon
 class UploadPackCommand(val repoPath: String) extends CommandBase {
   logger.debug("Upload pack command executed")
   def run(env: Environment) = {
-    for(proc <- packProcessing(repoByPath(repoPath, Some(user)), uploadPack))  {
+    for(proc <- packProcessing(repoByPath(repoPath, Some(user)), uploadPack)) {
           proc(in, out, err)
     } 
   }

@@ -346,13 +346,6 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
 
   def sourceBlobUrl(commit: String) = homePageUrl + "/blob/" + commit
 
-  lazy val publicGitUrl = "git://" + S.hostName + "/" + owner.login.get + "/" + name.get + ".git"
-
-  def privateSshUrl(user: Box[UserDoc]): String = owner_?(user) match {
-    case true => owner.login.get + "@" + S.hostName + ":" + name.get + ".git"
-    case false => user.get.login.get + "@" + S.hostName + ":" + owner.login.get + "/" + name.get + ".git"
-  }
-
   def canPush_?(user: Box[UserDoc]) = {
     //logger.debug(user)
     user match {
@@ -362,11 +355,9 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
     }
   }
 
-  def canPull_?(user: Box[UserDoc]) = open_?.get || canPush_?(user)
-
   def cloneUrlsForCurrentUser = canPush_?(UserDoc.currentUser) match {
-    case true => (publicGitUrl, "Git") :: (privateSshUrl(UserDoc.currentUser), "Ssh") :: Nil
-    case _ => (publicGitUrl, "Git") :: Nil
+    case true => (daemon.sshd.SshDaemon.repoUrlForCurrentUser(this), "Ssh") :: (code.snippet.GitHttpSnippet.repoUrlForCurrentUser(this), "Http") :: (daemon.git.GitDaemon.repoUrlForCurrentUser(this), "Git") :: Nil
+    case _ => (daemon.git.GitDaemon.repoUrlForCurrentUser(this), "Git") :: (code.snippet.GitHttpSnippet.repoUrlForCurrentUser(this), "Http") :: Nil
   }
 
   def owner_?(user: Box[UserDoc]) = user match {

@@ -9,7 +9,7 @@ import Helpers._
 
 import rest._
 
-import daemon.Resolver
+import daemon.{UploadPack, ReceivePack, Resolver, Pack}
 import code.model._
 
 import org.eclipse.jgit.util.TemporaryBuffer
@@ -20,55 +20,7 @@ import org.eclipse.jgit.revwalk.RevWalk
 
 import java.io._
 
-trait Pack {
-	val repo: RepositoryDoc
 
-	def sendInfoRefs(out: PacketLineOut): Unit
-
-	def sendPack(in: InputStream, out: OutputStream, err: OutputStream): Unit
-}
-
-class UploadPack(val repo: RepositoryDoc, twoWay: Boolean = true) extends Pack {
-	private val p = repo.git.upload_pack
-	p.setBiDirectionalPipe(twoWay)
-
-	def sendInfoRefs(out: PacketLineOut) {
-		try {								
-			p.sendAdvertisedRefs(new PacketLineOutRefAdvertiser(out))
-		} finally {
-			p.getRevWalk.release
-		}
-	}
-
-	def sendPack(in: InputStream, out: OutputStream, err: OutputStream) {
-		try {
-			p.upload(in, out, err)
-		} catch {
-			case e: IOException => 
-		}
-	}
-}
-
-class ReceivePack(val repo: RepositoryDoc, twoWay: Boolean = true) extends Pack {
-	private val p = repo.git.receive_pack
-	p.setBiDirectionalPipe(twoWay)
-
-	def sendInfoRefs(out: PacketLineOut) {
-		try {								
-			p.sendAdvertisedRefs(new PacketLineOutRefAdvertiser(out))
-		} finally {
-			p.getRevWalk.release
-		}
-	}
-
-	def sendPack(in: InputStream, out: OutputStream, err: OutputStream) {
-		try {
-			p.receive(in, out, err)
-		} catch {
-			case e: IOException => 
-		}
-	}
-}
 
 object GitHttpSnippet extends Loggable with RestHelper with Resolver {
 
@@ -146,34 +98,15 @@ object GitHttpSnippet extends Loggable with RestHelper with Resolver {
 		case _ => false
 	}
 
-}
-/*
-trait Gzipped {
-	self: SmartOutputStream => 
+	val DEFAULT_PORT = 80
 
-	def buffer(): TemporaryBuffer = {
-		import java.util.zip.GZIPOutputStream
+	lazy val port = S.request.map(_.request.serverPort).get
 
-		var out = self.buffer
-		if (256 < out.length) {
-			val gzbuf = new TemporaryBuffer.Heap(LIMIT)
-			try {
-				val gzip = new GZIPOutputStream(gzbuf)
-				try {
-					out.writeTo(gzip, null)
-				} finally {
-					gzip.close
-				}
-				if (gzbuf.length() < out.length()) {
-					out = gzbuf
-				}
-			} catch {
-				case e: IOException => 
-				// Most likely caused by overflowing the buffer, meaning
-				// its larger if it were compressed. Discard compressed
-				// copy and use the original.
-			}
-		}
-		out
+	lazy val protocol = S.request.map(_.request.url.split("://")(0)).get
+
+	def repoUrlForCurrentUser(r: RepositoryDoc):String = r.canPush_?(UserDoc.currentUser) match {
+	    case true => UserDoc.currentUser.map(user => protocol + "://" + user.login.get + "@" + S.hostName + (if(port == DEFAULT_PORT) "" else ":" + port) + "/" + r.owner.login.get + "/" + r.name.get + ".git").openOr("")
+	    case false  => protocol + "://" + S.hostName + (if(port == DEFAULT_PORT) "" else ":" + port) + "/" + r.owner.login.get + "/" + r.name.get + ".git"
 	}
-}*/
+
+}

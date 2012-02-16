@@ -7,6 +7,7 @@ package daemon.git
 
 import net.liftweb._
 import util._
+import http.S
 import Helpers._
 import common._
 import code.model.{RepositoryDoc, UserDoc }
@@ -38,6 +39,8 @@ import org.apache.mina.handler.stream._
 
 object GitDaemon extends daemon.Service with Loggable {
 
+  lazy val port = Props.getInt(Constants.GITD_PORT_OPTION, DEFAULT_PORT)
+
   def init() {
     acceptor.getFilterChain.addLast( "logger", new LoggingFilter )
 
@@ -45,7 +48,7 @@ object GitDaemon extends daemon.Service with Loggable {
 
     acceptor.setReuseAddress(true)
 
-    val port = Props.getInt(Constants.GITD_PORT_OPTION, DEFAULT_PORT)
+    
     logger.debug("Git daemon started on port %s".format(port))
     acceptor.bind(new InetSocketAddress(port))   
   }
@@ -55,6 +58,10 @@ object GitDaemon extends daemon.Service with Loggable {
   val DEFAULT_PORT = 9418
 
   private val acceptor = new NioSocketAcceptor
+
+  def repoUrlForCurrentUser(r: RepositoryDoc) = {
+    "git://" + S.hostName + (if(port != DEFAULT_PORT) ":" + port else "") + "/" + r.owner.login.get + "/" + r.name.get + ".git"
+  }
 
 }
 
