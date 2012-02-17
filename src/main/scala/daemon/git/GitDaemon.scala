@@ -41,6 +41,8 @@ object GitDaemon extends daemon.Service with Loggable {
 
   lazy val port = Props.getInt(Constants.GITD_PORT_OPTION, DEFAULT_PORT)
 
+  var inited = false
+
   def init() {
     acceptor.getFilterChain.addLast( "logger", new LoggingFilter )
 
@@ -51,6 +53,8 @@ object GitDaemon extends daemon.Service with Loggable {
     
     logger.debug("Git daemon started on port %s".format(port))
     acceptor.bind(new InetSocketAddress(port))   
+
+    inited = true
   }
 
   def shutdown() = acceptor.unbind

@@ -41,6 +41,8 @@ object SshDaemon extends Service with Loggable {
 
   lazy val port = Props.getInt(Constants.SSHD_PORT_OPTION, DEFAULT_PORT)
 
+  var inited = false
+
   def init() = {
     
     logger.debug("Ssh daemon started on port %s".format(port))
@@ -67,6 +69,8 @@ object SshDaemon extends Service with Loggable {
     })
 
     sshd.start
+
+    inited = true
   }
 
   def shutdown() = sshd.stop

@@ -2,6 +2,7 @@ package bootstrap.liftweb
 
 import net.liftweb._
 import common._
+import util._
 import http._
 import mongodb.{DefaultMongoIdentifier, MongoDB}
 import http.auth._
@@ -71,7 +72,18 @@ case class SourceElementPage(userName: String, repoName: String, commit: String,
  */
 class Boot extends Loggable {
   def boot {
-    MongoDB.defineDb(DefaultMongoIdentifier, new Mongo, "grt") //TODO както секюрно надо это делать
+    val dbHost = Props.get("db.host", "localhost")
+    val dbPort = Props.getInt("db.port", 27017)
+    val dbName = Props.get("db.name", "grt")
+
+    Props.get("db.user") match {
+      case Full(userName) => {
+        Props.requireOrDie("db.password")
+        MongoDB.defineDbAuth(DefaultMongoIdentifier, new Mongo(dbHost, dbPort), dbName, userName, Props.get("db.password").get)
+      }
+      case _ => 
+        MongoDB.defineDb(DefaultMongoIdentifier, new Mongo(dbHost, dbPort), dbName)
+    }
 
     tryo(SshDaemon.init)
     tryo(GitDaemon.init)
