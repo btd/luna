@@ -381,6 +381,8 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
       SshKeyRepoDoc where (_.ownerId eqs id.get) bulkDelete_!!
 
       RepositoryDoc where (_.forkOf eqs id.get) modify (_.forkOf setTo null) updateMulti
+
+      RepositoryCache.close(git.fs_repo_!)
   }
 
   def meta = RepositoryDoc
@@ -396,6 +398,10 @@ object RepositoryDoc extends RepositoryDoc with MongoMetaRecord[RepositoryDoc] {
   def byUserLoginAndRepoName(login: String, repoName: String): Option[RepositoryDoc] = {
     (UserDoc where (_.login eqs login) get) flatMap (u => 
       (RepositoryDoc where (_.ownerId eqs u.id.get) and (_.name eqs repoName) get))
+  }
+
+  def all = {
+    RepositoryDoc fetch
   }
 }
 
