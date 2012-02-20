@@ -40,12 +40,14 @@ Lift
 ----------------
 
 Props:
-run.mode (development) = set it to production
+
+run.mode (development) - set it to production
 
 Session timeout
 ----------------------
 
 To change default session timeout you need to add to (or change) web.xml
+
 ``` xml
 <session-config>
 	<session-timeout>!!!time in minutes!!!</session-timeout>
@@ -58,11 +60,17 @@ MongoDB
 In development i use version 2.0, but at 1.8 it works too.
 
 Props settings:
+
 db.host (localhost) - hostname of server where mongo located
+
 dp.port (27017) - port where mongo listen connections
+
 db.name (grt) - db name
+
 db.user - user for db.name. Depends on db.password
+
 db.password - password of db.user. Depends on db.user
+
 
 Stored paths
 --------------------------
@@ -70,6 +78,7 @@ Stored paths
 This is path in host fs where luna store own things.
 
 Props settings:
+
 repository.dir (./repo/) - where is user repositories is located. Make sure that this ends with /
 
 Git transport
@@ -78,7 +87,9 @@ Git transport
 Settings for luna supported transports.
 
 daemon.sshd.cert.path (./) - where is sshd store it keys. Make sure that this ends with /
+
 daemon.sshd.port (22) - sshd port
+
 daemon.gitd.port (9418) - gitd port
 
 For http transport it uses web server port. If you want to use http make sure use HTTPS.
@@ -101,9 +112,11 @@ In luna-services/WEB-INF/applicationContext.xml see 2 places:
     <to uri="seda:pushEvents"/>
 </route>
 ```
+
 You need to set uri attr of from tag to be relevant that use set for notification.url.
 
 Second is a email settings for gmail. You can do this for your own smtp.
+
 ``` xml
 <route>
     <from uri="seda:emailOutput"/>
@@ -115,6 +128,7 @@ Fs repo deleter
 --------------------------
 
 This daemon delete repositories one time at day from filesustem of server.
+
 It store trigger settings in /WEB-INF/classes/quartz/job.xml
 
 ``` xml
@@ -127,17 +141,20 @@ OS FAQ
 Luna tested on windows and linux. There is my recomendations.
 
 Windows:
-* Dont use in user repos not ASCII filenames (i mean local characters) will be crash
-* Install Mongo and Jetty as windows services
+
+ * Dont use in user repos not ASCII filenames (i mean local characters) will be crash
+ * Install Mongo and Jetty as windows services
 
 Linux (for jetty):
-* If u use jetty dont use in repos (it is very outdated). Use 7 or 8. Install it by hands, add as daemon.
-* If you want to use port numbers < 1024. Read this (http://wiki.eclipse.org/Jetty/Howto/Port80) how to do this.
-* Use something for reverse proxy (i use nginx)
+
+ * If u use jetty dont use in repos (it is very outdated). Use 7 or 8. Install it by hands, add as daemon.
+ * If you want to use port numbers < 1024. Read this (http://wiki.eclipse.org/Jetty/Howto/Port80) how to do this.
+ * Use something for reverse proxy (i use nginx)
 
 Both (for jetty):
-* Optimaze it (http://wiki.eclipse.org/Jetty/Howto/Garbage_Collection, http://wiki.eclipse.org/Jetty/Howto/High_Load)
-* Use resourceBase for context config and extract war in webapps
+
+ * Optimaze it (http://wiki.eclipse.org/Jetty/Howto/Garbage_Collection, http://wiki.eclipse.org/Jetty/Howto/High_Load)
+ * Use resourceBase for context config and extract war in webapps
 
 Contributing
 =================================
