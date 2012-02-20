@@ -11,4 +11,8 @@ object Constants {
 	val GITD_PORT_OPTION = "daemon.gitd.port"
 
 	val REPOSITORIES_DIR = "repository.dir"
+
+	val SSHD_CERT_PATH = "daemon.sshd.cert.path" 
+
+	val SSHD_CERT_PATH_DEFAULT = "./"
 }

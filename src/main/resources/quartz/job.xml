@@ -22,7 +22,7 @@
         </job>
         <trigger>
             <simple>
-                <name>TenSecondIntervals</name>
+                <name>OneTimeAtDayInterval</name>
                 <job-name>DeleterJob</job-name>
                 <repeat-count>-1</repeat-count> <!-- repeat forever  -->
                 <repeat-interval>86400000</repeat-interval>  <!--  one time at day -->

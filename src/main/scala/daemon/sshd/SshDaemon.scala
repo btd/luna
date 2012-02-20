@@ -49,7 +49,7 @@ object SshDaemon extends Service with Loggable {
     
     sshd.setPort(port)
     sshd.setReuseAddress(true)
-    sshd.setKeyPairProvider(new SimpleGeneratorHostKeyProvider("keycert"))//TODO move Props + Constants
+    sshd.setKeyPairProvider(new SimpleGeneratorHostKeyProvider(Props.get(Constants.SSHD_CERT_PATH, Constants.SSHD_CERT_PATH_DEFAULT) + "keycert"))//TODO move Props + Constants
     sshd.setUserAuthFactories(Arrays.asList(new UserAuthPublicKey.Factory))
     sshd.setPublickeyAuthenticator(new DatabasePubKeyAuth())
     sshd.setCommandFactory(new CommandFactory())
