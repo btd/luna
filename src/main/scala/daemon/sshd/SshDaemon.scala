@@ -47,7 +47,7 @@ object SshDaemon extends Service with Loggable {
 
   def init() = {
     
-    logger.debug("Ssh daemon started on port %s".format(port))
+    
     
     sshd.setPort(port)
     sshd.setReuseAddress(true)
@@ -71,7 +71,7 @@ object SshDaemon extends Service with Loggable {
     })
 
     sshd.start
-
+    logger.debug("Ssh daemon started on port %s".format(port))
     inited = true
   }
 

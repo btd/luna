@@ -100,8 +100,24 @@ class Boot extends Loggable {
         MongoDB.defineDb(DefaultMongoIdentifier, new Mongo(dbHost, dbPort), dbName)
     }
 
-    tryo(SshDaemon.init)
-    tryo(GitDaemon.init)
+    try { 
+      SshDaemon.init
+    } catch {
+      case e => logger.warn("Exception while start sshd", e)
+    }
+    try { 
+      GitDaemon.init
+    } catch {
+      case e => logger.warn("Exception while start gitd", e)
+    }
+
+    LiftRules.unloadHooks.append(
+      () => {
+        SshDaemon.shutdown
+        GitDaemon.shutdown
+        notification.client.NotifyActor.onShutdown
+      }
+    )
 
     ResourceServer.allow {
       case "css" :: _ => true
