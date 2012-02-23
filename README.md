@@ -26,13 +26,13 @@ $ cd luna
 $ ./sbt package
 ```
 
-Now use ./target/scala-2.9.1.final/luna-tool_2.9.1-{VERSION}.war. All default settings help yout to start an app.
+Now use `./target/scala-2.9.1.final/luna-tool_2.9.1-{VERSION}.war`. Default settings help you to start an app.
 
 Configuration
 ======================
 
 All configuration are optional. If one setting depends from others it will be written. 
-*Next / in filepath means root of war package. web.xml means /WEB-INF/web.xml. and props means /WEB-INF/classes/props/default.props*
+*Next `/` in filepath means root of war package. `web.xml` means `/WEB-INF/web.xml`. and `props` means `/WEB-INF/classes/props/default.props`*.
 
 *Check that props file uses ASCII encoding*
 
@@ -41,12 +41,12 @@ Lift
 
 Props:
 
-run.mode (development) - set it to production
+`run.mode` (`development`) - set it to production.
 
 Session timeout
 ----------------------
 
-To change default session timeout you need to add to (or change) web.xml
+To change default session timeout you need to add to (or change) web.xml:
 
 ``` xml
 <session-config>
@@ -61,15 +61,15 @@ In development i use version 2.0, but at 1.8 it works too.
 
 Props settings:
 
-db.host (localhost) - hostname of server where mongo located
+`db.host` (`localhost`) - hostname of server where mongo located;
 
-dp.port (27017) - port where mongo listen connections
+`dp.port` (`27017`) - port where mongo listen connections;
 
-db.name (grt) - db name
+`db.name` (`grt`) - database name;
 
-db.user - user for db.name. Depends on db.password
+`db.user` - user for `db.name`. Depends on `db.password`;
 
-db.password - password of db.user. Depends on db.user
+`db.password` - password of `db.user`. Depends on `db.user`.
 
 
 Stored paths
@@ -79,18 +79,18 @@ This is path in host fs where luna store own things.
 
 Props settings:
 
-repository.dir (./repo/) - where is user repositories is located. Make sure that this ends with /
+`repository.dir` (`./repo/`) - where is user repositories is located. Make sure that this ends with `/`.
 
 Git transport
 ---------------------------
 
-Settings for luna supported transports.
+Settings for luna supported transports:
 
-daemon.sshd.cert.path (./) - where is sshd store it keys. Make sure that this ends with /
+`daemon.sshd.cert.path` (`./`) - where is sshd store it keys. Make sure that this ends with `/`.
 
-daemon.sshd.port (22) - sshd port
+`daemon.sshd.port` (`22`) - sshd port
 
-daemon.gitd.port (9418) - gitd port
+`daemon.gitd.port` (`9418`) - gitd port
 
 For http transport it uses web server port. If you want to use http make sure use HTTPS.
 
@@ -99,10 +99,10 @@ Notification
 
 For mail notifications luna uses additional services.
 
-notification.url - this is where luna-services listen connections. E.g. http://localhost:8081/luna/services
+`notification.url` - this is where luna-services listen connections. E.g. `http://localhost:8081/luna/services`
 
-For notification service need to install other web app (luna-services). And you must have SMTP server.
-In luna-services/WEB-INF/applicationContext.xml see 2 places:
+For notification service need to install other web app (*luna-services*). And you must have SMTP server.
+In `luna-services/WEB-INF/applicationContext.xml` see 2 places:
 
 ``` xml
 <route>
@@ -113,7 +113,7 @@ In luna-services/WEB-INF/applicationContext.xml see 2 places:
 </route>
 ```
 
-You need to set uri attr of from tag to be relevant that use set for notification.url.
+You need to set `uri` attr of `from` tag to be relevant that use set for `notification.url`.
 
 Second is a email settings for gmail. You can do this for your own smtp.
 
@@ -127,9 +127,9 @@ Second is a email settings for gmail. You can do this for your own smtp.
 Fs repo deleter
 --------------------------
 
-This daemon delete repositories one time at day from filesustem of server.
+This daemon delete repositories one time at day from filesystem of server.
 
-It store trigger settings in /WEB-INF/classes/quartz/job.xml
+It store trigger settings in `/WEB-INF/classes/quartz/job.xml`.
 
 ``` xml
 <repeat-interval>There is time in millis</repeat-interval>
