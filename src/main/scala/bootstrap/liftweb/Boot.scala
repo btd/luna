@@ -229,6 +229,19 @@ class Boot extends Loggable {
             case _ => Templates("repo" :: "commit" :: "default" :: Nil)
           }.openOr(Templates("404" :: Nil).openOr(NodeSeq.Empty)))
 
+    val allCommitsByPathPage = Menu.params[SourceElementPage]("allCommitsByPathPage",
+      new LinkText[SourceElementPage](urp => Text("Repo " + urp.repoName)),
+      list => list match {
+        case login :: repo :: commit :: path => Full(SourceElementPage(login, repo, commit, path))
+        case _ => Empty
+      },
+      stp => (stp.userName :: stp.repoName :: stp.commit :: Nil) ::: stp.path) / * / * / "history" / * / ** >>
+      ValueTemplate(_.flatMap(rp => rp.repo).filter(r => r.canPull_?(UserDoc.currentUser))
+          .flatMap{
+            case r if r.git.inited_? => Templates("repo" :: "commit" :: "all-path" :: Nil)
+            case _ => Templates("repo" :: "commit" :: "default" :: Nil)
+          }.openOr(Templates("404" :: Nil).openOr(NodeSeq.Empty)))
+
     val commitPage = Menu.params[RepoAtCommitPage]("commitPage",
       new LinkText[RepoAtCommitPage](urp => Text("Repo " + urp.repoName)),
       list => list match {
@@ -307,6 +320,7 @@ class Boot extends Loggable {
       emptyRepoPage,
       emptyCommitsPage,
       allCommitsPage,
+      allCommitsByPathPage,
       commitPage,
       newPullRequestPage,
       allPullRequestPage,

@@ -77,7 +77,9 @@ class SourceElementOps(se: SourceElementPage) extends Loggable {
 
  def renderBlob = w(se.elem){_ match {
       case b @ Blob(_,_) => {
-       ".blob_header *" #> (".raw *" #> a(se.repo.get.homePageUrl + "/raw/" + se.commit + "/" + b.path, Text("raw"))) &
+       ".blob_header *" #> (
+        ".history *" #> a(se.repo.get.homePageUrl + "/history/" + se.commit + "/" + b.path, Text("history")) &
+        ".raw *" #> a(se.repo.get.homePageUrl + "/raw/" + se.commit + "/" + b.path, Text("raw"))) &
        (if(b.viewable_? && !b.generated_? && !b.vendored_?) ".source_code" #> b.data
               else if(b.generated_?) ".source_code" #> "File is generated and not will be shown"
               else if(b.vendored_?) ".source_code" #> "Seems that no need to show this file"
