@@ -22,22 +22,22 @@
     </error-page>
 
     <servlet>
-     <servlet-name>QuartzInitializer</servlet-name>
-     <display-name> Quartz Initializer Servlet</display-name>
-     <servlet-class>org.quartz.ee.servlet.QuartzInitializerServlet</servlet-class>
-     <load-on-startup>10</load-on-startup>
-     <init-param>
-         <param-name>config-file</param-name>
-         <param-value>quartz.properties</param-value>
-     </init-param>
-     <init-param>
-         <param-name>shutdown-on-unload</param-name>
-         <param-value>true</param-value>
-     </init-param>
-     <init-param>
-         <param-name>start-scheduler-on-load</param-name>
-         <param-value>true</param-value>
-     </init-param>
- </servlet>
+        <servlet-name>QuartzInitializer</servlet-name>
+        <display-name> Quartz Initializer Servlet</display-name>
+        <servlet-class>org.quartz.ee.servlet.QuartzInitializerServlet</servlet-class>
+        <load-on-startup>10</load-on-startup>
+        <init-param>
+            <param-name>config-file</param-name>
+            <param-value>quartz.properties</param-value>
+        </init-param>
+        <init-param>
+            <param-name>shutdown-on-unload</param-name>
+            <param-value>true</param-value>
+        </init-param>
+        <init-param>
+            <param-name>start-scheduler-on-load</param-name>
+            <param-value>true</param-value>
+        </init-param>
+    </servlet>
 
 </web-app>

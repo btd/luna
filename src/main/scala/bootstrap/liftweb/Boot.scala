@@ -119,11 +119,6 @@ class Boot extends Loggable {
       }
     )
 
-    ResourceServer.allow {
-      case "css" :: _ => true
-      case "js" :: _ => true
-    }
-
     // where to search snippet
     LiftRules.addToPackages("code")
 
@@ -367,7 +362,11 @@ class Boot extends Loggable {
           case _ => false 
         } 
       } 
-    } 
+    }
+
+    LiftRules.liftRequest.append {
+      case Req("assets" :: Nil, _, _)  => false
+    }
 
     // Use jQuery 1.4
     LiftRules.jsArtifacts = net.liftweb.http.js.jquery.JQuery14Artifacts
