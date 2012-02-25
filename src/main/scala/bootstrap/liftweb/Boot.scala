@@ -181,7 +181,7 @@ class Boot extends Loggable {
       stp => stp.userName :: stp.repoName :: Nil) / * / * / "tree" >>
       ValueTemplate(spBox =>
         spBox.flatMap(rp => rp.repo).filter(r => r.canPull_?(UserDoc.currentUser))
-          .flatMap(r => Templates("repo" :: "tree" :: Nil))
+          .flatMap(r => Templates("repo" :: "default" :: Nil))
           .openOr(Templates("404" :: Nil).openOr(NodeSeq.Empty))) >>
       TestValueAccess(_.flatMap(rp => rp.repo).filter(r => r.git.inited_?)
           .flatMap(r => Full(RedirectResponse(r.sourceTreeUrl))))
