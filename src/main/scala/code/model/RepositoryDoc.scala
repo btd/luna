@@ -258,13 +258,11 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
 
     def fs_repo_! = fs_repo
 
-    def log(commit: String) = {
-      scala.collection.JavaConversions.asScalaIterator((new Git(fs_repo)).log.add(fs_repo.resolve(commit)).call.iterator)
-    }
-
-    def log(commit: String, path: String) = {
-      logger.debug("Try to get log for " + path)
-      scala.collection.JavaConversions.asScalaIterator((new Git(fs_repo)).log.add(fs_repo.resolve(commit)).addPath(path).call.iterator)
+    def log(commit: String, path: String = "") = {
+      logger.debug("Try to access " + path)
+      val g = (new Git(fs_repo)).log.add(fs_repo.resolve(commit))
+      if(!path.isEmpty) g.addPath(path)
+      scala.collection.JavaConversions.asScalaIterator(g.call.iterator)
     }
 
     def log(from: ObjectId, to: ObjectId) = {
@@ -274,7 +272,7 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
           .log.addRange(from, to).call.iterator)
     }
 
-    def diff(commit1: String, commit2: String) = {
+    def diff(commit1: String, commit2: String, path: Option[String] = None) = {
       import org.eclipse.jgit.diff.DiffEntry.ChangeType._
 
       val diffList = new ListBuffer[(Change, String)]
@@ -283,6 +281,7 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
         val formatter = new DiffFormatter(baos)
         formatter.setRepository(fs_repo)
         formatter.setDetectRenames(true)
+        for(p <- path; if !p.isEmpty) formatter.setPathFilter(PathFilter.create(p))
 
         val entries = scala.collection.JavaConversions.asScalaBuffer(formatter.scan(fs_repo.resolve(commit1), fs_repo.resolve(commit2)))
 
@@ -307,8 +306,6 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
       }
       diffList.toList
     }
-
-    def diff(commit: String): List[(Change, String)] = diff(commit + "^1", commit)
 
     def clone(user: UserDoc): RepositoryDoc = {
       val uri = new URIish(fsPath)

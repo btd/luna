@@ -32,36 +32,40 @@ import code.model._
  * Time: 2:14 PM
  */
 
-class CommitOps(c: WithCommit) {
+class CommitOps(c: SourceElementPage) {
 
   def renderSourceTreeDefaultLink = w(c.repo)(renderSourceTreeLink(_, Full(c.commit)))
 
   def renderCommitsDefaultLink = w(c.repo)(renderCommitsLink(_, Full(c.commit)))
 
-  def renderBranchSelector = w(c.repo){repo => 
+  def renderBranchSelector = w(c.repo){repo => if(c.path.isEmpty)
     ".current_branch" #>
           SHtml.ajaxSelect(repo.git.branches.zip(repo.git.branches),
             if(repo.git.branches.contains(c.commit)) Full(c.commit) else Empty,
             value => S.redirectTo(repo.commitsUrl(value)))
+    else cleanAll
   }
 
 
   def renderCommitsList = w(c.repo){repo => 
-        ".day *" #>  groupCommitsByDate(repo.git.log(c.commit)).map(p => {
+        ".day *" #>  groupCommitsByDate(repo.git.log(c.commit, c.path.mkString("/"))).map(p => {
         ".date *" #> p._1 &
         ".commit *" #> p._2.map(lc => {
           ".commit_msg *" #> <span>{lc.getFullMessage.split("\n").map(m => <span>{m}</span><br/>)}</span> &
           ".commit_author *" #> (lc.getAuthorIdent.getName + " at " + SnippetHelper.timeFormatter.format(lc.getAuthorIdent.getWhen)) &
-          ".source_tree_link *" #> a(repo.sourceTreeUrl(lc.getName), Text("Source tree")) &
-          ".diff_link *" #> a(repo.commitUrl(lc.getName), Text(lc.getName))
+          ".source_tree_link *" #> (c.elem match {
+              case Full(Tree(_)) => a(repo.sourceTreeUrl(lc.getName) + suffix(c.path), Text("tree"))
+              case Full(Blob(_, _)) => a(repo.sourceBlobUrl(lc.getName) + suffix(c.path), Text("blob"))
+              case _ => a(repo.sourceTreeUrl(lc.getName) + suffix(c.path), Text("tree"))
+            }) &
+          ".diff_link *" #> a(repo.commitUrl(lc.getName) + suffix(c.path), Text(lc.getName))
           
       })
-    })
-      
+    })  
   }
 
   def renderDiffList =  w(c.repo){repo => {
-          val diff = repo.git.diff(c.commit)
+          val diff = repo.git.diff(c.commit + "^1", c.commit, Some(c.path.mkString("/")))
 
           val diffCount = diff.size // bad
 

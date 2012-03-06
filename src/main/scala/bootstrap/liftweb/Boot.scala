@@ -216,39 +216,26 @@ class Boot extends Loggable {
           .flatMap(r => Full(RedirectResponse(r.commitsUrl))))
 
 
-    val allCommitsPage = Menu.params[RepoAtCommitPage]("allCommitsPage",
-      new LinkText[RepoAtCommitPage](urp => Text("Repo " + urp.repoName)),
+    val allCommitsPage = Menu.params[SourceElementPage]("allCommitsPage",
+      new LinkText[SourceElementPage](urp => Text("Repo " + urp.repoName)),
       list => list match {
-        case login :: repo :: commit :: Nil => Full(RepoAtCommitPage(login, repo, commit))
+        case login :: repo :: commit :: path => Full(SourceElementPage(login, repo, commit, path))
         case _ => Empty
       },
-      urp => urp.userName :: urp.repoName :: urp.commit :: Nil) / * / * / "commits" / * >>
+      stp => (stp.userName :: stp.repoName :: stp.commit :: Nil) ::: stp.path) / * / * / "commits" / * / ** >>
       ValueTemplate(_.flatMap(rp => rp.repo).filter(r => r.canPull_?(UserDoc.currentUser))
           .flatMap{
             case r if r.git.inited_? => Templates("repo" :: "commit" :: "all" :: Nil)
             case _ => Templates("repo" :: "commit" :: "default" :: Nil)
           }.openOr(Templates("404" :: Nil).openOr(NodeSeq.Empty)))
 
-    val allCommitsByPathPage = Menu.params[SourceElementPage]("allCommitsByPathPage",
+    val commitPage = Menu.params[SourceElementPage]("commitPage",
       new LinkText[SourceElementPage](urp => Text("Repo " + urp.repoName)),
       list => list match {
         case login :: repo :: commit :: path => Full(SourceElementPage(login, repo, commit, path))
         case _ => Empty
       },
-      stp => (stp.userName :: stp.repoName :: stp.commit :: Nil) ::: stp.path) / * / * / "history" / * / ** >>
-      ValueTemplate(_.flatMap(rp => rp.repo).filter(r => r.canPull_?(UserDoc.currentUser))
-          .flatMap{
-            case r if r.git.inited_? => Templates("repo" :: "commit" :: "all-path" :: Nil)
-            case _ => Templates("repo" :: "commit" :: "default" :: Nil)
-          }.openOr(Templates("404" :: Nil).openOr(NodeSeq.Empty)))
-
-    val commitPage = Menu.params[RepoAtCommitPage]("commitPage",
-      new LinkText[RepoAtCommitPage](urp => Text("Repo " + urp.repoName)),
-      list => list match {
-        case login :: repo :: commit :: Nil => Full(RepoAtCommitPage(login, repo, commit))
-        case _ => Empty
-      },
-      urp => urp.userName :: urp.repoName :: urp.commit :: Nil) / * / * / "commit" / * >>
+      stp => (stp.userName :: stp.repoName :: stp.commit :: Nil) ::: stp.path) / * / * / "commit" / * / ** >>
       ValueTemplate(_.flatMap(rp => rp.repo).filter(r => r.canPull_?(UserDoc.currentUser))
           .flatMap(r => Templates("repo" :: "commit" :: "one" :: Nil))
           .openOr(Templates("404" :: Nil).openOr(NodeSeq.Empty)))
@@ -320,7 +307,6 @@ class Boot extends Loggable {
       emptyRepoPage,
       emptyCommitsPage,
       allCommitsPage,
-      allCommitsByPathPage,
       commitPage,
       newPullRequestPage,
       allPullRequestPage,
