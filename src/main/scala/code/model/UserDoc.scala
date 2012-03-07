@@ -170,4 +170,27 @@ object UserDoc extends UserDoc with MongoMetaRecord[UserDoc] {
 
   def byName(name: String) = UserDoc where (_.login eqs name) get
 
+  import bootstrap.liftweb.{UserPage, WithUser}
+  import sitemap._
+  import Loc._
+  import http.Templates
+  import xml.{Text, NodeSeq}
+
+  val userRepos = Menu.param[WithUser]("userRepos",
+    new Loc.LinkText[WithUser](up => xml.Text("User " + up.userName)),
+    login => Full(UserPage(login)),
+    up => up.userName) / "list" / * >>
+    ValueTemplate(_.flatMap(up => up.user) //user exists
+                  .flatMap(u => Templates("list" :: Nil))
+                  .openOr(Templates("404" :: Nil).openOr(NodeSeq.Empty)))
+
+  val userAdmin = Menu.param[WithUser]("userAdmin",
+    new Loc.LinkText[WithUser](up => xml.Text("User " + up.userName)),
+    login => Full(UserPage(login)),
+    up => up.userName) / "admin" / *  >>
+    ValueTemplate(_.flatMap(up => up.user)
+                   .filter(_.is(UserDoc.currentUser))
+                   .flatMap(u => Templates("admin" :: "adminUser" :: Nil))
+                   .openOr(Templates("404" :: Nil).openOr(NodeSeq.Empty)))
+
 }

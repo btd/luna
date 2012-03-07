@@ -127,21 +127,7 @@ class Boot extends Loggable {
     val indexPage = Menu.i("Home") / "index" >> If(() => !UserDoc.loggedIn_?, () => RedirectResponse(UserDoc.currentUser.get.homePageUrl))
     // val listPage = Menu.i("List") / "list"
 
-    val userPage = Menu.param[UserPage]("userPage",
-      new LinkText[UserPage](up => Text("User " + up.userName)),
-      login => Full(UserPage(login)),
-      up => up.userName) / "list" / * >>
-      ValueTemplate(upBox => upBox.flatMap(up => up.user).flatMap(u => Templates("list" :: Nil))
-          .openOr(Templates("404" :: Nil).openOr(NodeSeq.Empty)))
-
-    val userAdminPage = Menu.param[UserPage]("userAdminPage",
-      new LinkText[UserPage](up => Text("User " + up.userName)),
-      login => Full(UserPage(login)),
-      up => up.userName) / "admin" / *  >>
-      ValueTemplate(upBox => upBox.flatMap(up => up.user)
-        .filter(_.is(UserDoc.currentUser))
-        .flatMap(u => Templates("admin" :: "adminUser" :: Nil))
-          .openOr(Templates("404" :: Nil).openOr(NodeSeq.Empty)))
+   
      
 
     val userRepoAdminPage = Menu.params[RepoPage]("userRepoAdminPage",
@@ -296,11 +282,11 @@ class Boot extends Loggable {
     // Build SiteMap
     val entries = List(
       indexPage,
-      userPage,
+      UserDoc.userRepos,
+      UserDoc.userAdmin,
       signInPage,
       loginPage,
       newUserPage,
-      userAdminPage,
       userRepoAdminPage,
       sourceTreePage,
       blobPage,

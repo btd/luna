@@ -40,7 +40,7 @@ class AdminUserOps(up: WithUser) extends Loggable with SshKeyUI with UserUI {
   
 
   def renderUserForm = w(up.user) { user =>
-    userForm(user, "Update", updateUser(user, u => S.redirectTo("/admin/" + u.login.get)))
+    userForm(user, "Update", updateUser(user, u => S.redirectTo(UserDoc.userAdmin.calcHref(up))))
   }
   
   def renderSshKeysTable = w(up.user) {user =>
