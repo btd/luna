@@ -665,19 +665,39 @@ ul.clone-urls li.selected>a {
     float: right;
 }
 
+.options_holder {
+    width: 700px;
+
+}
+
+.options_holder.warn {
+    padding: 0 10px;
+}
+
 .table {
     width: 100%;
     margin: 10px 0;
-}
-
-.table td {
-    padding: 10px 0;
-
+    border: 2px solid rgb(217, 217, 217);
+    background-color: rgb(242,242,242);
+    border-radius: 3px;
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
 }
 
 .table tr {
-    border-top: 1px solid gray;
+
+    border-top: 1px solid rgb(217, 217, 217);
+    font-size: 1.3em;
+    line-height: 2em;
 }
+.table tr:first-child {
+    border-top: 0;
+}
+
+.table td {
+    padding: 0 10px;
+}
+
 
 .current_branch {
     width: 200px;

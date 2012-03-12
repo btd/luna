@@ -26,7 +26,7 @@ import util.Helpers._
 import common._
 import util.PassThru
 import com.foursquare.rogue.Rogue._
-import xml.{NodeSeq, Text}
+import xml.{NodeSeq, Text, EntityRef}
 import code.model._
 import org.bson.types.ObjectId
 import SnippetHelper._
@@ -45,7 +45,7 @@ class AdminRepoOps(urp: WithRepo) extends Loggable with SshKeyUI with Repository
     ".collaborator" #> repo.collaborators.map(c => {
       ".collaborator [id]" #> c.id.get.toString &
       ".collaborator_name *" #> c.login.get &
-      ".collaborator_delete *" #> SHtml.a(Text("X")) {
+      ".collaborator_delete *" #> SHtml.a(EntityRef("times")) {
                                   (CollaboratorDoc where (_.userId eqs c.id.get) and (_.repoId eqs repo.id.get)).findAndDeleteOne
                 JqId(c.id.get.toString) ~> JqRemove()}
 
