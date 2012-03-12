@@ -30,6 +30,7 @@ import xml.{NodeSeq, Text}
 import code.model._
 import org.bson.types.ObjectId
 import SnippetHelper._
+import code.lib._
 
 /**
  * User: denis.bardadym
@@ -86,12 +87,12 @@ class AdminRepoOps(urp: WithRepo) extends Loggable with SshKeyUI with Repository
 
 
   def renderUpdateRepoForm = w(urp.repo) {repo => {
-    repositoryForm(repo, "Update", updateRepo(repo, r => S.redirectTo("/admin" + r.homePageUrl))) }}
+    repositoryForm(repo, "Update", updateRepo(repo, r => S.redirectTo(Sitemap.repoAdmin.calcHref(RepoPage(repo))))) }}
 
   
 
   def renderDeleteRepo = w(urp.repo) {repo => 
-      "button" #> SHtml.button("Delete", deleteRepo(repo, r => S.redirectTo(repo.owner.homePageUrl)), "class" -> "button")
+      "button" #> SHtml.button("Delete", deleteRepo(repo, r => S.redirectTo(Sitemap.userRepos.calcHref(UserPage(repo.owner)))), "class" -> "button")
   }
 
   def renderBranchSelector = w(urp.repo) {repo => 

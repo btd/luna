@@ -21,8 +21,8 @@ import common._
 import util._
 import Helpers._
 import code.model._
-import code.snippet.SnippetHelper._
-import bootstrap.liftweb._
+import code.lib._
+import SnippetHelper._
 import xml._
 import Utility._
 
@@ -52,7 +52,7 @@ class PullRequestOneOps(pr: WithPullRequest) extends Loggable {
 
         ".commit *" #> diff.map(lc =>
           ".commit_msg *" #> <span>{lc.getFullMessage.split("\n").map(m => <span>{m}</span><br/>)}</span> &
-          ".commit_author *" #> (lc.getAuthorIdent.getName + " at " + SnippetHelper.timeFormatter.format(lc.getAuthorIdent.getWhen))
+          ".commit_author *" #> (lc.getAuthorIdent.getName + " at " + timeFormat(lc.getAuthorIdent.getWhen))
         ) &
         ".blob *" #> 
                 (pullRequest.srcRepoId.obj.get.git.diff(diff.head.getName + "^1", diff.last.getName).zipWithIndex.map(d => 

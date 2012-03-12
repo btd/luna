@@ -25,6 +25,7 @@ import util._
 import xml._
 import Utility._
 import code.model._
+import code.lib._
 
 /**
  * User: denis.bardadym
@@ -38,11 +39,12 @@ class CommitOps(c: SourceElementPage) {
 
   def renderCommitsDefaultLink = w(c.repo)(renderCommitsLink(_, Full(c.commit)))
 
-  def renderBranchSelector = w(c.repo){repo => if(c.path.isEmpty)
+  def renderBranchSelector = w(c.repo){repo => 
+    if(c.path.isEmpty)
     ".current_branch" #>
           SHtml.ajaxSelect(repo.git.branches.zip(repo.git.branches),
             if(repo.git.branches.contains(c.commit)) Full(c.commit) else Empty,
-            value => S.redirectTo(repo.commitsUrl(value)))
+            value => S.redirectTo(Sitemap.historyAtCommit.calcHref(SourceElementPage(repo,value))))
     else cleanAll
   }
 
@@ -52,13 +54,15 @@ class CommitOps(c: SourceElementPage) {
         ".date *" #> p._1 &
         ".commit *" #> p._2.map(lc => {
           ".commit_msg *" #> <span>{lc.getFullMessage.split("\n").map(m => <span>{m}</span><br/>)}</span> &
-          ".commit_author *" #> (lc.getAuthorIdent.getName + " at " + SnippetHelper.timeFormatter.format(lc.getAuthorIdent.getWhen)) &
-          ".source_tree_link *" #> (c.elem match {
-              case Full(Tree(_)) => a(repo.sourceTreeUrl(lc.getName) + suffix(c.path), Text("tree"))
-              case Full(Blob(_, _)) => a(repo.sourceBlobUrl(lc.getName) + suffix(c.path), Text("blob"))
-              case _ => a(repo.sourceTreeUrl(lc.getName) + suffix(c.path), Text("tree"))
-            }) &
-          ".diff_link *" #> a(repo.commitUrl(lc.getName) + suffix(c.path), Text(lc.getName))
+          ".commit_author *" #> (lc.getAuthorIdent.getName + " at " + timeFormat(lc.getAuthorIdent.getWhen)) &
+          ".source_tree_link *" #> {
+            val sep = c.copy(commit = lc.getName)
+            c.elem match {
+              case Full(Tree(_)) => a(Sitemap.treeAtCommit.calcHref(sep), Text("tree"))
+              case Full(Blob(_, _)) => a(Sitemap.blobAtCommit.calcHref(sep), Text("blob"))
+              case _ => NodeSeq.Empty
+            }} &
+          ".diff_link *" #> a(Sitemap.commit.calcHref(c.copy(commit = lc.getName)), Text(lc.getName))
           
       })
     })  

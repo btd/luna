@@ -26,7 +26,7 @@ import util.Helpers._
 import common._
 import util.PassThru
 import com.foursquare.rogue.Rogue._
-import xml.{NodeSeq, Text}
+import xml.{NodeSeq, Text, EntityRef}
 import code.model._
 import SnippetHelper._
 import org.bson.types.ObjectId
@@ -38,7 +38,7 @@ trait SshKeyUI extends Loggable {
 		".key" #> keys.map(key => {
 			".key [id]" #> key.id.get.toString &
 			".key_name *" #> (key.algorithm + " " + key.encodedKey.substring(0, 10) + "... " + key.comment) &
-			".key_delete *" #> SHtml.a(Text("X")) {
+			".key_delete *" #> SHtml.a(EntityRef("times")) {
                 									key.delete_!
                 									JqId(key.id.get.toString) ~> JqRemove()}
 

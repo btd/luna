@@ -68,8 +68,9 @@ trait UserUI extends Loggable{
  private def logUserIn() = {
     def logIn(u: UserDoc) = {
       UserDoc.logUserIn(u, () => {
+        import code.lib._
         //logger.debug(S.referer)
-        S.redirectTo(whence openOr u.homePageUrl)
+        S.redirectTo(whence openOr Sitemap.userRepos.calcHref(UserPage(u)))
       })
     }
 

@@ -31,54 +31,7 @@ import xml.{NodeSeq, Text}
 import daemon.git.GitDaemon
 import com.mongodb.Mongo
 import code.model._
-
-trait WithUser {
-  def userName: String
-
-  lazy val user = UserDoc.find("login", userName)
-}
-
-case class UserPage(userName: String) extends WithUser
-
-trait WithRepo extends WithUser {
-  def repoName: String
-
-  lazy val repo = user match {
-
-    case Full(u) => (tryo {  u.repos.filter(_.name.get == repoName).head } or { Empty }) match {
-      case Full(r) if (r.open_?.get) => Full(r)
-      case Full(r) if (r.canPush_?(UserDoc.currentUser)) => Full(r)
-      case _ => Empty
-    }
-        
-    case _ => Empty
-  }
-}
-
-trait WithPullRequest {
-  def pullRequestId: String
-
-  lazy val pullRequest = PullRequestDoc.find(pullRequestId)
-}
-
-trait WithCommit extends WithRepo {
-  def commit: String
-}
-
-case class RepoPage(userName: String, repoName: String) extends WithRepo
-
-case class RepoAtCommitPage(userName: String, repoName: String, commit: String) extends WithCommit
-
-case class PullRequestRepoPage(userName: String, repoName: String, pullRequestId: String)  extends WithPullRequest with WithRepo
-
-case class SourceElementPage(userName: String, repoName: String, commit: String, path: List[String]) extends WithCommit {
-  
-  private lazy val reversedPath = path.reverse
-
-  lazy val elem = repo.flatMap(r => tryo { r.git.ls_tree(reversedPath.tail.reverse, commit).filter(_.basename == reversedPath.head).head } or {Empty})
-}
-
-
+import code.lib._
 
 
 /**
@@ -124,182 +77,8 @@ class Boot extends Loggable {
 
     LiftRules.explicitlyParsedSuffixes = Set()
 
-    val indexPage = Menu.i("Home") / "index" >> If(() => !UserDoc.loggedIn_?, () => RedirectResponse(UserDoc.currentUser.get.homePageUrl))
-    // val listPage = Menu.i("List") / "list"
-
    
-     
-
-    val userRepoAdminPage = Menu.params[RepoPage]("userRepoAdminPage",
-      new LinkText[RepoPage](urp => Text("Repo " + urp.repoName)),
-      list => list match {
-        case login :: repo :: Nil => Full(RepoPage(login, repo))
-        case _ => Empty
-      },
-      urp => urp.userName :: urp.repoName :: Nil) / "admin" / * / * >>
-      ValueTemplate(upBox => upBox.flatMap(up => up.user)
-        .filter(_.is(UserDoc.currentUser))
-        .flatMap(u => Templates("admin" :: "adminRepo" :: Nil))
-          .openOr(Templates("404" :: Nil).openOr(NodeSeq.Empty)))
-
-    val blobPage = Menu.params[SourceElementPage]("blobPage",
-      new LinkText[SourceElementPage](stp => Text("Repo " + stp.repoName)),
-      list => list match {
-          case login :: repo :: commit :: path => Full(SourceElementPage(login, repo, commit, path))
-          case _ => Empty
-      },
-      stp => (stp.userName :: stp.repoName :: stp.commit :: Nil) ::: stp.path) / * / * / "blob" / * / **  >>
-      ValueTemplate(upBox =>
-        upBox.flatMap(rp => rp.repo).filter(r => r.canPull_?(UserDoc.currentUser))
-          .flatMap(r => Templates("repo" :: "blob" :: Nil))
-          .openOr(Templates("404" :: Nil).openOr(NodeSeq.Empty)))
-      
-
-    val emptyRepoPage = Menu.params[SourceElementPage]("emptyRepoPage",
-      new LinkText[SourceElementPage](stp => Text("Repo " + stp.repoName)),
-      list => {
-
-        list match {
-          case login :: repo :: Nil => Full(SourceElementPage(login, repo, "", Nil))
-          case _ => Empty
-        }
-      },
-      stp => stp.userName :: stp.repoName :: Nil) / * / * / "tree" >>
-      ValueTemplate(spBox =>
-        spBox.flatMap(rp => rp.repo).filter(r => r.canPull_?(UserDoc.currentUser))
-          .flatMap(r => Templates("repo" :: "default" :: Nil))
-          .openOr(Templates("404" :: Nil).openOr(NodeSeq.Empty))) >>
-      TestValueAccess(_.flatMap(rp => rp.repo).filter(r => r.git.inited_?)
-          .flatMap(r => Full(RedirectResponse(r.sourceTreeUrl))))
-
-    val sourceTreePage = Menu.params[SourceElementPage]("sourceTreePage",
-      new LinkText[SourceElementPage](stp => Text("Repo " + stp.repoName)),
-      list => {
-        list match {
-          case login :: repo :: commit :: path => Full(SourceElementPage(login, repo, commit, path))
-          case _ => Empty
-        }
-      },
-      stp => (stp.userName :: stp.repoName :: stp.commit :: Nil) ::: stp.path) / * / * / "tree" / * / ** >>
-      ValueTemplate(_.flatMap(rp => rp.repo).filter(r => r.canPull_?(UserDoc.currentUser))
-          .flatMap{
-            case r if r.git.inited_? => Templates("repo" :: "tree" :: Nil)
-            case _ => Templates("repo" :: "default" :: Nil)
-          }.openOr(Templates("404" :: Nil).openOr(NodeSeq.Empty)))
-
-    val emptyCommitsPage = Menu.params[RepoPage]("emptyCommitsPage",
-      new LinkText[RepoPage](urp => Text("Repo " + urp.repoName)),
-      list => list match {
-        case login :: repo :: Nil => Full(RepoPage(login, repo))
-        case _ => Empty
-      },
-      urp => urp.userName :: urp.repoName :: Nil) / * / * / "commits" >>
-      ValueTemplate(spBox =>
-        spBox.flatMap(rp => rp.repo).filter(r => r.canPull_?(UserDoc.currentUser))
-          .flatMap(r => Templates("repo" :: "commit" :: "default" :: Nil))
-          .openOr(Templates("404" :: Nil).openOr(NodeSeq.Empty))) >>
-      TestValueAccess(_.flatMap(rp => rp.repo).filter(r => r.git.inited_?)
-          .flatMap(r => Full(RedirectResponse(r.commitsUrl))))
-
-
-    val allCommitsPage = Menu.params[SourceElementPage]("allCommitsPage",
-      new LinkText[SourceElementPage](urp => Text("Repo " + urp.repoName)),
-      list => list match {
-        case login :: repo :: commit :: path => Full(SourceElementPage(login, repo, commit, path))
-        case _ => Empty
-      },
-      stp => (stp.userName :: stp.repoName :: stp.commit :: Nil) ::: stp.path) / * / * / "commits" / * / ** >>
-      ValueTemplate(_.flatMap(rp => rp.repo).filter(r => r.canPull_?(UserDoc.currentUser))
-          .flatMap{
-            case r if r.git.inited_? => Templates("repo" :: "commit" :: "all" :: Nil)
-            case _ => Templates("repo" :: "commit" :: "default" :: Nil)
-          }.openOr(Templates("404" :: Nil).openOr(NodeSeq.Empty)))
-
-    val commitPage = Menu.params[SourceElementPage]("commitPage",
-      new LinkText[SourceElementPage](urp => Text("Repo " + urp.repoName)),
-      list => list match {
-        case login :: repo :: commit :: path => Full(SourceElementPage(login, repo, commit, path))
-        case _ => Empty
-      },
-      stp => (stp.userName :: stp.repoName :: stp.commit :: Nil) ::: stp.path) / * / * / "commit" / * / ** >>
-      ValueTemplate(_.flatMap(rp => rp.repo).filter(r => r.canPull_?(UserDoc.currentUser))
-          .flatMap(r => Templates("repo" :: "commit" :: "one" :: Nil))
-          .openOr(Templates("404" :: Nil).openOr(NodeSeq.Empty)))
-
-    val newPullRequestPage = Menu.params[RepoPage]("newPullRequestPage",
-      new LinkText[RepoPage](urp => Text("Repo " + urp.repoName)),
-      list => list match {
-        case login :: repo :: Nil => Full(RepoPage(login, repo))
-        case _ => Empty
-      },
-      urp => urp.userName :: urp.repoName :: Nil) / * / * / "pull-requests" / "new" >>
-      ValueTemplate(_.flatMap(rp => rp.repo).filter(r => r.canPush_?(UserDoc.currentUser))
-          .flatMap(r => Templates("repo" :: "pull-request" :: "new" :: Nil))
-          .openOr(Templates("404" :: Nil).openOr(NodeSeq.Empty)))
-
-    val allPullRequestPage = Menu.params[RepoPage]("allPullRequestPage",
-      new LinkText[RepoPage](urp => Text("Repo " + urp.repoName)),
-      list => list match {
-        case login :: repo :: Nil => Full(RepoPage(login, repo))
-        case _ => Empty
-      },
-      urp => urp.userName :: urp.repoName :: Nil) / * / * / "pull-requests" >>
-      ValueTemplate(_.flatMap(rp => rp.repo).filter(r => r.canPull_?(UserDoc.currentUser))
-          .flatMap(r => Templates("repo" :: "pull-request" :: "all" :: Nil))
-          .openOr(Templates("404" :: Nil).openOr(NodeSeq.Empty)))
-
-    val onePullRequestPage = Menu.params[PullRequestRepoPage]("onePullRequestPage",
-      new LinkText[PullRequestRepoPage](urp => Text("Repo " + urp.repoName)),
-      list => list match {
-        case login :: repo :: pullRequestId :: Nil => Full(PullRequestRepoPage(login, repo, pullRequestId))
-        case _ => Empty
-      },
-      urp => urp.userName :: urp.repoName :: urp.pullRequestId :: Nil) / * / * / "pull-request" / * >>
-      ValueTemplate(_.flatMap(rp => rp.repo).filter(r => r.canPull_?(UserDoc.currentUser))
-          .flatMap(r => Templates("repo" :: "pull-request" :: "one" :: Nil))
-          .openOr(Templates("404" :: Nil).openOr(NodeSeq.Empty)))
-
-    val signInPage = Menu.i("Sign In") / "user" / "m" / "signin" >> If(() => !UserDoc.loggedIn_?, () => RedirectResponse(UserDoc.currentUser.get.homePageUrl))
-
-    val loginPage = Menu.i("Log In") / "user" / "m" / "login"
-
-    val newUserPage = Menu.i("Registration") / "user" / "m" / "new"
-
-    val notifyPushPage = Menu.params[RepoPage]("notifyPushPage",
-      new LinkText[RepoPage](urp => Text("Repo " + urp.repoName)),
-      list => list match {
-        case login :: repo :: Nil => Full(RepoPage(login, repo))
-        case _ => Empty
-      },
-      urp => urp.userName :: urp.repoName :: Nil) / * / * / "notify" >>
-      ValueTemplate(rpBox =>
-        rpBox.flatMap(rp => rp.repo).filter(r => UserDoc.loggedIn_?)
-          .flatMap(r => Templates("notification" :: "push" :: Nil))
-          .openOr(Templates("404" :: Nil).openOr(NodeSeq.Empty))
-          
-      )
-
-    // Build SiteMap
-    val entries = List(
-      indexPage,
-      UserDoc.userRepos,
-      UserDoc.userAdmin,
-      signInPage,
-      loginPage,
-      newUserPage,
-      userRepoAdminPage,
-      sourceTreePage,
-      blobPage,
-      emptyRepoPage,
-      emptyCommitsPage,
-      allCommitsPage,
-      commitPage,
-      newPullRequestPage,
-      allPullRequestPage,
-      onePullRequestPage,
-      notifyPushPage)
-    
-    LiftRules.setSiteMap(SiteMap(entries: _*))
+    LiftRules.setSiteMap(SiteMap(Sitemap.entries: _*))
 
     LiftRules.dispatch.append(code.snippet.RawFileStreamingSnippet)
     LiftRules.dispatch.append(code.snippet.GitHttpSnippet)
@@ -355,7 +134,7 @@ class Boot extends Loggable {
     }
 
     // Use jQuery 1.4
-    LiftRules.jsArtifacts = net.liftweb.http.js.jquery.JQuery14Artifacts
+    //LiftRules.jsArtifacts = net.liftweb.http.js.jquery.JQuery14Artifacts
 
     // Force the request to be UTF-8
     LiftRules.early.append(_.setCharacterEncoding("UTF-8"))

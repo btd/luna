@@ -42,7 +42,7 @@ class PullRequestDoc private() extends MongoRecord[PullRequestDoc] with ObjectId
 
   object description extends StringField(this, 1000)
 
-  lazy val homePageUrl = destRepoId.obj.get.homePageUrl + "/pull-request/" + id.get
+  //lazy val homePageUrl = destRepoId.obj.get.homePageUrl + "/pull-request/" + id.get
 
   def srcRepo = srcRepoId.obj.get
 

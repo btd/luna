@@ -24,7 +24,8 @@ import Helpers._
 import xml._
 import Utility._
 import code.model._
-import code.snippet.SnippetHelper._
+import code.lib._
+import SnippetHelper._
 
 /**
  * User: denis.bardadym
@@ -109,9 +110,10 @@ class PullRequestOps(urp: WithRepo) extends Loggable {
           .srcRef(sourceRef)
           .destRef(destRef)
           .creatorId(u.id.get).description(description).save
-        S.redirectTo(sourceRepo.pullRequestsUrl)
+        S.redirectTo(Sitemap.pullRequests.calcHref(RepoPage(sourceRepo)))
     }
   }
+
 
   def renderPullRequests = w(urp.repo){repo =>
    if(repo.pullRequests.isEmpty) 
@@ -119,13 +121,13 @@ class PullRequestOps(urp: WithRepo) extends Loggable {
    else
     ".pull_request" #> repo.pullRequests.map(pr => {
        ".pull_request [class+]" #> (if(pr.accepted_?.get) "closed_pr" else "opened_pr" ) &
-        ".from" #> a(pr.srcRepoId.obj.get.sourceTreeUrl(pr.srcRef.get), 
+        ".from" #> a(Sitemap.treeAtCommit.calcHref(SourceElementPage(pr.srcRepoId.obj.get, pr.srcRef.get)), 
             Text(pr.srcRepoId.obj.get.owner.login.get + "/" + pr.srcRepoId.obj.get.name.get + "@" + pr.srcRef)) &
-        ".to" #> a(pr.destRepoId.obj.get.sourceTreeUrl(pr.srcRef.get), 
+        ".to" #> a(Sitemap.treeAtCommit.calcHref(SourceElementPage(pr.destRepoId.obj.get, pr.srcRef.get)), 
             Text(pr.destRepoId.obj.get.owner.login.get + "/" + pr.destRepoId.obj.get.name.get + "@" + pr.destRef)) &
-        ".whom" #> a(pr.creatorId.obj.get.homePageUrl, Text(pr.creatorId.obj.get.login.get)) &
-        ".when" #> SnippetHelper.dateFormatter.format(pr.creationDate.get) &
-        ".msg" #> a(pr.homePageUrl, Text(if(!pr.description.get.isEmpty) escape(pr.description.get) else "No description"))
+        ".whom" #> a(Sitemap.userRepos.calcHref(UserPage(pr.creatorId.obj.get)), Text(pr.creatorId.obj.get.login.get)) &
+        ".when" #> dateFormat(pr.creationDate.get) &
+        ".msg" #> a(Sitemap.pullRequest.calcHref(PullRequestRepoPage(pr)), Text(if(!pr.description.get.isEmpty) escape(pr.description.get) else "No description"))
     })
   }
 

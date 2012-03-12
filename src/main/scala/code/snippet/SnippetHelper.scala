@@ -26,6 +26,7 @@ import http.{S, SHtml}
 
 import util.Helpers._
 import code.model._
+import code.lib._
 import util._
 import java.text.SimpleDateFormat
 import org.eclipse.jgit.revwalk.RevCommit
@@ -49,7 +50,8 @@ object SnippetHelper {
     case _ => cleanAll
   }
 
-  def button(text: String, onSubmit: () => Any): CssSel = "button" #> SHtml.button(text, onSubmit, "class" -> "button")
+  def button(text: String, onSubmit: () => Any): CssSel = 
+    "button" #> SHtml.button(text, onSubmit, "class" -> "button")
 
 
   def suffix(list: List[String]) : String = suffix(list, "/", "")
@@ -69,18 +71,21 @@ object SnippetHelper {
 
   def makeFork(repo: RepositoryDoc, u: UserDoc)():JsCmd = {
     repo.git.clone(u)
-    S.redirectTo(u.homePageUrl)
+    S.redirectTo(Sitemap.userRepos.calcHref(UserPage(u)))
   }
 
   def toggleOpen(repo: RepositoryDoc)():JsCmd = {
     repo.open_?(!repo.open_?.get).save
-    S.redirectTo(repo.owner.homePageUrl)
+    S.redirectTo(Sitemap.userRepos.calcHref(UserPage(repo.owner)))
   }
   
   def a(href: String, value: NodeSeq) = <a href={href}>{value}</a>
 
-  val dateFormatter = new SimpleDateFormat("MMM dd, yyyy")
-  val timeFormatter = new SimpleDateFormat("HH:mm:ss")
+  private val dateFormatter = new SimpleDateFormat("MMM dd, yyyy")
+  private val timeFormatter = new SimpleDateFormat("HH:mm:ss")
+
+  def dateFormat(d: Date): String = dateFormatter.format(d)
+  def timeFormat(d: Date): String = timeFormatter.format(d)
 
   def eqDay(date1: Date, date2: Date) = {
     val c1 = Calendar.getInstance
@@ -113,17 +118,28 @@ object SnippetHelper {
     groupedList.toList
   }
 
+  import code.lib._
+  import bootstrap.liftweb._
+
   def renderSourceTreeLink(repo:RepositoryDoc, branch: Box[String]) = 
     ".repo_menu_link *" #> (S.attr("current") match {
       case Full(_) => Text("Sources")
-      case _ => a( branch.map(repo.sourceTreeUrl(_)).openOr(repo.sourceTreeUrl), Text("Sources"))
+      case _ => {
+        val href = branch.map(b => Sitemap.treeAtCommit.calcHref(SourceElementPage(repo.owner.login.get, repo.name.get , b, Nil)))
+          .openOr(Sitemap.defaultTree.calcHref(RepoPage(repo)))
+          a( href, Text("Sources"))
+        } 
     })
 
 
   def renderCommitsLink(repo:RepositoryDoc, branch: Box[String]) = 
     ".repo_menu_link *" #> (S.attr("current") match {
       case Full(_) => Text("Commits")
-      case _ => a( branch.map(repo.commitsUrl(_)).openOr(repo.commitsUrl), Text("Commits"))
+      case _ => {
+        val href = branch.map(b => Sitemap.historyAtCommit.calcHref(SourceElementPage(repo, b)))
+          .openOr(Sitemap.defaultCommits.calcHref(RepoPage(repo)))
+        a( href, Text("Commits"))
+      }
     })
 
 

@@ -20,9 +20,8 @@ import common.{Full, Loggable}
 import util.Helpers._
 import http._
 import code.model._
+import code.lib._
 import SnippetHelper._
-import com.foursquare.rogue.Rogue._
-
 
 
 class AuthOps extends Loggable with UserUI with SshKeyUI {
@@ -45,7 +44,7 @@ class AuthOps extends Loggable with UserUI with SshKeyUI {
               newUser.save
               newKey.save
               logger.debug(newUser)
-              UserDoc.logUserIn(newUser, ()=> S.redirectTo(newUser.homePageUrl))
+              UserDoc.logUserIn(newUser, ()=> S.redirectTo(Sitemap.userRepos.calcHref(UserPage(newUser))))
             }
             case l => l.foreach(fe => S.error(fe.msg))
           }

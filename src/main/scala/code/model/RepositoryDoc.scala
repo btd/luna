@@ -337,21 +337,17 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
   }
 
 
-  lazy val pullRequestsUrl = homePageUrl + "/pull-requests"
+  //lazy val pullRequestsUrl = homePageUrl + "/pull-requests"
 
-  lazy val homePageUrl = "/" + owner.login.get + "/" + name.get
+  //lazy val homePageUrl = "/" + owner.login.get + "/" + name.get
 
-  lazy val sourceTreeUrl = homePageUrl + "/tree" + (if(git.currentBranch == "") "" else ("/" + git.currentBranch))
+ // lazy val sourceTreeUrl = homePageUrl + "/tree" + (if(git.currentBranch == "") "" else ("/" + git.currentBranch))
 
-  lazy val commitsUrl = homePageUrl + "/commits/" + git.currentBranch
+  //lazy val commitsUrl = homePageUrl + "/commits/" + git.currentBranch
 
-  def commitsUrl(commit: String) = homePageUrl + "/commits/" + commit
+  //def commitsUrl(commit: String) = homePageUrl + "/commits/" + commit
 
-  def commitUrl(commit: String) = homePageUrl + "/commit/" + commit
-
-  def sourceTreeUrl(commit: String) = homePageUrl + "/tree/" + commit
-
-  def sourceBlobUrl(commit: String) = homePageUrl + "/blob/" + commit
+ // def commitUrl(commit: String) = homePageUrl + "/commit/" + commit
 
   def canPush_?(user: Box[UserDoc]) = {
     //logger.debug(user)

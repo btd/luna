@@ -25,6 +25,7 @@ import util._
 import xml._
 import js._
 import code.model._
+import code.lib._
 
 /**
  * User: denis.bardadym
@@ -46,7 +47,7 @@ class RepoOps(urp: WithRepo) extends Loggable {
     }
     ".repo_menu_link *" #> (S.attr("current") match {
       case Full(_) => text
-      case _ => a(repo.pullRequestsUrl, text)
+      case _ => a(Sitemap.pullRequests.calcHref(RepoPage(repo)), text)
     })
   }} 
 
@@ -81,30 +82,30 @@ class RepoOps(urp: WithRepo) extends Loggable {
         case _ => "public"
       }) &
       ".repo *" #> (
-          ".repo_name *" #> <span><a href={repo.owner.homePageUrl}>{repo.owner.login.get}</a>/{repo.name.get}</span> &
+          ".repo_name *" #> <span><a href={Sitemap.userRepos.calcHref(UserPage(repo.owner))}>{repo.owner.login.get}</a>/{repo.name.get}</span> &
           ".clone-url *" #> (repo.cloneUrlsForCurrentUser.map(url => "a" #> a(url._1, Text(url._2)))) &
         (UserDoc.currentUser match {
                 case Full(cu) if (cu.login.get == u.login.get) => {
                     
-                    ".admin_page *" #> a("/admin" + repo.homePageUrl, Text("admin")) & 
+                    ".admin_page *" #> a(Sitemap.repoAdmin.calcHref(RepoPage(repo)), Text("admin")) & 
                     ".fork *" #> SHtml.a(makeFork(repo, cu) _, Text("fork it")) &
-                    ".notification_page *" #> a(repo.homePageUrl + "/notify", Text("notify")) &
+                    ".notification_page *" #> a(Sitemap.notification.calcHref(RepoPage(repo)), Text("notify")) &
                     ".toggle_open *" #> SHtml.a(toggleOpen(repo) _, Text(if (repo.open_?.get) "make private" else "make public")) &
-                    (repo.forkOf.obj.map(fr => ".origin_link *" #> a(fr.sourceTreeUrl, Text("origin"))) openOr 
+                    (repo.forkOf.obj.map(fr => ".origin_link *" #> a(Sitemap.defaultTree.calcHref(RepoPage(fr)), Text("origin"))) openOr 
                           ".origin_link" #> NodeSeq.Empty)
                 }
                 case Full(cu) => {     
                     ".admin_page" #> NodeSeq.Empty & 
                     ".fork *" #> SHtml.a(makeFork(repo, cu) _, Text("fork it")) &
                     ".toggle_open" #> NodeSeq.Empty &
-                    ".notification_page *" #> a(repo.homePageUrl + "/notify", Text("notify")) &
-                    (repo.forkOf.obj.map(fr => ".origin_link *" #> a(fr.sourceTreeUrl, Text("origin"))) openOr 
+                    ".notification_page *" #> a(Sitemap.notification.calcHref(RepoPage(repo)), Text("notify")) &
+                    (repo.forkOf.obj.map(fr => ".origin_link *" #> a(Sitemap.defaultTree.calcHref(RepoPage(fr)), Text("origin"))) openOr 
                           ".origin_link" #> NodeSeq.Empty)
                   }
                 case _ => {
                     (repo.forkOf.obj match {
                           case Full(fr) => {
-                            ".origin_link *" #> a(fr.sourceTreeUrl, Text("origin")) &
+                            ".origin_link *" #> a(Sitemap.defaultTree.calcHref(RepoPage(fr)), Text("origin")) &
                             ".admin_page" #> NodeSeq.Empty & 
                             ".toggle_open" #> NodeSeq.Empty &
                             ".fork" #> NodeSeq.Empty &

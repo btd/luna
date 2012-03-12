@@ -21,6 +21,7 @@ import util.Helpers._
 import http._
 import common._
 import code.model._
+import code.lib._
 import SnippetHelper._
 import xml._
 
@@ -46,17 +47,17 @@ class UserOps(up: WithUser) extends Loggable with RepositoryUI {
     ".repo" #> NodeSeq.Empty
     else 
     ".repo" #> ((u.publicRepos ++ (if(u.is(UserDoc.currentUser)) u.privateRepos else Nil)).map(repo => {
-     
+      val rp = RepoPage(repo)
       ".repo [class+]" #> (if(repo.open_?.get) "public" else "private" ) &
-        ".repo_name *" #> a(repo.sourceTreeUrl, Text(repo.name.get)) &
-        ".clone-url" #> (repo.cloneUrlsForCurrentUser.map(url => "a" #> a(url._1, Text(url._2)))) &
+      ".repo_name *" #> a(Sitemap.defaultTree.calcHref(rp), Text(repo.name.get)) &
+      ".clone-url" #> (repo.cloneUrlsForCurrentUser.map(url => "a" #> a(url._1, Text(url._2)))) &
         (UserDoc.currentUser match {
           case Full(cu) if (cu.login.get == u.login.get) => {
-              ".admin_page *" #> a("/admin" + repo.homePageUrl, Text("admin")) & 
+              ".admin_page *" #> a(Sitemap.repoAdmin.calcHref(rp), Text("admin")) & 
               ".fork *" #> SHtml.a(makeFork(repo, cu) _, Text("fork it")) & //later will be added js append
-              ".notification_page *" #> a(repo.homePageUrl + "/notify", Text("notify")) &
+              ".notification_page *" #> a(Sitemap.notification.calcHref(RepoPage(repo)), Text("notify")) &
               ".toggle_open *" #> SHtml.a(toggleOpen(repo) _, Text(if (repo.open_?.get) "make private" else "make public")) &
-              (repo.forkOf.obj.map(fr => ".origin_link *" #> a(fr.sourceTreeUrl, Text("origin"))) openOr 
+              (repo.forkOf.obj.map(fr => ".origin_link *" #> a(Sitemap.defaultTree.calcHref(RepoPage(fr)), Text("origin"))) openOr 
                   ".origin_link" #> NodeSeq.Empty)
 
           }
@@ -64,14 +65,14 @@ class UserOps(up: WithUser) extends Loggable with RepositoryUI {
               ".admin_page" #> NodeSeq.Empty & 
               ".fork *" #> SHtml.a(makeFork(repo, cu) _, Text("fork it")) &
               ".toggle_open" #> NodeSeq.Empty &
-              ".notification_page *" #> a(repo.homePageUrl + "/notify", Text("notify")) &
-              (repo.forkOf.obj.map(fr => ".origin_link *" #> a(fr.sourceTreeUrl, Text("origin"))) openOr 
+              ".notification_page *" #> a(Sitemap.notification.calcHref(RepoPage(repo)), Text("notify")) &
+              (repo.forkOf.obj.map(fr => ".origin_link *" #> a(Sitemap.defaultTree.calcHref(RepoPage(fr)), Text("origin"))) openOr 
                   ".origin_link" #> NodeSeq.Empty)
             }
           case _ => {
               (repo.forkOf.obj match {
                   case Full(fr) => {
-                    ".origin_link *" #> a(fr.sourceTreeUrl, Text("origin")) &
+                    ".origin_link *" #> a(Sitemap.defaultTree.calcHref(RepoPage(fr)), Text("origin")) &
                     ".admin_page" #> NodeSeq.Empty & 
                     ".toggle_open" #> NodeSeq.Empty &
                     ".notification_page" #> NodeSeq.Empty &
@@ -85,12 +86,12 @@ class UserOps(up: WithUser) extends Loggable with RepositoryUI {
     }) ++
     (if(u.is(UserDoc.currentUser)) u.collaboratedRepos else Nil).map(repo => {
       ".repo [class+]" #> "collaborated" &
-      ".repo_name *" #> a(repo.sourceTreeUrl, Text(repo.name.get)) &
+      ".repo_name *" #> a(Sitemap.defaultTree.calcHref(RepoPage(repo)), Text(repo.name.get)) &
       ".clone-url" #> (repo.cloneUrlsForCurrentUser.map(url => "a" #> a(url._1, Text(url._2)))) &
       ".admin_page" #> NodeSeq.Empty & 
       ".fork *" #> SHtml.a(makeFork(repo, UserDoc.currentUser.get) _, Text("fork it")) &
       ".toggle_open" #> NodeSeq.Empty &
-      (repo.forkOf.obj.map(fr => ".origin_link *" #> a(fr.sourceTreeUrl, Text("origin"))) openOr 
+      (repo.forkOf.obj.map(fr => ".origin_link *" #> a(Sitemap.defaultTree.calcHref(RepoPage(fr)), Text("origin"))) openOr 
                   ".origin_link" #> NodeSeq.Empty)       
     }) 
     )  

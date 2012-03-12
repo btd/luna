@@ -28,6 +28,7 @@ import js.JsCmds._
 import util._
 import xml._
 import SnippetHelper._
+import code.lib._
 
 /**
  * User: denis.bardadym
@@ -40,7 +41,7 @@ class AdminUserOps(up: WithUser) extends Loggable with SshKeyUI with UserUI {
   
 
   def renderUserForm = w(up.user) { user =>
-    userForm(user, "Update", updateUser(user, u => S.redirectTo(UserDoc.userAdmin.calcHref(up))))
+    userForm(user, "Update", updateUser(user, u => S.redirectTo(Sitemap.userAdmin.calcHref(up))))
   }
   
   def renderSshKeysTable = w(up.user) {user =>
