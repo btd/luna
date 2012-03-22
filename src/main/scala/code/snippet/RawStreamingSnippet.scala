@@ -36,26 +36,25 @@ object RawFileStreamingSnippet extends Loggable with RestHelper {
              _, // suffix
              GetRequest) =>
       {
-      	(UserDoc where (_.login eqs user) get).flatMap(u => tryo {u.repos.filter(_.name.get == repo).head}) match {
-      		case Some(r) if(r.canPush_?(UserDoc.currentUser) || r.open_?.get) => {
-
-      			
-
-      			val reversedPath = path.reverse
-				
-				(tryo { r.git.ls_tree(reversedPath.tail.reverse, ref).filter(_.basename == reversedPath.head).head } or {Empty}) match {
-					
-					case Full(b @ Blob(_, size)) => {
-						r.git.withSourceElementStream(path, ref) { in => 
-							StreamingResponse(in, () => {in.close()}, size, List("Content-Type" -> (if (b.image_?) "image/" + b.extname else if(b.binary_?) "application/octet-stream" else "text/plain"),
-						        "Content-Disposition" -> ("attachment; filename=" + b.basename)), Nil, 200)
-						    }
-					}
-						
-					
-					case _ => InMemoryResponse("".getBytes, List("Content-Type" -> "text/plain"), Nil, 404)
-				}
-      		}
+      	RepositoryDoc.byUserLoginAndRepoName(user, repo) match {
+      		case Some(r) if r.canPull_?(UserDoc.currentUser) => {
+			
+   				SourceElement.find(r, ref, path) match {
+   					
+   					case Full(b @ Blob(_, _, _, size)) => 
+                     //ugly way, but now ok
+   						r.git.withSourceElementStream(path, ref) { in => 
+   							StreamingResponse(in, 
+                           () => {in.close()}, 
+                           size, 
+                           List("Content-Type" -> (if (b.image_?) "image/" + b.extname else if(b.binary_?) "application/octet-stream" else "text/plain"),
+   						        "Content-Disposition" -> ("attachment; filename=" + b.name)), Nil, 200)
+   						}
+   					
+						case _ => InMemoryResponse("".getBytes, List("Content-Type" -> "text/plain"), Nil, 404)
+			      }
+            }
+      		
       		case _ => InMemoryResponse("".getBytes, List("Content-Type" -> "text/plain"), Nil, 404)
       	}
       

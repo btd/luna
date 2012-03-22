@@ -22,6 +22,7 @@ import http._
 import common._
 import code.model._
 import code.lib._
+import code.lib.Sitemap._
 import SnippetHelper._
 import xml._
 
@@ -33,67 +34,65 @@ import com.foursquare.rogue.Rogue._
  * Time: 2:16 PM
  */
 
-class UserOps(up: WithUser) extends Loggable with RepositoryUI {
+class UserOps(user: UserDoc) extends Loggable with RepositoryUI {
 
-  def renderNewRepositoryForm = w(up.user) {u => w(UserDoc.currentUser){cu => {
-    val repo = RepositoryDoc.createRecord.ownerId(u.id.get)
-    if(u.login.get == cu.login.get) repositoryForm(repo, "Add", saveRepo(repo))
-    else cleanAll
-  }}}
+  def renderNewRepositoryForm: NodeSeq => NodeSeq = 
+    (for { 
+           currentUser <- UserDoc.currentUser
+           repo = RepositoryDoc.createRecord.ownerId(user.id.get)
+           if(user.login.get == currentUser.login.get)
+         } yield {   
+           repositoryForm(repo, "Add", saveRepo(repo)) 
+         }) openOr cleanAll
 
-  def renderRepositoryList = w(up.user) {u => 
-    
-    if(u.repos.isEmpty)
-    ".repo" #> NodeSeq.Empty
+  def renderRepositoryList = {
+    val repos = user.publicRepos ++ 
+      (if(user.is(UserDoc.currentUser)) user.privateRepos ++ user.collaboratedRepos else Nil)
+
+    if(repos.isEmpty)
+      ".repo" #> NodeSeq.Empty
     else 
-    ".repo" #> ((u.publicRepos ++ (if(u.is(UserDoc.currentUser)) u.privateRepos else Nil)).map(repo => {
-      val rp = RepoPage(repo)
-      ".repo [class+]" #> (if(repo.open_?.get) "public" else "private" ) &
-      ".repo_name *" #> a(Sitemap.defaultTree.calcHref(rp), Text(repo.name.get)) &
-      ".clone-url" #> (repo.cloneUrlsForCurrentUser.map(url => "a" #> a(url._1, Text(url._2)))) &
-        (UserDoc.currentUser match {
-          case Full(cu) if (cu.login.get == u.login.get) => {
-              ".admin_page *" #> a(Sitemap.repoAdmin.calcHref(rp), Text("admin")) & 
-              ".fork *" #> SHtml.a(makeFork(repo, cu) _, Text("fork it")) & //later will be added js append
-              ".notification_page *" #> a(Sitemap.notification.calcHref(RepoPage(repo)), Text("notify")) &
-              ".toggle_open *" #> SHtml.a(toggleOpen(repo) _, Text(if (repo.open_?.get) "make private" else "make public")) &
-              (repo.forkOf.obj.map(fr => ".origin_link *" #> a(Sitemap.defaultTree.calcHref(RepoPage(fr)), Text("origin"))) openOr 
-                  ".origin_link" #> NodeSeq.Empty)
+      ".repo" #> repos.map(repo => {
 
-          }
-          case Full(cu) => {        
-              ".admin_page" #> NodeSeq.Empty & 
-              ".fork *" #> SHtml.a(makeFork(repo, cu) _, Text("fork it")) &
-              ".toggle_open" #> NodeSeq.Empty &
-              ".notification_page *" #> a(Sitemap.notification.calcHref(RepoPage(repo)), Text("notify")) &
-              (repo.forkOf.obj.map(fr => ".origin_link *" #> a(Sitemap.defaultTree.calcHref(RepoPage(fr)), Text("origin"))) openOr 
-                  ".origin_link" #> NodeSeq.Empty)
-            }
-          case _ => {
-              (repo.forkOf.obj match {
-                  case Full(fr) => {
-                    ".origin_link *" #> a(Sitemap.defaultTree.calcHref(RepoPage(fr)), Text("origin")) &
-                    ".admin_page" #> NodeSeq.Empty & 
-                    ".toggle_open" #> NodeSeq.Empty &
-                    ".notification_page" #> NodeSeq.Empty &
-                    ".fork" #> NodeSeq.Empty
-                  }
-                  case _ =>  ".admin" #> NodeSeq.Empty 
-                })
-             
-        }
-      }) 
-    }) ++
-    (if(u.is(UserDoc.currentUser)) u.collaboratedRepos else Nil).map(repo => {
-      ".repo [class+]" #> "collaborated" &
-      ".repo_name *" #> a(Sitemap.defaultTree.calcHref(RepoPage(repo)), Text(repo.name.get)) &
-      ".clone-url" #> (repo.cloneUrlsForCurrentUser.map(url => "a" #> a(url._1, Text(url._2)))) &
-      ".admin_page" #> NodeSeq.Empty & 
-      ".fork *" #> SHtml.a(makeFork(repo, UserDoc.currentUser.get) _, Text("fork it")) &
-      ".toggle_open" #> NodeSeq.Empty &
-      (repo.forkOf.obj.map(fr => ".origin_link *" #> a(Sitemap.defaultTree.calcHref(RepoPage(fr)), Text("origin"))) openOr 
-                  ".origin_link" #> NodeSeq.Empty)       
-    }) 
-    )  
+        ".repo [class+]" #> (if(repo.ownerId.get == user.id.get) 
+                                  if(repo.open_?.get) "public" else "private"
+                              else "collaborated") &
+        ".repo_name *" #> a(defaultTree.calcHref(repo), 
+                                if(repo.ownerId.get == user.id.get) Text(repo.name.get)
+                                else Text(repo.owner.login.get + "/" + repo.name.get)) &
+        ".clone-url" #> (repo.cloneUrlsForCurrentUser.map(url => "a" #> a(url._1, Text(url._2)))) &
+        (UserDoc.currentUser match {
+          case Full(currentUser) if(user.id.get == currentUser.id.get) => 
+            ".fork *" #> SHtml.a(makeFork(repo, currentUser) _, Text("fork it")) &
+            ".notification_page *" #> a(notification.calcHref(repo), Text("notify")) &
+            (if(repo.ownerId.get == user.id.get) 
+              ".toggle_open *" #> SHtml.a(toggleOpen(repo) _, Text(if (repo.open_?.get) "make private" else "make public"))
+            else ".toggle_open" #> NodeSeq.Empty) &
+            ".admin_page *" #> a(repoAdmin.calcHref(repo), Text("admin")) &
+            repo.forkOf.obj.map(fr => 
+                  ".origin_link *" #> a(defaultTree.calcHref(fr), Text("origin")))
+                  .openOr(".origin_link" #> NodeSeq.Empty) 
+          
+          case Full(currentUser) =>
+            ".fork *" #> SHtml.a(makeFork(repo, currentUser) _, Text("fork it")) &
+            ".notification_page *" #> a(notification.calcHref(repo), Text("notify")) &
+            ".toggle_open" #> NodeSeq.Empty &
+            ".admin_page" #> NodeSeq.Empty &
+            repo.forkOf.obj.map(fr => 
+                  ".origin_link *" #> a(defaultTree.calcHref(fr), Text("origin")))
+                  .openOr(".origin_link" #> NodeSeq.Empty)
+          
+          case _ => repo.forkOf.obj.map(fr => 
+                  ".origin_link *" #> a(defaultTree.calcHref(fr), Text("origin")) &
+                  ".toggle_open" #> NodeSeq.Empty &
+                  ".admin_page" #> NodeSeq.Empty &
+                  ".notification_page" #> NodeSeq.Empty &
+                  ".fork" #> NodeSeq.Empty)
+                  .openOr(".admin" #> NodeSeq.Empty)             
+        })
+        
+      }
+    )
+    
   }
 }

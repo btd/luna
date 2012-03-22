@@ -25,7 +25,8 @@ import util._
 import xml._
 import js._
 import code.model._
-import code.lib._
+import notification.client._
+import code.lib.Sitemap._
 
 /**
  * User: denis.bardadym
@@ -33,33 +34,24 @@ import code.lib._
  * Time: 2:14 PM
  */
 
-class RepoOps(urp: WithRepo) extends Loggable {
+class RepoOps(repo: RepositoryDoc) extends Loggable {
 
-  def renderSourceTreeDefaultLink = w(urp.repo)(renderSourceTreeLink(_, None))
+  def renderSourceTreeDefaultLink = renderSourceTreeLink(repo, None)
 
-  def renderCommitsDefaultLink = w(urp.repo)(renderCommitsLink(_, None))
+  def renderCommitsDefaultLink = renderCommitsLink(repo, None)
 
-  def renderPullRequestsLink = w(urp.repo){repo => {
-    val pullRequestCount = repo.pullRequests.filter(!_.accepted_?.get).size
-    def text = {
-      if(pullRequestCount == 0) Text("Pull requests")
-      else Text("Pull requests (%d)" format pullRequestCount)
-    }
-    ".repo_menu_link *" #> (S.attr("current") match {
-      case Full(_) => text
-      case _ => a(Sitemap.pullRequests.calcHref(RepoPage(repo)), text)
-    })
-  }} 
+  def renderPullRequestsDefaultLink: NodeSeq => NodeSeq = 
+    renderPullRequestsLink(repo)
 
-  def notifyEmailForm = w(UserDoc.currentUser){ u => w(urp.repo) { r =>
-    import notification.client._
+  def notifyEmailForm = w(UserDoc.currentUser){ u => 
+    
     import com.foursquare.rogue.Rogue._
 
-    val settings = (NotifySubscriptionDoc where (_.who eqs u.id.get) and (_.repo eqs r.id.get) and (_.onWhat eqs NotifyEvents.Push) get) 
-        .getOrElse(NotifySubscriptionDoc.createRecord.who(u.id.get).repo(r.id.get).onWhat(NotifyEvents.Push))
+    val settings = (NotifySubscriptionDoc where (_.who eqs u.id.get) and (_.repo eqs repo.id.get) and (_.onWhat eqs NotifyEvents.Push) get) 
+        .getOrElse(NotifySubscriptionDoc.createRecord.who(u.id.get).repo(repo.id.get).onWhat(NotifyEvents.Push))
     emailForm(settings.output.get.email.get, u) &
     "button" #> SHtml.button("Update settings", saveNotifySettings(settings) _)
-  }}
+  }
 
   private def saveNotifySettings(s : NotifySubscriptionDoc)() {
     s.save
@@ -75,47 +67,7 @@ class RepoOps(urp: WithRepo) extends Loggable {
     "name=activated" #> SHtml.checkbox(emailOutput.activated.get, v => emailOutput.activated(v))
   }
 
-  def renderRepositoryBlock = w(urp.user){u =>  w(urp.repo){repo => 
-      ".repo [class+]" #> (UserDoc.currentUser match {
-        case Full(cu) if(!repo.owner_?(Full(cu)) && repo.canPush_?(Full(cu))) => "collaborated"
-        case Full(cu) if(repo.owner_?(Full(cu)))=> if(repo.open_?.get) "public" else "private"
-        case _ => "public"
-      }) &
-      ".repo *" #> (
-          ".repo_name *" #> <span><a href={Sitemap.userRepos.calcHref(UserPage(repo.owner))}>{repo.owner.login.get}</a>/{repo.name.get}</span> &
-          ".clone-url *" #> (repo.cloneUrlsForCurrentUser.map(url => "a" #> a(url._1, Text(url._2)))) &
-        (UserDoc.currentUser match {
-                case Full(cu) if (cu.login.get == u.login.get) => {
-                    
-                    ".admin_page *" #> a(Sitemap.repoAdmin.calcHref(RepoPage(repo)), Text("admin")) & 
-                    ".fork *" #> SHtml.a(makeFork(repo, cu) _, Text("fork it")) &
-                    ".notification_page *" #> a(Sitemap.notification.calcHref(RepoPage(repo)), Text("notify")) &
-                    ".toggle_open *" #> SHtml.a(toggleOpen(repo) _, Text(if (repo.open_?.get) "make private" else "make public")) &
-                    (repo.forkOf.obj.map(fr => ".origin_link *" #> a(Sitemap.defaultTree.calcHref(RepoPage(fr)), Text("origin"))) openOr 
-                          ".origin_link" #> NodeSeq.Empty)
-                }
-                case Full(cu) => {     
-                    ".admin_page" #> NodeSeq.Empty & 
-                    ".fork *" #> SHtml.a(makeFork(repo, cu) _, Text("fork it")) &
-                    ".toggle_open" #> NodeSeq.Empty &
-                    ".notification_page *" #> a(Sitemap.notification.calcHref(RepoPage(repo)), Text("notify")) &
-                    (repo.forkOf.obj.map(fr => ".origin_link *" #> a(Sitemap.defaultTree.calcHref(RepoPage(fr)), Text("origin"))) openOr 
-                          ".origin_link" #> NodeSeq.Empty)
-                  }
-                case _ => {
-                    (repo.forkOf.obj match {
-                          case Full(fr) => {
-                            ".origin_link *" #> a(Sitemap.defaultTree.calcHref(RepoPage(fr)), Text("origin")) &
-                            ".admin_page" #> NodeSeq.Empty & 
-                            ".toggle_open" #> NodeSeq.Empty &
-                            ".fork" #> NodeSeq.Empty &
-                            ".notification_page" #> NodeSeq.Empty
-                          }
-                          case _ =>  ".admin" #> NodeSeq.Empty 
-                        })
-                }
-            }))
-  }} 
+  def renderRepositoryBlockDefault = renderRepositoryBlock(repo)
 
   
 

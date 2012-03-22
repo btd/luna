@@ -17,53 +17,39 @@ package code.model
 
 import net.liftweb._
 import mongodb.record.{MongoMetaRecord, MongoRecord}
+import mongodb.record.field.{ObjectIdRefField, ObjectIdPk}
 import record.field._
 import util._
-import org.eclipse.jgit.lib.RepositoryCache.FileKey
-import org.eclipse.jgit.util.FS
 
-import net.liftweb.http.S
+import http.S
+
+import net.liftweb.common._
+import net.liftweb.util.Helpers._
+
+import collection.immutable.Nil
+import collection.mutable.{ListBuffer, ArrayBuffer}
+import annotation.tailrec
+
+import java.io._
+
 import org.apache.commons.codec.digest.DigestUtils
-import net.liftweb.mongodb.record.field.{ObjectIdRefField, ObjectIdPk}
+
 import org.eclipse.jgit.revwalk.RevWalk
 import org.eclipse.jgit.treewalk.TreeWalk
 import org.eclipse.jgit.treewalk.filter.PathFilter
-
-import org.eclipse.jgit.lib.{Constants, ObjectId, FileMode, RepositoryCache}
-import net.liftweb.common._
-import net.liftweb.util.Helpers._
-import org.eclipse.jgit.api.Git
-import collection.immutable.Nil
-import org.eclipse.jgit.diff.DiffFormatter
-import java.io._
-import collection.mutable.{ListBuffer, ArrayBuffer}
 import org.eclipse.jgit.transport.{URIish, UploadPack, ReceivePack}
-
+import org.eclipse.jgit.lib.{Constants, ObjectId, FileMode, RepositoryCache}
+import org.eclipse.jgit.lib.RepositoryCache.FileKey
+import org.eclipse.jgit.util.FS
+import org.eclipse.jgit.api.Git
+import org.eclipse.jgit.diff.DiffFormatter
 
 import com.foursquare.rogue.Rogue._
 
 import org.lunatool.linguist._
 import Helper._
 
-/**
- * User: denis.bardadym
- * Date: 9/30/11
- * Time: 3:05 PM
- */
 
-abstract class SourceElement {
-  def path: String
-
-  def basename = path.substring(path.lastIndexOf("/") + 1)
-}
-
-abstract case class Blob(path: String, size: Long) extends SourceElement with BlobHelper with FileBlob {
-  def basePath = None
- 
-  def name = path
-}
-
-case class Tree(path: String) extends SourceElement
 
 class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk[RepositoryDoc] with Loggable {
 
@@ -136,12 +122,14 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
 
       val list = new ArrayBuffer[SourceElement](50)
       while (walk.next) {
-        val fullPath = guessString(Some(walk.getRawPath)) getOrElse ""
+        val fullPath = (guessString(Some(walk.getRawPath)) getOrElse "").split("/").toList
 
         list +=
-          (if (walk.getFileMode(level) == FileMode.TREE) Tree(fullPath)
-          else new Blob(fullPath, reader.getObjectSize(walk.getObjectId(level), Constants.OBJ_BLOB)) {
-            lazy val data = ls_cat(fullPath.split("/").toList, commit)
+          (if (walk.getFileMode(level) == FileMode.TREE) 
+            Tree(RepositoryDoc.this, commit, fullPath)
+          else {
+            val size = reader.getObjectSize(walk.getObjectId(level), Constants.OBJ_BLOB)
+            Blob(RepositoryDoc.this, commit, fullPath, size)
           })
       }
 
@@ -152,14 +140,13 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
       list.toList
     }
 
+    @tailrec
     private def subTree(tw: TreeWalk, prefix: List[String], suffix: List[String]): TreeWalk = {
-      logger.debug("Try to load source " + suffix + " tw -> " + tw.getFileMode(0).getObjectType)
+     
       suffix match {
         case subDir :: other => {
           tw.setFilter(PathFilter.create((prefix ::: List[String](subDir)).mkString("/")))
-          logger.debug("Filter: " + (prefix ::: List[String](subDir)).mkString("/"))
           tw.next
-          logger.debug("Now at " + tw.getFileMode(0).getObjectType)
           if (tw.getFileMode(0).getObjectType == Constants.OBJ_TREE) tw.enterSubtree
           subTree(tw, prefix ::: List[String](subDir), other)
         }
@@ -169,7 +156,6 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
     }
 
     def withSourceElementStream[T](path: List[String], commit: String)(f: (InputStream) => T): Option[T]  = {
-      logger.debug("ls_cat" + path)
       val reader = fs_repo.newObjectReader
       val rev = new RevWalk(reader)
 
@@ -183,10 +169,7 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
 
       var result: Option[T] = None
 
-      logger.debug("tw -> " + walk.getFileMode(level).getObjectType)
-
       if (walk.getFileMode(level).getObjectType == Constants.OBJ_BLOB) {
-        logger.debug("Source founded. Try to load")
         val blobLoader = reader.open(walk.getObjectId(level), Constants.OBJ_BLOB)
 
         val in = blobLoader.openStream
@@ -258,10 +241,10 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
 
     def fs_repo_! = fs_repo
 
-    def log(commit: String, path: String = "") = {
-      logger.debug("Try to access " + path)
+    def log(commit: String, path: List[String] = Nil) = {
+
       val g = (new Git(fs_repo)).log.add(fs_repo.resolve(commit))
-      if(!path.isEmpty) g.addPath(path)
+      if(!path.isEmpty) g.addPath(path.mkString("/"))
       scala.collection.JavaConversions.asScalaIterator(g.call.iterator)
     }
 

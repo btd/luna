@@ -454,6 +454,9 @@ input, textarea, button {
     margin: 0;
     padding: 0 15px 0 0;
 }
+.repo > .sub.admin:empty {
+    display: none;
+}
 
 .repo.public > .sub.admin {
     border-color: #C3D69B;

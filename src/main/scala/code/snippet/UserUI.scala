@@ -70,7 +70,7 @@ trait UserUI extends Loggable{
       UserDoc.logUserIn(u, () => {
         import code.lib._
         //logger.debug(S.referer)
-        S.redirectTo(whence openOr Sitemap.userRepos.calcHref(UserPage(u)))
+        S.redirectTo(whence openOr Sitemap.userRepos.calcHref(u))
       })
     }
 

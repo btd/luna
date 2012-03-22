@@ -1,11 +1,10 @@
 package code.lib
 
-import net.liftweb._
-import sitemap._
+import net.liftweb.sitemap._
+import net.liftweb.common._
+import net.liftweb.http._
+import net.liftweb.util.Helpers._
 import Loc._
-import common._
-import http._
-import util.Helpers._
 
 import xml.{Text, NodeSeq}
 
@@ -43,17 +42,6 @@ trait WithPullRequest {
   lazy val pullRequest = PullRequestDoc.find(pullRequestId)
 }
 
-trait WithCommit extends WithRepo {
-  def commit: String
-}
-
-case class RepoPage(userName: String, repoName: String) extends WithRepo
-
-object RepoPage {
-  def apply(r: RepositoryDoc): RepoPage = RepoPage(r.owner.login.get, r.name.get)
-}
-
-case class RepoAtCommitPage(userName: String, repoName: String, commit: String) extends WithCommit
 
 case class PullRequestRepoPage(userName: String, repoName: String, pullRequestId: String)  extends WithPullRequest with WithRepo
 
@@ -64,162 +52,155 @@ object PullRequestRepoPage {
   }
 }
 
-case class SourceElementPage(userName: String, repoName: String, commit: String, path: List[String]) extends WithCommit {
-  
-  private lazy val reversedPath = path.reverse
-
-  lazy val elem = repo.flatMap(r => 
-    tryo { 
-      path match {
-        case Nil => r.git.ls_tree(Nil, commit)
-        case _ => r.git.ls_tree(reversedPath.tail.reverse, commit).filter(_.basename == reversedPath.head).head 
-      }
-    })
-}
-
-object SourceElementPage {
-  def apply(r: RepositoryDoc, commit: String): SourceElementPage = 
-      SourceElementPage(r.owner.login.get, r.name.get, commit, Nil)
-  
-}
 
 
+object Sitemap extends Loggable {
+  import code.snippet.SnippetHelper._
+  import Menu._
 
-object Sitemap {
-	val userRepos = Menu.param[WithUser]("userRepos",
-	    new Loc.LinkText[WithUser](up => xml.Text("User " + up.userName)),
-	    login => Full(UserPage(login)),
-	    up => up.userName) / "list" / * >>
-	    ValueTemplateBox(for(up <- _; u <- up.user; tpl <- Templates("list" :: Nil)) yield tpl)
 
-	  val userAdmin = Menu.param[WithUser]("userAdmin",
-	    new Loc.LinkText[WithUser](up => xml.Text("User " + up.userName)),
-	    login => Full(UserPage(login)),
-	    up => up.userName) / "admin" / *  >>
-	    ValueTemplateBox(for(up <- _; u <- up.user; if u.is(UserDoc.currentUser); tpl <- Templates("admin" :: "adminUser" :: Nil)) yield tpl)
+  /* ugly hack while Lift community ignore bug */
+  implicit def toLoc[T](able: ParamsMenuable[T]): Loc[T] = {
+    new Loc[T] with ParamExtractor[List[String], T] {
+      def name = able.name    
+      def headMatch: Boolean = able.headMatch
+      def defaultValue = Empty
+      def params = able.params
+      def text = able.linkText
+      val link = new ProxyLink(new ParamLocLink[T](able.path, able.headMatch, able.encoder))
+      def locPath: List[LocPath] = able.path
+      def parser = able.parser
+      def listToFrom(in: List[String]): Box[List[String]] = Full(in)
+      val pathLen = able.path.length
+    }
+    
+  }
 
-    val repoAdmin = Menu.params[WithRepo]("userRepoAdminPage",
-      new LinkText[WithRepo](urp => Text("Repo " + urp.repoName)),
-      list => list match {
-        case login :: repo :: Nil => Full(RepoPage(login, repo))
+  //default LinkText's
+  private val repoLinkText = new LinkText[RepositoryDoc](urp => Text("Repo " + urp.name.get))
+  private val seLinkText = new LinkText[SourceElement](urp => Text("Source " + urp.pathLst.mkString("/")))
+
+  private def parser(lst: List[String]): Box[RepositoryDoc] =
+      lst match {
+        case login :: repo :: Nil => RepositoryDoc.byUserLoginAndRepoName(login, repo)
         case _ => Empty
-      },
-      urp => urp.userName :: urp.repoName :: Nil) / "admin" / * / * >>
-    ValueTemplateBox(for(rp <- _; u <- rp.user; r <- rp.repo if u.is(UserDoc.currentUser); tpl <- Templates("admin" :: "adminRepo" :: Nil)) yield tpl)
+      }
+  private def encoder(r: RepositoryDoc): List[String] = r.owner.login.get :: r.name.get :: Nil
 
-    val blobAtCommit = Menu.params[SourceElementPage]("blobAtCommit",
-      new LinkText[SourceElementPage](stp => Text("Repo " + stp.repoName)),
-      list => list match {
-          case login :: repo :: commit :: path => Full(SourceElementPage(login, repo, commit, path))
-          case _ => Empty
-      },
-      stp => stp.userName :: stp.repoName :: stp.commit :: stp.path) / * / * / "blob" / * / **  >>
+  private def parserSE(lst: List[String]): Box[SourceElement] = {
+    lst match {
+      case userName :: repoName :: commit :: path => {
+        RepositoryDoc.byUserLoginAndRepoName(userName, repoName).flatMap(
+          SourceElement.find(_, commit, path)
+        )
+      }
+      case _ => Empty
+    }
+     
+  }
+
+  private def encoderSE(se: SourceElement): List[String] = 
+      se.repo.owner.login.get :: 
+      se.repo.name.get :: 
+      se.commit ::
+      se.pathLst
+
+
+	  val userAdmin = Menu.param[UserDoc]("userAdmin",
+	    new Loc.LinkText[UserDoc](up => xml.Text("User " + up.login.get)),
+	    UserDoc.byName _,
+	    _.login.get) / "admin" / *  >>
+	    ValueTemplateBox(for(u <- _; if u.is(UserDoc.currentUser); tpl <- Templates("admin" :: "adminUser" :: Nil)) yield tpl)
+
+    val repoAdmin = Menu.params[RepositoryDoc]("userRepoAdminPage",
+      repoLinkText,
+      parser _,
+      encoder _) / "admin" / * / * >>
+    ValueTemplateBox(for(r <- _; u = r.owner if u.is(UserDoc.currentUser); tpl <- Templates("admin" :: "adminRepo" :: Nil)) yield tpl)
+
+    val userRepos = UserMenu()//Fuck >=(
+
+    val blobAtCommit = Menu.params[SourceElement]("blobAtCommit",
+      seLinkText,
+      parserSE _,
+      encoderSE _) / * / * / "blob" / * / **  >>
       ValueTemplateBox(
         for {
-          rp <- _
-          repo <- rp.repo
-          if repo.canPull_?(UserDoc.currentUser)
-          elem <- rp.elem
+          se <- _
+          if se.repo.canPull_?(UserDoc.currentUser)
           tpl <- Templates("repo" :: "blob" :: Nil)
         } yield tpl)
 
-    val treeAtCommit = Menu.params[SourceElementPage]("treeAtCommit",
-      new LinkText[SourceElementPage](stp => Text("Repo " + stp.repoName)),
-      list => list match {
-          case login :: repo :: commit :: path => Full(SourceElementPage(login, repo, commit, path))
-          case _ => Empty
-      },
-      stp => stp.userName :: stp.repoName :: stp.commit :: stp.path) / * / * / "tree" / * / ** >>
+    val treeAtCommit = Menu.params[SourceElement]("treeAtCommit",
+      seLinkText,
+      parserSE _,
+      encoderSE _) / * / * / "tree" / * / ** >>
       ValueTemplateBox(
         for {
-          rp <- _
-          repo <- rp.repo
-          if repo.canPull_?(UserDoc.currentUser)
-          elem <- rp.elem
+          se <- _
+          if se.repo.canPull_?(UserDoc.currentUser)
           tpl <- Templates("repo" :: "tree" :: Nil)
-        } yield tpl)				      
+        } yield tpl)				   
 
-    val defaultTree = Menu.params[WithRepo]("defaultTree",
-      new LinkText[WithRepo](stp => Text("Repo " + stp.repoName)),
-      list => list match {
-          case login :: repo :: Nil => Full(RepoPage(login, repo))
-          case _ => Empty
-      },
-      stp => stp.userName :: stp.repoName :: Nil) / * / * / "tree" >>
+    val defaultTree = Menu.params[RepositoryDoc]("defaultTree",
+      repoLinkText,
+      parser _,
+      encoder _) / * / * / "tree" >>
       ValueTemplateBox(
         for {
-          rp <- _
-          r <- rp.repo
+          r <- _
           if r.canPull_?(UserDoc.currentUser)
           tpl <- Templates("repo" :: "default" :: Nil)} yield tpl) >>
       TestValueAccess(
         for { 
-          rp <- _
-          r <- rp.repo
+          r <- _
           if r.git.inited_?
-        } yield RedirectResponse(treeAtCommit.calcHref(SourceElementPage(rp.userName, rp.repoName, r.git.currentBranch, Nil))))
+        } yield RedirectResponse(treeAtCommit.calcHref(SourceElement.rootAt(r, r.git.currentBranch))))
     
 
 
-    val historyAtCommit = Menu.params[SourceElementPage]("historyAtCommit",
-      new LinkText[SourceElementPage](urp => Text("Repo " + urp.repoName)),
-      list => list match {
-        case login :: repo :: commit :: path => Full(SourceElementPage(login, repo, commit, path))
-        case _ => Empty
-      },
-      stp => (stp.userName :: stp.repoName :: stp.commit :: Nil) ::: stp.path) / * / * / "commits" / * / ** >>
+    val historyAtCommit = Menu.params[SourceElement]("historyAtCommit",
+      seLinkText,
+      parserSE _,
+      encoderSE _) / * / * / "commits" / * / ** >>
        ValueTemplateBox (
         for {
-          rp <- _
-          r <- rp.repo
-          if r.canPull_?(UserDoc.currentUser)
+          se <- _
+          if se.repo.canPull_?(UserDoc.currentUser)
           tpl <- Templates("repo" :: "commit" :: "all" :: Nil)} yield tpl)
 
-    val defaultCommits = Menu.params[WithRepo]("defaultCommits",
-      new LinkText[WithRepo](urp => Text("Repo " + urp.repoName)),
-      list => list match {
-        case login :: repo :: Nil => Full(RepoPage(login, repo))
-        case _ => Empty
-      },
-      urp => urp.userName :: urp.repoName :: Nil) / * / * / "commits" >>
+    val defaultCommits = Menu.params[RepositoryDoc]("defaultCommits",
+      repoLinkText,
+      parser _,
+      encoder _) / * / * / "commits" >>
       ValueTemplateBox (
         for {
-          rp <- _
-          r <- rp.repo
+          r <- _
           if r.canPull_?(UserDoc.currentUser)
           tpl <- Templates("repo" :: "commit" :: "default" :: Nil)} yield tpl) >>
       TestValueAccess(
         for {
-          rp <- _
-          r <- rp.repo
+          r <- _
           if r.git.inited_?
-        } yield RedirectResponse(historyAtCommit.calcHref(SourceElementPage(r, r.git.currentBranch))))  
+        } yield RedirectResponse(historyAtCommit.calcHref(SourceElement.rootAt(r, r.git.currentBranch))))
 
-    val commit = Menu.params[SourceElementPage]("commit",
-      new LinkText[SourceElementPage](urp => Text("Repo " + urp.repoName)),
-      list => list match {
-        case login :: repo :: commit :: path => Full(SourceElementPage(login, repo, commit, path))
-        case _ => Empty
-      },
-      stp => stp.userName :: stp.repoName :: stp.commit :: stp.path) / * / * / "commit" / * / ** >>
+    val commit = Menu.params[SourceElement]("commit",
+      seLinkText,
+      parserSE _,
+      encoderSE _) / * / * / "commit" / * / ** >>
       ValueTemplateBox (
         for {
-          rp <- _
-          r <- rp.repo
-          if r.canPull_?(UserDoc.currentUser)
+          se <- _
+          if se.repo.canPull_?(UserDoc.currentUser)
           tpl <- Templates("repo" :: "commit" :: "one" :: Nil)} yield tpl)
 
-    val pullRequests = Menu.params[WithRepo]("pullRequests",
-      new LinkText[WithRepo](urp => Text("Repo " + urp.repoName)),
-      list => list match {
-        case login :: repo :: Nil => Full(RepoPage(login, repo))
-        case _ => Empty
-      },
-      urp => urp.userName :: urp.repoName :: Nil) / * / * / "pull-requests" >>
+    val pullRequests = Menu.params[RepositoryDoc]("pullRequests",
+      repoLinkText,
+      parser _,
+      encoder _) / * / * / "pull-requests" >>
       ValueTemplateBox (
         for {
-          rp <- _
-          r <- rp.repo
+          r <- _
           if r.canPull_?(UserDoc.currentUser)
           tpl <- Templates("repo" :: "pull-request" :: "all" :: Nil)} yield tpl)
 
@@ -238,35 +219,31 @@ object Sitemap {
           tpl <- Templates("repo" :: "pull-request" :: "one" :: Nil)} yield tpl)
 
     val index = Menu.i("Home") / "index" >> 
-      If(() => !UserDoc.loggedIn_?, () => RedirectResponse(userRepos.calcHref(UserPage(UserDoc.currentUser.get))))
+      If(() => !UserDoc.loggedIn_?, () => RedirectResponse(userRepos.calcHref(UserDoc.currentUser.get)))
 
 
     val signIn = Menu.i("Sign In") / "user" / "m" / "signin" >> 
-          If(() => !UserDoc.loggedIn_?, () => RedirectResponse(userRepos.calcHref(UserPage(UserDoc.currentUser.get))))
+          If(() => !UserDoc.loggedIn_?, () => RedirectResponse(userRepos.calcHref(UserDoc.currentUser.get)))
 
     val login = Menu.i("Log In") / "user" / "m" / "login"
 
     val newUser = Menu.i("Registration") / "user" / "m" / "new"
 
-    val notification = Menu.params[WithRepo]("notifyPushPage",
-      new LinkText[WithRepo](urp => Text("Repo " + urp.repoName)),
-      list => list match {
-        case login :: repo :: Nil => Full(RepoPage(login, repo))
-        case _ => Empty
-      },
-      urp => urp.userName :: urp.repoName :: Nil) / * / * / "notify" >>
+    val notification = Menu.params[RepositoryDoc]("notifyPushPage",
+      repoLinkText,
+      parser _,
+      encoder _) / * / * / "notify" >>
       ValueTemplateBox(
         for {
-          rp <- _
-          r <- rp.repo
+          r <- _
           if UserDoc.loggedIn_? && r.canPull_?(UserDoc.currentUser) //
           tpl <- Templates("notification" :: "push" :: Nil)} yield tpl)
 
 
    val entries = List[Menu](
-      userRepos,
       userAdmin,
       repoAdmin,
+      userRepos,
       blobAtCommit,
       treeAtCommit,
       defaultTree,
@@ -282,4 +259,40 @@ object Sitemap {
       notification
     )
 
+}
+
+import Menu._
+
+/* workarount to awoid weird links */
+case class UserMenu() extends ParamMenuable[UserDoc](
+  "userRepos", 
+  new LinkText[UserDoc](user => xml.Text("User " + user.login.get)),
+  UserDoc.byName _,
+  _.login.get,
+  * :: Nil,
+  false,
+  ValueTemplateBox((userBox:Box[UserDoc]) => for(u <- userBox; tpl <- Templates("list" :: Nil)) yield tpl) :: Nil,
+  Nil
+  )
+
+  /* ugly hack while Lift community ignore bug */
+class ProxyLink[-T](val self: Link[T]) extends Link[T](self.uriList , self.matchHead_? ) {
+
+  override def isDefinedAt(req: Req): Boolean = isDefinedAt(req)
+
+  override def pathList(value: T): List[String] = self.pathList(value)
+  
+  override def createPath(value: T): String = {
+      val path: List[String] = pathList(value).map(urlEncode)
+
+      if (matchHead_?) {
+        path.mkString("/", "/", "")
+      } else if (SiteMap.rawIndex_? && path == List("index")) {
+        "/"
+      } else if (path.length > 1 && path.last == "index") {
+        path.dropRight(1).mkString("/", "/", "/")
+      } else {
+        path.mkString("/", "/", "")
+      }
+    }
 }

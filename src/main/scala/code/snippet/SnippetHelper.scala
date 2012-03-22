@@ -34,6 +34,8 @@ import java.util.{Calendar, Date}
 import collection.mutable.ListBuffer
 import xml.{Node, Text, NodeSeq}
 
+import Sitemap._
+
 /**
  * User: denis.bardadym
  * Date: 10/5/11
@@ -71,12 +73,12 @@ object SnippetHelper {
 
   def makeFork(repo: RepositoryDoc, u: UserDoc)():JsCmd = {
     repo.git.clone(u)
-    S.redirectTo(Sitemap.userRepos.calcHref(UserPage(u)))
+    S.redirectTo(userRepos.calcHref(u))
   }
 
   def toggleOpen(repo: RepositoryDoc)():JsCmd = {
     repo.open_?(!repo.open_?.get).save
-    S.redirectTo(Sitemap.userRepos.calcHref(UserPage(repo.owner)))
+    S.redirectTo(userRepos.calcHref(repo.owner))
   }
   
   def a(href: String, value: NodeSeq) = <a href={href}>{value}</a>
@@ -125,8 +127,8 @@ object SnippetHelper {
     ".repo_menu_link *" #> (S.attr("current") match {
       case Full(_) => Text("Sources")
       case _ => {
-        val href = branch.map(b => Sitemap.treeAtCommit.calcHref(SourceElementPage(repo.owner.login.get, repo.name.get , b, Nil)))
-          .openOr(Sitemap.defaultTree.calcHref(RepoPage(repo)))
+        val href = branch.map(b => treeAtCommit.calcHref(SourceElement.rootAt(repo, b)))
+          .openOr(defaultTree.calcHref(repo))
           a( href, Text("Sources"))
         } 
     })
@@ -136,11 +138,64 @@ object SnippetHelper {
     ".repo_menu_link *" #> (S.attr("current") match {
       case Full(_) => Text("Commits")
       case _ => {
-        val href = branch.map(b => Sitemap.historyAtCommit.calcHref(SourceElementPage(repo, b)))
-          .openOr(Sitemap.defaultCommits.calcHref(RepoPage(repo)))
+        val href = branch.map(b => historyAtCommit.calcHref(SourceElement.rootAt(repo, b)))
+          .openOr(defaultCommits.calcHref(repo))
         a( href, Text("Commits"))
       }
     })
 
+  def renderPullRequestsLink(repo: RepositoryDoc): CssSel = {
+    val pullRequestCount = repo.pullRequests.filter(!_.accepted_?.get).size
+    val text = {
+      if(pullRequestCount == 0) Text("Pull requests")
+      else Text("Pull requests (%d)" format pullRequestCount)
+    }
+    ".repo_menu_link *" #> (S.attr("current") match {
+      case Full(_) => text
+      case _ => a(pullRequests.calcHref(repo), text)
+    })
+  }
+
+  def renderRepositoryBlock(repo: RepositoryDoc): CssSel = {
+      ".repo [class+]" #> (UserDoc.currentUser match {
+        case u @ Full(cu) if !repo.owner_?(u) && repo.canPush_?(u) => "collaborated"
+        case u @ Full(cu) if repo.owner_?(u) => if(repo.open_?.get) "public" else "private"
+        case _ => "public"
+      }) &
+      ".repo *" #> (
+          ".repo_name *" #> <span><a href={userRepos.calcHref(repo.owner)}>{repo.owner.login.get}</a>/{repo.name.get}</span> &
+          ".clone-url *" #> (repo.cloneUrlsForCurrentUser.map(url => "a" #> a(url._1, Text(url._2)))) &
+        (UserDoc.currentUser match {
+                case Full(cu) if (cu.login.get == repo.owner.login.get) => {
+                    
+                    ".admin_page *" #> a(repoAdmin.calcHref(repo), Text("admin")) & 
+                    ".fork *" #> SHtml.a(makeFork(repo, cu) _, Text("fork it")) &
+                    ".notification_page *" #> a(notification.calcHref(repo), Text("notify")) &
+                    ".toggle_open *" #> SHtml.a(toggleOpen(repo) _, Text(if (repo.open_?.get) "make private" else "make public")) &
+                    (repo.forkOf.obj.map(fr => ".origin_link *" #> a(defaultTree.calcHref(fr), Text("origin"))) openOr 
+                          ".origin_link" #> NodeSeq.Empty)
+                }
+                case Full(cu) => {     
+                    ".admin_page" #> NodeSeq.Empty & 
+                    ".fork *" #> SHtml.a(makeFork(repo, cu) _, Text("fork it")) &
+                    ".toggle_open" #> NodeSeq.Empty &
+                    ".notification_page *" #> a(notification.calcHref(repo), Text("notify")) &
+                    (repo.forkOf.obj.map(fr => ".origin_link *" #> a(defaultTree.calcHref(fr), Text("origin"))) openOr 
+                          ".origin_link" #> NodeSeq.Empty)
+                  }
+                case _ => {
+                    (repo.forkOf.obj match {
+                          case Full(fr) => {
+                            ".origin_link *" #> a(defaultTree.calcHref(fr), Text("origin")) &
+                            ".admin_page" #> NodeSeq.Empty & 
+                            ".toggle_open" #> NodeSeq.Empty &
+                            ".fork" #> NodeSeq.Empty &
+                            ".notification_page" #> NodeSeq.Empty
+                          }
+                          case _ =>  ".admin" #> NodeSeq.Empty 
+                        })
+                }
+            }))
+  }
 
 }

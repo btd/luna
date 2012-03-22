@@ -108,7 +108,7 @@ class UserDoc private() extends MongoRecord[UserDoc] with ObjectIdPk[UserDoc] {
   
 }
 
-object UserDoc extends UserDoc with MongoMetaRecord[UserDoc] {
+object UserDoc extends UserDoc with MongoMetaRecord[UserDoc] with Loggable {
   override def collectionName: String = "users"
 
   def loggedIn_? = {
@@ -168,7 +168,7 @@ object UserDoc extends UserDoc with MongoMetaRecord[UserDoc] {
 
   def currentUser: Box[UserDoc] = curUser.is
 
-  def byName(name: String) = UserDoc where (_.login eqs name) get
+  def byName(name: String) = {logger.debug("Try to find user: " + name); UserDoc where (_.login eqs name) get}
 
 
 

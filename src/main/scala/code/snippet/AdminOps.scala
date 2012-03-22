@@ -28,7 +28,7 @@ import js.JsCmds._
 import util._
 import xml._
 import SnippetHelper._
-import code.lib._
+import code.lib.Sitemap._
 
 /**
  * User: denis.bardadym
@@ -36,29 +36,29 @@ import code.lib._
  * Time: 5:29 PM
  */
 
-class AdminUserOps(up: WithUser) extends Loggable with SshKeyUI with UserUI {
+class AdminUserOps(user: UserDoc) extends Loggable with SshKeyUI with UserUI {
   
   
 
-  def renderUserForm = w(up.user) { user =>
-    userForm(user, "Update", updateUser(user, u => S.redirectTo(Sitemap.userAdmin.calcHref(up))))
-  }
+  def renderUserForm = 
+    userForm(user, "Update", updateUser(user, u => S.redirectTo(userAdmin.calcHref(user))))
   
-  def renderSshKeysTable = w(up.user) {user =>
+  
+  def renderSshKeysTable = 
     keysTable(user.keys)
-  }
+
 
  
-  def renderAddKeyForm = w(up.user) {user => {
+  def renderAddKeyForm =  {
   	val newKey = SshKeyUserDoc.createRecord.ownerId(user.id.get)
   	sshKeyForm(newKey, "Add", saveSshKey(newKey))
-  }}
+  }
   
 
   
 
-  def renderDeleteUser = w(up.user) {user => 
-    "button" #> SHtml.button("Delete", deleteUser(user), "class" -> "button")}
+  def renderDeleteUser = 
+    "button" #> SHtml.button("Delete", deleteUser(user), "class" -> "button")
 
   
 

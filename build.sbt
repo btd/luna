@@ -8,11 +8,9 @@ scalaVersion := "2.9.1"
 
 scalacOptions += "-deprecation"
 
-checksums := Nil
-
 resolvers ++= Seq (
   "jgit-repository" at "http://download.eclipse.org/jgit/maven",
-  "scala-tools snapshots" at "http://scala-tools.org/repo-snapshots",
+  "Sonatype Snapshot" at "https://oss.sonatype.org/content/repositories/snapshots",
   "my github repo" at "http://btd.github.com/maven2"
   )
 
