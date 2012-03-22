@@ -28,6 +28,13 @@ import Utility._
 
 class PullRequestOneOps(pullRequest: PullRequestDoc) extends Loggable {
 
+  def renderSourceTreeDefaultLink = renderSourceTreeLink(pullRequest.destRepo, None)
+
+  def renderCommitsDefaultLink = renderCommitsLink(pullRequest.destRepo, None)
+
+  def renderPullRequestsDefaultLink: NodeSeq => NodeSeq = 
+    renderPullRequestsLink(pullRequest.destRepo)
+
 
   def renderHelp = 
     ".shell *" #> ("$ git remote add %s %s\n" +
