@@ -10,49 +10,6 @@ import xml.{Text, NodeSeq}
 
 import code.model._
 
-trait WithUser {
-  def userName: String
-
-  lazy val user = UserDoc.find("login", userName)
-}
-
-case class UserPage(userName: String) extends WithUser
-
-object UserPage {
-  def apply(u: UserDoc): UserPage = UserPage(u.login.get)
-}
-
-trait WithRepo extends WithUser {
-  def repoName: String
-
-  lazy val repo = user match {
-
-    case Full(u) => tryo(u.repos.filter(_.name.get == repoName).head) match {
-      case Full(r) if (r.canPull_?(UserDoc.currentUser)) => Full(r)
-      case _ => Empty
-    }
-        
-    case _ => Empty
-  }
-}
-
-trait WithPullRequest {
-  def pullRequestId: String
-
-  lazy val pullRequest = PullRequestDoc.find(pullRequestId)
-}
-
-
-case class PullRequestRepoPage(userName: String, repoName: String, pullRequestId: String)  extends WithPullRequest with WithRepo
-
-object PullRequestRepoPage {
-  def apply(pr: PullRequestDoc):PullRequestRepoPage = {
-    val r = pr.destRepoId.obj.get
-    PullRequestRepoPage(r.owner.login.get, r.name.get, pr.id.get.toString)
-  }
-}
-
-
 
 object Sitemap extends Loggable {
   import code.snippet.SnippetHelper._
@@ -105,6 +62,9 @@ object Sitemap extends Loggable {
       se.commit ::
       se.pathLst
 
+  private def encoderPR(pr: PullRequestDoc): List[String] = {
+      pr.destRepoId.obj.map(r => List[String](r.owner.login.get,r.name.get, pr.id.get.toString)).openOr(Nil)
+  }
 
 	  val userAdmin = Menu.param[UserDoc]("userAdmin",
 	    new Loc.LinkText[UserDoc](up => xml.Text("User " + up.login.get)),
@@ -204,18 +164,22 @@ object Sitemap extends Loggable {
           if r.canPull_?(UserDoc.currentUser)
           tpl <- Templates("repo" :: "pull-request" :: "all" :: Nil)} yield tpl)
 
-    val pullRequest = Menu.params[PullRequestRepoPage]("onePullRequestPage",
-      new LinkText[PullRequestRepoPage](urp => Text("Repo " + urp.repoName)),
+    val pullRequest = Menu.params[PullRequestDoc]("onePullRequestPage",
+      new LinkText[PullRequestDoc](urp => Text("Pull Request")),
       list => list match {
-        case login :: repo :: pullRequestId :: Nil => Full(PullRequestRepoPage(login, repo, pullRequestId))
+        case login :: repo :: pullRequestId :: Nil => {
+          val pr = PullRequestDoc.find(pullRequestId)
+          pr.flatMap(pullRequest => pullRequest.destRepoId.obj.filter(r => r.name.get == repo && r.owner.login.get == login).map(ignore => pullRequest))
+        }
+         
         case _ => Empty
       },
-      urp => urp.userName :: urp.repoName :: urp.pullRequestId :: Nil) / * / * / "pull-request" / * >>
+      encoderPR _) / * / * / "pull-request" / * >>
       ValueTemplateBox (
         for {
-          rp <- _
-          r <- rp.repo
-          if r.canPull_?(UserDoc.currentUser)
+          pr <- _
+          r <- pr.destRepoId.obj
+          if r.canPull_?(UserDoc.currentUser)//TODO check
           tpl <- Templates("repo" :: "pull-request" :: "one" :: Nil)} yield tpl)
 
     val index = Menu.i("Home") / "index" >> 

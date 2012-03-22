@@ -26,10 +26,10 @@ import SnippetHelper._
 import xml._
 import Utility._
 
-class PullRequestOneOps(pr: WithPullRequest) extends Loggable {
+class PullRequestOneOps(pullRequest: PullRequestDoc) extends Loggable {
 
 
-  def renderHelp = w(pr.pullRequest){pullRequest =>
+  def renderHelp = 
     ".shell *" #> ("$ git remote add %s %s\n" +
       "$ git fetch %s\n" +
       "$ git merge %s/%s\n").format(pullRequest.srcRepoId.obj.get.owner.login.get,
@@ -37,10 +37,9 @@ class PullRequestOneOps(pr: WithPullRequest) extends Loggable {
         pullRequest.srcRepoId.obj.get.owner.login.get,
         pullRequest.srcRepoId.obj.get.owner.login.get,
         pullRequest.srcRef.get      )
-  }
+ 
 
-  def renderAll = pr.pullRequest match {
-    case Full(pullRequest) => {
+  def renderAll =  {
       val destHistory = pullRequest.destRepoId.obj.get.git.log(pullRequest.destRef.get).toList.reverse
       val srcHistory = pullRequest.srcRepoId.obj.get.git.log(pullRequest.srcRef.get).toList.reverse
 
@@ -70,16 +69,15 @@ class PullRequestOneOps(pr: WithPullRequest) extends Loggable {
                   )) 
         else ".blob" #>  NodeSeq.Empty & ".commit *" #> "No commits. Update ref or close PR."
     }
-    case _ => PassThru
-  }
+    
 
-  def renderForm = w(pr.pullRequest){pullRequest => {
+  def renderForm = {
       "p" #> <p>{pullRequest.description.get}</p> &
       "button" #> (if (!pullRequest.accepted_?.get && UserDoc.loggedIn_?) 
                     SHtml.button("Close", processPullRequestClose(pullRequest), "class" -> "button") 
                   else NodeSeq.Empty)
     }
-  }
+
 
   def processPullRequestClose(pullRequest: PullRequestDoc)() = {
     pullRequest

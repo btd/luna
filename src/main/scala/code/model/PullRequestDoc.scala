@@ -54,5 +54,6 @@ class PullRequestDoc private() extends MongoRecord[PullRequestDoc] with ObjectId
 
 object PullRequestDoc extends PullRequestDoc with MongoMetaRecord[PullRequestDoc] {
   override def collectionName: String = "pull_requests"
+
 }
 

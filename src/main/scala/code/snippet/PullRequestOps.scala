@@ -123,7 +123,7 @@ class PullRequestOps(repo: RepositoryDoc) extends Loggable {
             Text(pr.destRepoId.obj.get.owner.login.get + "/" + pr.destRepoId.obj.get.name.get + "@" + pr.destRef)) &
         ".whom" #> a(userRepos.calcHref(pr.creatorId.obj.get), Text(pr.creatorId.obj.get.login.get)) &
         ".when" #> dateFormat(pr.creationDate.get) &
-        ".msg" #> a(pullRequest.calcHref(PullRequestRepoPage(pr)), Text(if(!pr.description.get.isEmpty) escape(pr.description.get) else "No description"))
+        ".msg" #> a(pullRequest.calcHref(pr), Text(if(!pr.description.get.isEmpty) escape(pr.description.get) else "No description"))
     })
   
 
