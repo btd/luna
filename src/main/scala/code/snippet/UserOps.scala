@@ -62,12 +62,10 @@ class UserOps(user: UserDoc) extends Loggable with RepositoryUI {
                                 else Text(repo.owner.login.get + "/" + repo.name.get)) &
         ".clone-url" #> (repo.cloneUrlsForCurrentUser.map(url => "a" #> a(url._1, Text(url._2)))) &
         (UserDoc.currentUser match {
-          case Full(currentUser) if(user.id.get == currentUser.id.get) => 
+          case Full(currentUser) if(repo.ownerId.get == currentUser.id.get) => 
             ".fork *" #> SHtml.a(makeFork(repo, currentUser) _, Text("fork it")) &
             ".notification_page *" #> a(notification.calcHref(repo), Text("notify")) &
-            (if(repo.ownerId.get == user.id.get) 
-              ".toggle_open *" #> SHtml.a(toggleOpen(repo) _, Text(if (repo.open_?.get) "make private" else "make public"))
-            else ".toggle_open" #> NodeSeq.Empty) &
+            ".toggle_open *" #> SHtml.a(toggleOpen(repo) _, Text(if (repo.open_?.get) "make private" else "make public")) &
             ".admin_page *" #> a(repoAdmin.calcHref(repo), Text("admin")) &
             repo.forkOf.obj.map(fr => 
                   ".origin_link *" #> a(defaultTree.calcHref(fr), Text("origin")))
