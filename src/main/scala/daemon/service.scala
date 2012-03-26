@@ -42,13 +42,15 @@ trait Pack {
   def sendPack(in: InputStream, out: OutputStream, err: OutputStream): Unit
 }
 
-class UploadPack(val repo: RepositoryDoc, twoWay: Boolean = true) extends Pack {
+class UploadPack(val repo: RepositoryDoc, twoWay: Boolean = true) extends Pack with Loggable {
   private val p = repo.git.upload_pack
   p.setBiDirectionalPipe(twoWay)
 
   def sendInfoRefs(out: PacketLineOut) {
     try {               
       p.sendAdvertisedRefs(new PacketLineOutRefAdvertiser(out))
+    } catch {
+      case e: IOException => logger.warn("IOException: %s".format(e.getMessage))
     } finally {
       p.getRevWalk.release
     }
@@ -58,18 +60,20 @@ class UploadPack(val repo: RepositoryDoc, twoWay: Boolean = true) extends Pack {
     try {
       p.upload(in, out, err)
     } catch {
-      case e: IOException => 
-    }
+      case e: IOException => logger.warn("IOException: %s".format(e.getMessage))
+    } 
   }
 }
 
-class ReceivePack(val repo: RepositoryDoc, twoWay: Boolean = true) extends Pack {
+class ReceivePack(val repo: RepositoryDoc, twoWay: Boolean = true) extends Pack with Loggable {
   private val p = repo.git.receive_pack
   p.setBiDirectionalPipe(twoWay)
 
   def sendInfoRefs(out: PacketLineOut) {
     try {               
       p.sendAdvertisedRefs(new PacketLineOutRefAdvertiser(out))
+    } catch {
+      case e: IOException => logger.warn("IOException: %s".format(e.getMessage))
     } finally {
       p.getRevWalk.release
     }
@@ -86,7 +90,7 @@ class ReceivePack(val repo: RepositoryDoc, twoWay: Boolean = true) extends Pack 
       p.receive(in, out, err)
       NotifyActor ! PushEvent(repo, ident, oldHeads)
     } catch {
-      case e: IOException => 
+      case e: IOException => logger.warn("IOException: %s".format(e.getMessage))
     }
   }
 }
