@@ -70,6 +70,10 @@ class UserDoc private() extends MongoRecord[UserDoc] with ObjectIdPk[UserDoc] {
     def match_?(passwd: String) = BCrypt.checkpw(passwd, get)
   }
 
+  object admin extends BooleanField(this, false) {
+    override def optional_? = true
+  }
+
   def is (user: Box[UserDoc]): Boolean = user match {
     case Full(u) if(u.login.get == login.get) => true
     case _ => false
@@ -155,23 +159,32 @@ object UserDoc extends UserDoc with MongoMetaRecord[UserDoc] with Loggable {
 
 
 
+  def currentUserId: Box[ObjectId] = curUserId.get
 
-  def currentUserId: Box[ObjectId] = curUserId.is
+  private object curUser extends RequestVar[Box[UserDoc]](currentUserId.flatMap(_id => byId(_id))) 
+        with CleanRequestVarOnSessionTransition {
 
-  private object curUser extends RequestVar[Box[UserDoc]](tryo {
-    UserDoc.find("_id", currentUserId.get).get
-  } or {
-    Empty
-  }) with CleanRequestVarOnSessionTransition {
     override lazy val __nameSalt = Helpers.nextFuncName
   }
 
-  def currentUser: Box[UserDoc] = curUser.is
+  def currentUser: Box[UserDoc] = curUser.get
 
-  def byName(name: String) = {logger.debug("Try to find user: " + name); UserDoc where (_.login eqs name) get}
+  def byName(name: String) = UserDoc where (_.login eqs name) get
 
+  def byId(_id: ObjectId) = UserDoc where (_.id eqs _id) get
 
-
+  def addDefaultAdmin = 
+    UserDoc.createRecord
+      .login("admin")
+      .password("admin")
+      .admin(true)
+      .email("admin@admin")
+      .save
   
+  def adminExists_? = !(UserDoc.where(_.admin eqs true).get.isEmpty)
+
+  def all = {
+    UserDoc fetch()
+  }
 
 }

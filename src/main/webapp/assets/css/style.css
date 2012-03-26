@@ -678,6 +678,24 @@ ul.clone-urls li.selected>a {
     width: 680px;
 }
 
+table.users {
+    width: 100%;
+}
+
+table.users .user_name {
+    width: 50%;
+}
+
+table.users .user_delete {
+    width: 25%;
+    text-align: center;
+}
+
+table.users .user_admin {
+    width: 25%;
+    text-align: center;
+}
+
 .table {
     width: 100%;
     margin: 10px 0;

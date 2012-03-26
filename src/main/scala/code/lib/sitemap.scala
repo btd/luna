@@ -11,6 +11,7 @@ import xml.{Text, NodeSeq}
 import code.model._
 
 
+
 object Sitemap extends Loggable {
   import code.snippet.SnippetHelper._
   import Menu._
@@ -186,12 +187,19 @@ object Sitemap extends Loggable {
       If(() => !UserDoc.loggedIn_?, () => RedirectResponse(userRepos.calcHref(UserDoc.currentUser.get)))
 
 
-    val signIn = Menu.i("Sign In") / "user" / "m" / "signin" >> 
+    val signIn: Menu = Menu("Sign In") / "user" / "m" / "signin" >> 
           If(() => !UserDoc.loggedIn_?, () => RedirectResponse(userRepos.calcHref(UserDoc.currentUser.get)))
 
-    val login = Menu.i("Log In") / "user" / "m" / "login"
+    val login: Menu = Menu("Log In") / "user" / "m" / "login"
 
-    val newUser = Menu.i("Registration") / "user" / "m" / "new"
+    val newUser: Menu = Menu("Registration") / "user" / "m" / "new"
+
+    val adminUsers: Menu = Menu("Users") / "admin" / "users" >> 
+      TemplateBox ( () =>
+        for {
+          cu <- UserDoc.currentUser
+          if UserDoc.loggedIn_? && cu.admin.get
+          tpl <- Templates("admin" :: "adminUsers" :: Nil)} yield tpl)
 
     val notification = Menu.params[RepositoryDoc]("notifyPushPage",
       repoLinkText,
@@ -204,7 +212,9 @@ object Sitemap extends Loggable {
           tpl <- Templates("notification" :: "push" :: Nil)} yield tpl)
 
 
-   val entries = List[Menu](
+   
+
+  def defaultEntries = List[Menu](
       userAdmin,
       repoAdmin,
       userRepos,
@@ -216,11 +226,14 @@ object Sitemap extends Loggable {
       commit,
       pullRequests,
       pullRequest,
-      index,
-      signIn,
       login,
-      newUser,
-      notification
+      notification,
+      adminUsers
+    )
+
+  def entries = defaultEntries ::: List[Menu](
+      signIn,
+      newUser
     )
 
 }

@@ -21,17 +21,23 @@ import util._
 import http._
 import mongodb.{DefaultMongoIdentifier, MongoDB}
 import http.auth._
-import sitemap._
-import Loc._
+import sitemap.SiteMap
+
 import util.Helpers._
-import sitemap.LocPath._
-import daemon.sshd.SshDaemon
-import actors.Actor
+
 import xml.{NodeSeq, Text}
+
 import daemon.git.GitDaemon
+import daemon.sshd.SshDaemon
+
 import com.mongodb.Mongo
+
 import code.model._
-import code.lib._
+
+import code.lib.Sitemap
+
+
+import main.Constants._
 
 
 /**
@@ -77,8 +83,30 @@ class Boot extends Loggable {
 
     LiftRules.explicitlyParsedSuffixes = Set()
 
-   
-    LiftRules.setSiteMap(SiteMap(Sitemap.entries: _*))
+    //not so good but enough
+    if(Props.getBool(USER_REGISTRATION_ENABLED, true)) {
+
+      LiftRules.setSiteMap(SiteMap(Sitemap.entries: _*))
+      
+      LiftRules.statelessRewrite.append {
+        case RewriteRequest(ParsePath("index" :: Nil, _, _, true), _, _) =>
+
+          RewriteResponse("user" :: "m" :: "signin" :: Nil, true)
+      }
+
+    } else {
+      if(!UserDoc.adminExists_?) {
+        UserDoc.addDefaultAdmin
+      }
+      LiftRules.setSiteMap(SiteMap(Sitemap.defaultEntries: _*))
+      
+      LiftRules.statelessRewrite.append {
+        case RewriteRequest(ParsePath("index" :: Nil, _, _, true), _, _) =>
+
+          RewriteResponse("user" :: "m" :: "login" :: Nil, true)
+      }
+    }
+    
 
     LiftRules.dispatch.append(code.snippet.RawFileStreamingSnippet)
     LiftRules.dispatch.append(code.snippet.GitHttpSnippet)
@@ -86,16 +114,9 @@ class Boot extends Loggable {
     LiftRules.ajaxRetryCount = Full(1)
     LiftRules.ajaxPostTimeout = 15000
 
-    LiftRules.statelessRewrite.append {
-      case RewriteRequest(ParsePath("index" :: Nil, _, _, true), _, _) =>
+    
 
-        RewriteResponse("user" :: "m" :: "signin" :: Nil, true)
 
-     // case RewriteRequest(ParsePath(user :: Nil, _, _, false), _, _) =>
-
-       // RewriteResponse("list" :: user :: Nil, Map[String, String]())
-
-    }
 
     def open_?(userName: String, repoName: String):Boolean = {
       RepositoryDoc.byUserLoginAndRepoName(userName, repoName.substring(0, repoName.length - 4)) match {

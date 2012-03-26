@@ -18,7 +18,7 @@ Installation
 
 Assume you already have a server with any java web server (i use jetty) and mongodb 2.0 (yes as storage it uses mongo). 
 
-Easiest way
+The easiest way
 
 ``` bash
 $ git clone git://github.com/btd/luna.git
@@ -138,11 +138,11 @@ It store trigger settings in `/WEB-INF/classes/quartz/job.xml`.
 OS FAQ
 =================================
 
-Luna tested on windows and linux. There is my recomendations.
+Luna tested on windows and linux. There are my recomendations:
 
 Windows:
 
- * Dont use in user repos not ASCII filenames (i mean local characters) will be crash
+ * Dont use in user repos not ASCII filenames (i mean local characters) will be a crash
  * Install Mongo and Jetty as windows services
 
 Linux (for jetty):

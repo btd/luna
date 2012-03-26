@@ -1,0 +1,36 @@
+<div id="main" role="main" class="lift:surround?with=default;at=content">
+    <div class="lift:embed?what=menu"></div>
+
+    <div class="options_holder">
+        
+        <h2 class="font large">Current users</h2>
+        <form class="replaceDialog" data-button-text="Add user">
+            <input class="textfield large font" name="login" type="text"/>
+            <br/>
+            <input class="textfield large font" name="email" type="text"/>
+            <br/>
+            <input class="textfield large font" name="password" type="password"/>
+            <br/>
+            <button class="button">Add</button>
+        </form>
+        <div class="lift:Msg?id=users&errorClass=error">
+
+        </div>
+
+        <div class="lift:AdminUsersOps.renderUsersTable table">
+            <table class="users font">
+                <tr>
+                    <th class="user_name">Login</th>
+                    <th class="user_admin">Is admin</th>
+                    <th class="user_delete">Delete</th>
+                </tr>
+                <tr class="user" id="">
+                    <td class="user_name">user</td>
+                    <td class="user_admin">true</td>
+                    <td class="user_delete">&times;</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    
+</div>

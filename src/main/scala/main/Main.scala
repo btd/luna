@@ -25,4 +25,6 @@ object Constants {
 	val SSHD_CERT_PATH = "daemon.sshd.cert.path" 
 
 	val SSHD_CERT_PATH_DEFAULT = "./"
+
+   val USER_REGISTRATION_ENABLED = "users.registration.enabled" //true
 }

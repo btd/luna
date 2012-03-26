@@ -18,8 +18,11 @@ package code.snippet
 import net.liftweb.common._
 import net.liftweb.http._
 import net.liftweb.util.Helpers._
+import net.liftweb.util.Props
 import xml.{Text, NodeSeq}
 import code.model.UserDoc
+import code.lib.Sitemap._
+import main.Constants._
 
 /**
  * Created by IntelliJ IDEA.
@@ -30,25 +33,33 @@ import code.model.UserDoc
  */
 
 class MyMenu {
-  def your = {
-    "li *" #> (UserDoc.currentUser match {
-      case Full(u) => <a href={"/" + u.login.get}>Your page</a>
-      case _ => Text("")
-    })
-  }
+  def your = 
+    UserDoc.currentUser match {
+      case Full(u) => "li *" #>  <a href={userRepos.calcHref(u)}>Your page</a>
+      case _ => "li" #> NodeSeq.Empty
+    }
+  
 
-  def admin = {
-    "li *" #> (UserDoc.currentUser match {
-      case Full(u) => <a href={"/admin/" + u.login.get}>Admin</a>
-      case _ => Text("")
-    })
-  }
+  def admin = 
+    UserDoc.currentUser match {
+      case Full(u) => "li *" #> <a href={userAdmin.calcHref(u)}>Admin</a>
+      case _ => "li" #> NodeSeq.Empty
+    }
+  
 
-  def signIn = {
+  def signIn = 
     UserDoc.currentUser match {
       case Full(u) => "li *" #> SHtml.a(()=> { UserDoc.logoutCurrentUser; S.redirectTo(S.referer openOr "") }, Text("Log Out"))
-      case _ => "li" #> (<li><a href="/user/m/login">Log In</a></li> ++ <li><a href="/user/m/new">Register</a></li>)
+      case _ => "li" #> (<li><a href={login.loc.calcDefaultHref}>Log In</a></li> ++ 
+                          (if(Props.getBool(USER_REGISTRATION_ENABLED, true))
+                            <li><a href={newUser.loc.calcDefaultHref}>Register</a></li>
+                          else NodeSeq.Empty))
     }
 
+  def users = {
+    UserDoc.currentUser match {
+      case Full(u) if u.admin.get => "li *" #> <a href={adminUsers.loc.calcDefaultHref}>Users</a>
+      case _ => "li" #> NodeSeq.Empty
+    }
   }
 }
