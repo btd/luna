@@ -26,7 +26,7 @@ $ cd luna
 $ ./sbt package
 ```
 
-Now use `./target/scala-2.9.1.final/luna-tool_2.9.1-{VERSION}.war`. Default settings help you to start an app.
+Now use `./target/scala-2.9.1.final/luna-tool_2.9.1-{VERSION}.war`. Default settings help you to start an app. 
 
 Configuration
 ======================
@@ -35,6 +35,15 @@ All configuration are optional. If one setting depends from others it will be wr
 *Next `/` in filepath means root of war package. `web.xml` means `/WEB-INF/web.xml`. and `props` means `/WEB-INF/classes/props/default.props`*.
 
 *Check that props file uses ASCII encoding*
+
+User Registration
+---------------------
+
+Props:
+
+`users.registration.enabled` (`true`) - enable or disable user registration.
+
+At first time luna check existence of user admin/admin, therefor dont forget to change password for him. If you remove all admins with `users.registration.enabled=false` one will be created =).
 
 Lift
 ----------------
