@@ -48,7 +48,12 @@ $(function() {
 
     $("form.replaceDialog").each(function(i, form){
         var el = $(form);
-        var newButton = $("<button class='button'>" + el.attr('data-button-text') + "</button>").click(function(){
+        var newLink = ""
+        if(el.attr('data-button-text') !== undefined)
+            newLink = "<button class='button'>" + el.attr('data-button-text') + "</button>"
+        else 
+            newLink = "<a href='javascript://'>" + el.attr('data-anchor-text') + "</a>"
+        var newButton = $(newLink).click(function(){
             el.dialog("open");
             $('button', el).click(function(){
                 el.dialog.dialog("close");

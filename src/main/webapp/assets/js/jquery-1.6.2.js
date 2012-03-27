@@ -1,7 +1,3 @@
-/*
- * Copyright (c) 2011 Denis Bardadym
- * Distributed under Apache License.
- */
 (function( window, undefined ) {
 
 // Use the correct document accordingly with window argument (sandbox)
