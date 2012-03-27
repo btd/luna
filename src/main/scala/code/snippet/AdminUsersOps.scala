@@ -28,6 +28,7 @@ import common._
 import com.foursquare.rogue.Rogue._
 import xml.{NodeSeq, Text, EntityRef}
 import code.model._
+import code.lib.Sitemap._
 import org.bson.types.ObjectId
 
 /**
@@ -36,7 +37,7 @@ import org.bson.types.ObjectId
  * Time: 3:28 PM
  */
 
-class AdminUsersOps extends Loggable {
+class AdminUsersOps extends Loggable with UserUI {
 
 	def changeAdminOption(u: UserDoc): JsCmd = {
 		u.admin(!u.admin.get).save
@@ -62,6 +63,11 @@ class AdminUsersOps extends Loggable {
 		      )	
 	      	)
 	      
+	}
+
+	def addNewUser = {
+		val user = UserDoc.createRecord
+		userForm(user, "Add", saveUser(user, u => { S.redirectTo(adminUsers.loc.calcDefaultHref) }))
 	}
 }
 //

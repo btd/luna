@@ -43,7 +43,7 @@ class AuthOps extends Loggable with UserUI with SshKeyUI {
             case Nil => {
               newUser.save
               newKey.save
-              logger.debug(newUser)
+              //logger.debug(newUser)
               UserDoc.logUserIn(newUser, ()=> S.redirectTo(Sitemap.userRepos.calcHref(newUser)))
             }
             case l => l.foreach(fe => S.error(fe.msg))

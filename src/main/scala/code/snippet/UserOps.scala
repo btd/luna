@@ -58,13 +58,13 @@ class UserOps(user: UserDoc) extends Loggable with RepositoryUI {
     
 
     if(repos.isEmpty)
-      "*" #> <span class="large">There is no repo</span>
+      "*" #> <span class="large">{user.login.get.capitalize} has no repos yet.</span>
     else 
      ".repo" #> repos.map(repo =>
        renderRepositoryBlock(repo, user, 
-        r => a(defaultTree.calcHref(repo), 
-          if(repo.ownerId.get == user.id.get) Text(repo.name.get)
-          else Text(repo.owner.login.get + "/" + repo.name.get))))
+        r => a(defaultTree.calcHref(r), 
+          if(r.ownerId.get == user.id.get) Text(r.name.get)
+          else Text(r.owner.login.get + "/" + r.name.get))))
     
     
   }
