@@ -67,7 +67,9 @@ class RepoOps(repo: RepositoryDoc) extends Loggable {
     "name=activated" #> SHtml.checkbox(emailOutput.activated.get, v => emailOutput.activated(v))
   }
 
-  def renderRepositoryBlockDefault = renderRepositoryBlock(repo)
+  def renderRepositoryBlockDefault = renderRepositoryBlock(repo, 
+                          repo.owner, 
+                          r => <span><a href={userRepos.calcHref(r.owner)}>{r.owner.login.get}</a>/{r.name.get}</span>)
 
   
 

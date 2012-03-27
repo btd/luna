@@ -96,6 +96,9 @@ class SourceElementOps(se: SourceElement) extends Loggable {
     case _ => ".source_code" #> NodeSeq.Empty
   }
     
-  def renderRepositoryBlockDefault = renderRepositoryBlock(se.repo)
+  def renderRepositoryBlockDefault = 
+    renderRepositoryBlock(se.repo, 
+                          se.repo.owner, 
+                          r => <span><a href={userRepos.calcHref(r.owner)}>{r.owner.login.get}</a>/{r.name.get}</span>)
 
 }

@@ -19,7 +19,7 @@ import net.liftweb._
 import common._
 import http.js.JE.Call
 import http.js.jquery._
-import http.js.JsCmd
+import http.js.{JsCmd, JsExp, JsMember}
 import JqJE._
 import JqJsCmds._
 import http.{S, SHtml}
@@ -76,10 +76,7 @@ object SnippetHelper {
     S.redirectTo(userRepos.calcHref(u))
   }
 
-  def toggleOpen(repo: RepositoryDoc)():JsCmd = {
-    repo.open_?(!repo.open_?.get).save
-    S.redirectTo(userRepos.calcHref(repo.owner))
-  }
+
   
   def a(href: String, value: NodeSeq) = <a href={href}>{value}</a>
 
@@ -156,46 +153,52 @@ object SnippetHelper {
     })
   }
 
-  def renderRepositoryBlock(repo: RepositoryDoc): CssSel = {
-      ".repo [class+]" #> (UserDoc.currentUser match {
-        case u @ Full(cu) if !repo.owner_?(u) && repo.canPush_?(u) => "collaborated"
-        case u @ Full(cu) if repo.owner_?(u) => if(repo.open_?.get) "public" else "private"
-        case _ => "public"
-      }) &
-      ".repo *" #> (
-          ".repo_name *" #> <span><a href={userRepos.calcHref(repo.owner)}>{repo.owner.login.get}</a>/{repo.name.get}</span> &
-          ".clone-url *" #> (repo.cloneUrlsForCurrentUser.map(url => "a" #> a(url._1, Text(url._2)))) &
+  case class JqParents(parentSelector: JsExp) extends JsExp with JsMember {
+     def toJsCmd = "parents(" + parentSelector.toJsCmd + ")"
+  }
+
+  case class JqToggleClass(classes: JsExp) extends JsExp with JsMember {
+     def toJsCmd = "toggleClass(" + classes.toJsCmd + ")"
+  }
+
+  def renderRepositoryBlock(repo: RepositoryDoc, 
+                            user: UserDoc, 
+                            repoName: (RepositoryDoc) => NodeSeq): CssSel = {
+      ".repo [class+]" #> (if(repo.ownerId.get == user.id.get) 
+                                  if(repo.open_?.get) "public" else "private"
+                              else "collaborated") &
+        ".repo_name *" #> repoName(repo) &
+        ".clone-url" #> (repo.cloneUrlsForCurrentUser.map(url => "a" #> a(url._1, Text(url._2)))) &
         (UserDoc.currentUser match {
-                case Full(cu) if (cu.login.get == repo.owner.login.get) => {
-                    
-                    ".admin_page *" #> a(repoAdmin.calcHref(repo), Text("admin")) & 
-                    ".fork *" #> SHtml.a(makeFork(repo, cu) _, Text("fork it")) &
-                    ".notification_page *" #> a(notification.calcHref(repo), Text("notify")) &
-                    ".toggle_open *" #> SHtml.a(toggleOpen(repo) _, Text(if (repo.open_?.get) "make private" else "make public")) &
-                    (repo.forkOf.obj.map(fr => ".origin_link *" #> a(defaultTree.calcHref(fr), Text("origin"))) openOr 
-                          ".origin_link" #> NodeSeq.Empty)
-                }
-                case Full(cu) => {     
-                    ".admin_page" #> NodeSeq.Empty & 
-                    ".fork *" #> SHtml.a(makeFork(repo, cu) _, Text("fork it")) &
-                    ".toggle_open" #> NodeSeq.Empty &
-                    ".notification_page *" #> a(notification.calcHref(repo), Text("notify")) &
-                    (repo.forkOf.obj.map(fr => ".origin_link *" #> a(defaultTree.calcHref(fr), Text("origin"))) openOr 
-                          ".origin_link" #> NodeSeq.Empty)
-                  }
-                case _ => {
-                    (repo.forkOf.obj match {
-                          case Full(fr) => {
-                            ".origin_link *" #> a(defaultTree.calcHref(fr), Text("origin")) &
-                            ".admin_page" #> NodeSeq.Empty & 
-                            ".toggle_open" #> NodeSeq.Empty &
-                            ".fork" #> NodeSeq.Empty &
-                            ".notification_page" #> NodeSeq.Empty
-                          }
-                          case _ =>  ".admin" #> NodeSeq.Empty 
-                        })
-                }
-            }))
+          case Full(currentUser) if(repo.ownerId.get == currentUser.id.get) => 
+            ".fork *" #> SHtml.a(makeFork(repo, currentUser) _, Text("fork it")) &
+            ".notification_page *" #> a(notification.calcHref(repo), Text("notify")) &
+            ".toggle_open *" #> SHtml.a(Text(if (repo.open_?.get) "make private" else "make public")) {
+                repo.open_?(!repo.open_?.get).save
+                S.redirectTo(userRepos.calcHref(user))
+            } &
+            ".admin_page *" #> a(repoAdmin.calcHref(repo), Text("admin")) &
+            repo.forkOf.obj.map(fr => 
+                  ".origin_link *" #> a(defaultTree.calcHref(fr), Text("origin")))
+                  .openOr(".origin_link" #> NodeSeq.Empty) 
+          
+          case Full(currentUser) =>
+            ".fork *" #> SHtml.a(makeFork(repo, currentUser) _, Text("fork it")) &
+            ".notification_page *" #> a(notification.calcHref(repo), Text("notify")) &
+            ".toggle_open" #> NodeSeq.Empty &
+            ".admin_page" #> NodeSeq.Empty &
+            repo.forkOf.obj.map(fr => 
+                  ".origin_link *" #> a(defaultTree.calcHref(fr), Text("origin")))
+                  .openOr(".origin_link" #> NodeSeq.Empty)
+          
+          case _ => repo.forkOf.obj.map(fr => 
+                  ".origin_link *" #> a(defaultTree.calcHref(fr), Text("origin")) &
+                  ".toggle_open" #> NodeSeq.Empty &
+                  ".admin_page" #> NodeSeq.Empty &
+                  ".notification_page" #> NodeSeq.Empty &
+                  ".fork" #> NodeSeq.Empty)
+                  .openOr(".admin" #> NodeSeq.Empty)             
+        })
   }
 
 }
