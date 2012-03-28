@@ -17,7 +17,7 @@ package code.snippet
 
 import net.liftweb._
 import common._
-import http.js.JE.Call
+import http.js.JE._
 import http.js.jquery._
 import http.js.{JsCmd, JsExp, JsMember}
 import JqJE._
@@ -161,44 +161,61 @@ object SnippetHelper {
      def toJsCmd = "toggleClass(" + classes.toJsCmd + ")"
   }
 
+  case class JqFind(child: JsExp) extends JsExp with JsMember {
+     def toJsCmd = "find(" + child.toJsCmd + ")"
+  }
+
+  def updateToggleOpenLink(repo: RepositoryDoc): JsCmd = {
+    repo.open_?(!repo.open_?.get).save
+              //S.redirectTo(userRepos.calcHref(user))
+
+    Jq("#" + repo.id.get.toString) ~> 
+      JqToggleClass("public private") ~>
+      JqFind(".toggle_open") ~> 
+      JqHtml(SHtml.a(Text(if (repo.open_?.get) "make private" else "make public")) {
+        updateToggleOpenLink(repo)
+      })
+  }
+  
+
   def renderRepositoryBlock(repo: RepositoryDoc, 
                             user: UserDoc, 
                             repoName: (RepositoryDoc) => NodeSeq): CssSel = {
       ".repo [class+]" #> (if(repo.ownerId.get == user.id.get) 
-                                  if(repo.open_?.get) "public" else "private"
-                              else "collaborated") &
-        ".repo_name *" #> repoName(repo) &
-        ".clone-url" #> (repo.cloneUrlsForCurrentUser.map(url => "a" #> a(url._1, Text(url._2)))) &
-        (UserDoc.currentUser match {
-          case Full(currentUser) if(repo.ownerId.get == currentUser.id.get) => 
-            ".fork *" #> SHtml.a(makeFork(repo, currentUser) _, Text("fork it")) &
-            ".notification_page *" #> a(notification.calcHref(repo), Text("notify")) &
-            ".toggle_open *" #> SHtml.a(Text(if (repo.open_?.get) "make private" else "make public")) {
-                repo.open_?(!repo.open_?.get).save
-                S.redirectTo(userRepos.calcHref(user))
-            } &
-            ".admin_page *" #> a(repoAdmin.calcHref(repo), Text("admin")) &
-            repo.forkOf.obj.map(fr => 
-                  ".origin_link *" #> a(defaultTree.calcHref(fr), Text("origin")))
-                  .openOr(".origin_link" #> NodeSeq.Empty) 
-          
-          case Full(currentUser) =>
-            ".fork *" #> SHtml.a(makeFork(repo, currentUser) _, Text("fork it")) &
-            ".notification_page *" #> a(notification.calcHref(repo), Text("notify")) &
-            ".toggle_open" #> NodeSeq.Empty &
-            ".admin_page" #> NodeSeq.Empty &
-            repo.forkOf.obj.map(fr => 
-                  ".origin_link *" #> a(defaultTree.calcHref(fr), Text("origin")))
-                  .openOr(".origin_link" #> NodeSeq.Empty)
-          
-          case _ => repo.forkOf.obj.map(fr => 
-                  ".origin_link *" #> a(defaultTree.calcHref(fr), Text("origin")) &
-                  ".toggle_open" #> NodeSeq.Empty &
-                  ".admin_page" #> NodeSeq.Empty &
-                  ".notification_page" #> NodeSeq.Empty &
-                  ".fork" #> NodeSeq.Empty)
-                  .openOr(".admin" #> NodeSeq.Empty)             
-        })
+                              if(repo.open_?.get) "public" else "private"
+                           else "collaborated") &
+      ".repo [id]" #> repo.id.get.toString &
+      ".repo_name *" #> repoName(repo) &
+      ".clone-url" #> (repo.cloneUrlsForCurrentUser.map(url => "a" #> a(url._1, Text(url._2)))) &
+      (UserDoc.currentUser match {
+        case Full(currentUser) if(repo.ownerId.get == currentUser.id.get) => 
+          ".fork *" #> SHtml.a(makeFork(repo, currentUser) _, Text("fork it")) &
+          ".notification_page *" #> a(notification.calcHref(repo), Text("notify")) &
+          ".toggle_open *" #> SHtml.a(Text(if (repo.open_?.get) "make private" else "make public")) {
+            updateToggleOpenLink(repo)
+          } &
+          ".admin_page *" #> a(repoAdmin.calcHref(repo), Text("admin")) &
+          repo.forkOf.obj.map(fr => 
+                ".origin_link *" #> a(defaultTree.calcHref(fr), Text("origin")))
+                .openOr(".origin_link" #> NodeSeq.Empty) 
+        
+        case Full(currentUser) =>
+          ".fork *" #> SHtml.a(makeFork(repo, currentUser) _, Text("fork it")) &
+          ".notification_page *" #> a(notification.calcHref(repo), Text("notify")) &
+          ".toggle_open" #> NodeSeq.Empty &
+          ".admin_page" #> NodeSeq.Empty &
+          repo.forkOf.obj.map(fr => 
+                ".origin_link *" #> a(defaultTree.calcHref(fr), Text("origin")))
+                .openOr(".origin_link" #> NodeSeq.Empty)
+        
+        case _ => repo.forkOf.obj.map(fr => 
+                ".origin_link *" #> a(defaultTree.calcHref(fr), Text("origin")) &
+                ".toggle_open" #> NodeSeq.Empty &
+                ".admin_page" #> NodeSeq.Empty &
+                ".notification_page" #> NodeSeq.Empty &
+                ".fork" #> NodeSeq.Empty)
+                .openOr(".admin" #> NodeSeq.Empty)             
+      })
   }
 
 }

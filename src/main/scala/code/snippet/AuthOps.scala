@@ -20,7 +20,7 @@ import common.{Full, Loggable}
 import util.Helpers._
 import http._
 import code.model._
-import code.lib._
+import code.lib.Sitemap._
 import SnippetHelper._
 
 
@@ -44,7 +44,7 @@ class AuthOps extends Loggable with UserUI with SshKeyUI {
               newUser.save
               newKey.save
               //logger.debug(newUser)
-              UserDoc.logUserIn(newUser, ()=> S.redirectTo(Sitemap.userRepos.calcHref(newUser)))
+              UserDoc.logUserIn(newUser, ()=> S.redirectTo(userRepos.calcHref(newUser)))
             }
             case l => l.foreach(fe => S.error(fe.msg))
           }

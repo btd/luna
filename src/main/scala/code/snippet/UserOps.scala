@@ -54,11 +54,10 @@ class UserOps(user: UserDoc) extends Loggable with RepositoryUI {
   def renderRepositoryList = {
     val repos = user.publicRepos ++ 
       (if(user.is(UserDoc.currentUser)) user.privateRepos ++ user.collaboratedRepos else Nil)
-
     
 
     if(repos.isEmpty)
-      "*" #> <span class="large">{user.login.get.capitalize} has no repos yet.</span>
+      "*" #> <span class="large">{user.login.get.capitalize} has no repos.</span>
     else 
      ".repo" #> repos.map(repo =>
        renderRepositoryBlock(repo, user, 
