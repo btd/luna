@@ -57,7 +57,10 @@ class AdminUsersOps extends Loggable with UserUI {
 		      } &
 		      ".user_delete *" #> SHtml.a(EntityRef("times")) {
 		                            (UserDoc.where(_.id eqs u.id.get).findAndDeleteOne)
-		                            JqId(u.id.get.toString) ~> JqRemove() 
+		                            if(u.id.get == UserDoc.currentUser.get.id.get) {
+		                            	UserDoc.logoutCurrentUser
+		                            	S.redirectTo(login.loc.calcDefaultHref)
+		                            } else JqId(u.id.get.toString) ~> JqRemove() 
 		                          }
 
 		      )	
