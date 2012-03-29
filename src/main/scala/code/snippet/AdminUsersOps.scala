@@ -48,7 +48,7 @@ class AdminUsersOps extends Loggable with UserUI {
 	} 
 
 	def renderUsersTable = {
-		".user" #> UserDoc.all.map(u => 
+		".user" #> UserDoc.allButNot(UserDoc.currentUser.get.id.get).map(u => 
 	      ".user [id]" #> u.id.get.toString &
 	      ".user *" #> (
 		      ".user_name *" #> u.login.get &
@@ -57,10 +57,7 @@ class AdminUsersOps extends Loggable with UserUI {
 		      } &
 		      ".user_delete *" #> SHtml.a(EntityRef("times")) {
 		                            (UserDoc.where(_.id eqs u.id.get).findAndDeleteOne)
-		                            if(u.id.get == UserDoc.currentUser.get.id.get) {
-		                            	UserDoc.logoutCurrentUser
-		                            	S.redirectTo(login.loc.calcDefaultHref)
-		                            } else JqId(u.id.get.toString) ~> JqRemove() 
+		                            JqId(u.id.get.toString) ~> JqRemove() 
 		                          }
 
 		      )	

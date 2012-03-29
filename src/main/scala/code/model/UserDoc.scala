@@ -187,4 +187,8 @@ object UserDoc extends UserDoc with MongoMetaRecord[UserDoc] with Loggable {
     UserDoc fetch()
   }
 
+  def allButNot(_id: ObjectId) = {
+    UserDoc where (_.id neqs _id) fetch()
+  }
+
 }
