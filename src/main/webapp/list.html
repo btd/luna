@@ -3,13 +3,15 @@
 
     <div>
 
-        <div>
-            <form class="sub_menu lift:UserOps.renderNewRepositoryForm?form=post replaceDialog" data-button-text="Add new repository">
-                <input name="name" type="text" class="textfield font large" placeholder="Repository name"/>
-                <br/>
-                <label><input name="open" type="checkbox"/> Public repo?</label>
-                <br/>
-                <button class="button" type="button" value="New">New repository</button>
+        <div class="lift:UserOps.addNewRepo sub_menu replaceDialog" data-button-text="Add new repository">
+            <form class="lift:form.ajax">
+                <div class="form">
+                    <input name="name" type="text" class="textfield font large" placeholder="Repository name"/>
+                    <br/>
+                    <label><input name="open" type="checkbox"/> Public repo?</label>
+                    <br/>
+                    <button class="button" type="button" value="New">New repository</button>
+                </div>
             </form>
 
             <div class="lift:Msgs?errorClass=error"></div>

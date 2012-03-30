@@ -19,7 +19,7 @@ import net.liftweb._
 import common._
 import http.js.JE._
 import http.js.jquery._
-import http.js.{JsCmd, JsExp, JsMember}
+import http.js.{JsCmd, JsExp, JsMember, JsCmds}
 import JqJE._
 import JqJsCmds._
 import http.{S, SHtml}
@@ -169,10 +169,11 @@ object SnippetHelper {
      def toJsCmd = "removeAttr(" + attr.toJsCmd + ")"
   }
 
-    case class JqVal(attr: JsExp) extends JsExp with JsMember {
+  case class JqVal(attr: JsExp) extends JsExp with JsMember {
      def toJsCmd = "val(" + attr.toJsCmd + ")"
   }
 
+  val DoNothing = () => JsCmds.Noop 
 
   def cleanForm(formSelector: String): JsCmd = {
     Jq(formSelector) ~> JqFind("input:text, input:password, input:file, select") ~> JqVal("") &

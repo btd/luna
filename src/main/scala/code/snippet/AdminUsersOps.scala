@@ -104,7 +104,7 @@ class AdminUsersOps extends Loggable with UserUI {
 			SHtml.text("", v => user.email(v.trim), "placeholder" -> "email@example.com", "class" -> "textfield large") ++
 			SHtml.text("", v => user.login(v.trim), "placeholder" -> "login", "class" -> "textfield large") ++
 			SHtml.password("",v => user.password(v.trim), "placeholder" -> "password", "class" -> "textfield large") ++
-			SHtml.button("Add", () => JsCmds.Noop , "class" -> "button") ++
+			SHtml.button("Add", DoNothing, "class" -> "button") ++
 			SHtml.hidden(save(user) _)
 		)
 		//userForm(user, "Add", saveUser(user, u => { S.redirectTo(adminUsers.loc.calcDefaultHref) }))

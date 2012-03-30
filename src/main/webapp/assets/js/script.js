@@ -6,6 +6,19 @@
 /* Author:
  Bardadym Denis
  */
+function setCloneUrls() {
+    $(".url-box > .clone-urls > li > a").click(function() {
+        var a = $(this);
+        var ul = a.parent().parent();
+        ul.children().removeClass("selected");
+        a.parent().addClass("selected");
+        ul.siblings("input").val(a.attr("href"));
+        return false;
+    });
+
+    $(".url-box > .clone-urls > li:first-child > a").click();
+}
+
 $(function() {
     if (!Modernizr.input.placeholder) {
 
@@ -34,17 +47,8 @@ $(function() {
         });
     }
     
+    setCloneUrls();
 
-    $(".url-box > .clone-urls > li > a").click(function() {
-        var a = $(this);
-        var ul = a.parent().parent();
-        ul.children().removeClass("selected");
-        a.parent().addClass("selected");
-        ul.siblings("input").val(a.attr("href"));
-        return false;
-    });
-
-    $(".url-box > .clone-urls > li:first-child > a").click();
 
     $(".replaceDialog").each(function(i, form){
         var el = $(form);
@@ -61,7 +65,7 @@ $(function() {
             el.dialog("open");
             return false;
         });
-        el.parent().append(newButton)
+        el.parent().prepend(newButton)
         el.dialog({ autoOpen: false, modal: true, width: "600px" });        
     });
 

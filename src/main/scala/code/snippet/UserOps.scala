@@ -21,6 +21,7 @@ import util.Helpers._
 import http._
 import common._
 
+import js.{JsCmd, JE}
 import js.jquery._
 import js.jquery.JqJE._
 import js.jquery.JqJsCmds._
@@ -41,30 +42,62 @@ import com.foursquare.rogue.Rogue._
 
 class UserOps(user: UserDoc) extends Loggable with RepositoryUI {
 
-  def renderNewRepositoryForm: NodeSeq => NodeSeq = 
+  private var name = ""
+  private var open_? = true
+
+  def saveRepo(): JsCmd = {
+
+    val repo = RepositoryDoc.createRecord.ownerId(user.id.get).name(name).open_?(open_?)
+
+    repo.validate match {
+        case Nil => {
+          repo.save
+
+          cleanForm("form") & 
+          Jq(".repo_list") ~> JqHtml(memo.applyAgain()) &
+          JE.JsRaw("setCloneUrls()") 
+        }
+        case l => l.foreach(fe => S.error("repo", fe.msg))
+    }
+  }
+
+  def addNewRepo: NodeSeq => NodeSeq = 
     (for { 
-           currentUser <- UserDoc.currentUser
-           repo = RepositoryDoc.createRecord.ownerId(user.id.get)
-           if(user.login.get == currentUser.login.get)
+       currentUser <- UserDoc.currentUser
+
+       if(user.login.get == currentUser.login.get)
      } yield {   
-           repositoryForm(repo, "Add", saveRepo(repo)) 
+       ".form" #> SHtml.ajaxForm(
+          SHtml.text("", v => name = v.trim, "placeholder" -> "Name", "class" -> "textfield large") ++
+          <br/> ++
+          <label>{SHtml.checkbox(true, open_? = _)} Public repo?</label> ++
+          <br/> ++
+          SHtml.button("Add", DoNothing, "class" -> "button") ++
+          SHtml.hidden(saveRepo _)
+        )
      }) openOr cleanAll
- 
 
-  def renderRepositoryList = {
-    val repos = user.publicRepos ++ 
-      (if(user.is(UserDoc.currentUser)) user.privateRepos ++ user.collaboratedRepos else Nil)
-    
+  def repos = user.publicRepos ++ 
+                   (if(user.is(UserDoc.currentUser)) 
+                    user.privateRepos ++ user.collaboratedRepos 
+                    else Nil)
+              
 
-    if(repos.isEmpty)
-      "*" #> <span class="large">{user.login.get.capitalize} has no repos.</span>
-    else 
-     ".repo" #> repos.map(repo =>
+  val memo = SHtml.memoize {
+    ".repo" #> repos.map(repo =>
        renderRepositoryBlock(repo, user, 
         r => a(defaultTree.calcHref(r), 
           if(r.ownerId.get == user.id.get) Text(r.name.get)
           else Text(r.owner.login.get + "/" + r.name.get))))
-    
+  }
+ 
+
+  def renderRepositoryList = {   
+
+    if(repos.isEmpty)
+      "*" #> <span class="large">{user.login.get.capitalize} has no repos.</span>
+    else 
+     ".repo_list" #> memo    
     
   }
 }
