@@ -105,9 +105,6 @@ class UserDoc private() extends MongoRecord[UserDoc] with ObjectIdPk[UserDoc] {
 
     PullRequestDoc where (_.creatorId eqs id.get) bulkDelete_!!
 
-    UserDoc.logoutCurrentUser
-
-    S.redirectTo("/")
   }
   
 }
@@ -143,6 +140,8 @@ object UserDoc extends UserDoc with MongoMetaRecord[UserDoc] with Loggable {
     curUser.remove()
     curUserId(who.id.valueBox)
     curUser(Full(who))
+
+    Sessions + who.login.get
   }
 
   def logoutCurrentUser = logUserOut()
@@ -151,6 +150,10 @@ object UserDoc extends UserDoc with MongoMetaRecord[UserDoc] with Loggable {
     curUserId.remove()
     curUser.remove()
     S.session.foreach(_.destroySession())
+  }
+
+  def logUserOut(user: UserDoc) {
+    Sessions - user.login.get
   }
 
   private object curUserId extends SessionVar[Box[ObjectId]](Empty) {
@@ -191,4 +194,33 @@ object UserDoc extends UserDoc with MongoMetaRecord[UserDoc] with Loggable {
     UserDoc where (_.id neqs _id) fetch()
   }
 
+}
+
+object Sessions {
+  import collection.mutable.{HashMap, SynchronizedMap, ListBuffer}
+
+  private val sessions = new HashMap[String, ListBuffer[String]] with SynchronizedMap[String, ListBuffer[String]]
+
+  //add session to global storage
+  def +(user: String) {
+    S.session.foreach { session =>
+      sessions.get(user).map(exisingSessions => exisingSessions += session.uniqueId).orElse {
+        sessions += (user -> ListBuffer(session.uniqueId))
+        None
+      }
+    }
+    
+  }
+
+  def -(user: String) {
+    sessions.get(user).foreach { 
+      _.foreach { sid =>
+        net.liftweb.http.SessionMaster.getSession(sid, Empty).foreach { 
+          _.destroySession
+        } 
+      }
+
+    }
+    sessions -= user
+  }
 }

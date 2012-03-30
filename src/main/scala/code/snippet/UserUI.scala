@@ -126,7 +126,11 @@ trait UserUI extends Loggable{
   }
 
   def deleteUser(user: UserDoc)() = {
+      UserDoc.logoutCurrentUser
+
       user.deleteDependend
       user.delete_!
+      
+      S.redirectTo("/")
   }
 }

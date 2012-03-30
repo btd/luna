@@ -56,7 +56,9 @@ class AdminUsersOps extends Loggable with UserUI {
 		      	changeAdminOption(u)
 		      } &
 		      ".user_delete *" #> SHtml.a(EntityRef("times")) {
-		                            (UserDoc.where(_.id eqs u.id.get).findAndDeleteOne)
+		      						UserDoc.logUserOut(u)	
+		      						u.deleteDependend		      						
+		      						u.delete_!
 		                            JqId(u.id.get.toString) ~> JqRemove() 
 		                          }
 
