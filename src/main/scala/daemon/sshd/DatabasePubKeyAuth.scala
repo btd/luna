@@ -35,8 +35,9 @@ class DatabasePubKeyAuth extends PublickeyAuthenticator with Loggable {
    * @return a boolean indicating if authentication succeeded or not
    */
   def authenticate(username: String, key: PublicKey, session: ServerSession): Boolean = {
-    logger.debug("User " + username + " tried to authentificate")
+    //logger.debug("User " + username + " tried to authentificate")
     UserDoc.byName(username) match {
+      case Some(u) if u.suspended.get => false
       case Some(u) => {
         tryo {
           val keys = (u.keys ++ u.repos.flatMap(_.keys))

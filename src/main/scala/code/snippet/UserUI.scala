@@ -68,9 +68,9 @@ trait UserUI extends Loggable{
  private def logUserIn() = {
     def logIn(u: UserDoc) = {
       UserDoc.logUserIn(u, () => {
-        import code.lib._
+        import code.lib.Sitemap._
         //logger.debug(S.referer)
-        S.redirectTo(whence openOr Sitemap.userRepos.calcHref(u))
+        S.redirectTo(whence openOr userRepos.calcHref(u))
       })
     }
 
@@ -80,9 +80,11 @@ trait UserUI extends Loggable{
       S.error("Email/login field is empty")
     else
       UserDoc where (_.email eqs email) get  match {
+        case Some(u) if u.suspended.get => S.error("User is suspended. Ask admin to unblock.")
         case Some(u) if (u.password.match_?(password)) => logIn(u)
         case _ => {
           UserDoc where (_.login eqs email) get match {
+            case Some(u) if u.suspended.get => S.error("User is suspended. Ask admin to unblock.")
             case Some(u) if (u.password.match_?(password)) => logIn(u)
             case _ => S.error("User with such email or login doesn't exists or password is wrong")
           }
@@ -130,7 +132,7 @@ trait UserUI extends Loggable{
 
       user.deleteDependend
       user.delete_!
-      
+
       S.redirectTo("/")
   }
 }

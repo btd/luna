@@ -74,6 +74,10 @@ class UserDoc private() extends MongoRecord[UserDoc] with ObjectIdPk[UserDoc] {
     override def optional_? = true
   }
 
+  object suspended extends BooleanField(this, false) {
+    override def optional_? = true
+  }
+
   def is (user: Box[UserDoc]): Boolean = user match {
     case Full(u) if(u.login.get == login.get) => true
     case _ => false

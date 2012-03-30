@@ -49,7 +49,7 @@ class MyMenu {
 
   def signIn = 
     UserDoc.currentUser match {
-      case Full(u) => "li *" #> SHtml.a(()=> { UserDoc.logoutCurrentUser; S.redirectTo(S.referer openOr "") }, Text("Log Out"))
+      case Full(u) => "li *" #> SHtml.a(()=> { UserDoc.logoutCurrentUser; S.redirectTo(S.referer openOr "/") }, Text("Log Out"))
       case _ => "li" #> (<li><a href={login.loc.calcDefaultHref}>Log In</a></li> ++ 
                           (if(Props.getBool(USER_REGISTRATION_ENABLED, true))
                             <li><a href={newUser.loc.calcDefaultHref}>Register</a></li>

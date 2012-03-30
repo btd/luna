@@ -45,6 +45,14 @@ class AdminUsersOps extends Loggable with UserUI {
 			JqHtml(SHtml.a(Text(u.admin.get.toString)) {
 				changeAdminOption(u)
 			})
+	}
+
+	def changeSuspendOption(u: UserDoc): JsCmd = {
+		u.suspended(!u.suspended.get).save
+		Jq("#" + u.id.get.toString + " " + ".user_suspended") ~> 
+			JqHtml(SHtml.a(Text(u.suspended.get.toString)) {
+				changeSuspendOption(u)
+			})
 	} 
 
 	def renderUsersTable = {
@@ -60,9 +68,10 @@ class AdminUsersOps extends Loggable with UserUI {
 		      						u.deleteDependend		      						
 		      						u.delete_!
 		                            JqId(u.id.get.toString) ~> JqRemove() 
-		                          }
-
-		      )	
+		                          } &
+		      ".user_suspended *" #> SHtml.a(Text(u.suspended.get.toString)) {
+		      	changeSuspendOption(u)
+		      })
 	      	)
 	      
 	}

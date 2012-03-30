@@ -139,7 +139,9 @@ class Boot extends Loggable {
 
     LiftRules.authentication = HttpBasicAuthentication("lift") { 
       case (username, password, Req(userName :: repoName :: _, _, _)) if repoName.endsWith(".git") => { 
-        UserDoc.byName(username) match { 
+        UserDoc.byName(username) match {
+          case Some(user) if user.suspended.get => false
+        
           case Some(user) if user.password.match_?(password) => 
             RepositoryDoc.byUserLoginAndRepoName(userName, repoName.substring(0, repoName.length - 4)) match {
               case Some(r) => r.canPush_?(Some(user))
