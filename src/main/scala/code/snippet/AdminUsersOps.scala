@@ -31,6 +31,8 @@ import code.model._
 import code.lib.Sitemap._
 import org.bson.types.ObjectId
 
+import SnippetHelper._
+
 /**
  * User: denis.bardadym
  * Date: 9/27/11
@@ -84,6 +86,8 @@ class AdminUsersOps extends Loggable with UserUI {
 		user.validate match {
 	      case Nil => {
 	        user.save
+
+	        cleanForm("form") & //hope this is ok for now
 	        Jq(".users") ~> JqHtml(memo.applyAgain())
 	      }
 	      case l => l.foreach(fe => S.error("person", fe.msg))
@@ -98,9 +102,9 @@ class AdminUsersOps extends Loggable with UserUI {
 		val user = UserDoc.createRecord
 		".form" #> SHtml.ajaxForm(
 			SHtml.text("", v => user.email(v.trim), "placeholder" -> "email@example.com", "class" -> "textfield large") ++
-			SHtml.password("",v => user.password(v.trim), "placeholder" -> "password", "class" -> "textfield large") ++
 			SHtml.text("", v => user.login(v.trim), "placeholder" -> "login", "class" -> "textfield large") ++
-			SHtml.button("Add", save(user) , "class" -> "button") ++
+			SHtml.password("",v => user.password(v.trim), "placeholder" -> "password", "class" -> "textfield large") ++
+			SHtml.button("Add", () => JsCmds.Noop , "class" -> "button") ++
 			SHtml.hidden(save(user) _)
 		)
 		//userForm(user, "Add", saveUser(user, u => { S.redirectTo(adminUsers.loc.calcDefaultHref) }))

@@ -165,6 +165,20 @@ object SnippetHelper {
      def toJsCmd = "find(" + child.toJsCmd + ")"
   }
 
+  case class JqRemoveAttr(attr: JsExp) extends JsExp with JsMember {
+     def toJsCmd = "removeAttr(" + attr.toJsCmd + ")"
+  }
+
+    case class JqVal(attr: JsExp) extends JsExp with JsMember {
+     def toJsCmd = "val(" + attr.toJsCmd + ")"
+  }
+
+
+  def cleanForm(formSelector: String): JsCmd = {
+    Jq(formSelector) ~> JqFind("input:text, input:password, input:file, select") ~> JqVal("") &
+    Jq(formSelector) ~> JqFind("input:radio, input:checkbox") ~> JqRemoveAttr("checked") ~> JqRemoveAttr("selected")
+  }
+
   def updateToggleOpenLink(repo: RepositoryDoc): JsCmd = {
     repo.open_?(!repo.open_?.get).save
               //S.redirectTo(userRepos.calcHref(user))
