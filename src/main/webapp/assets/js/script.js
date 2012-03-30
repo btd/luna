@@ -46,8 +46,12 @@ $(function() {
 
     $(".url-box > .clone-urls > li:first-child > a").click();
 
-    $("form.replaceDialog").each(function(i, form){
+    $(".replaceDialog").each(function(i, form){
         var el = $(form);
+        $('button', el).click(function(){
+            el.dialog("close");
+            return true;
+        });
         var newLink = ""
         if(el.attr('data-button-text') !== undefined)
             newLink = "<button class='button'>" + el.attr('data-button-text') + "</button>"
@@ -55,10 +59,6 @@ $(function() {
             newLink = "<a href='javascript://'>" + el.attr('data-anchor-text') + "</a>"
         var newButton = $(newLink).click(function(){
             el.dialog("open");
-            $('button', el).click(function(){
-                el.dialog.dialog("close");
-                return true;
-            });
             return false;
         });
         el.parent().append(newButton)

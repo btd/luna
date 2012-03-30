@@ -4,15 +4,19 @@
     <div class="options_holder">
         
         <h2 class="font large">Current users</h2>
-        <form class="lift:AdminUsersOps.addNewUser replaceDialog" data-button-text="Add user">
-            <input class="textfield large font" name="login" type="text"/>
-            <br/>
-            <input class="textfield large font" name="email" type="text"/>
-            <br/>
-            <input class="textfield large font" name="password" type="password"/>
-            <br/>
-            <button class="button">Add</button>
-        </form>
+        <div class="lift:AdminUsersOps.addNewUser replaceDialog" data-button-text="Add user">
+            <form class="lift:form.ajax ">
+                <div class="form">
+                    <input class="textfield large font" name="login" type="text"/>
+                    <br/>
+                    <input class="textfield large font" name="email" type="text"/>
+                    <br/>
+                    <input class="textfield large font" name="password" type="password"/>
+                    <br/>
+                    <button class="button">Add</button>
+                </div>
+            </form>
+        </div>
         <div class="lift:Msg?id=person&errorClass=error">
 
         </div>

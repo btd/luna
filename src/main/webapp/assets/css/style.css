@@ -359,6 +359,15 @@ html, body {
     padding: 50px 0;
 }
 
+#preloader {
+    z-index:10000;
+    position: fixed;
+    top: 95%;
+    left: 95%;
+    margin-top: -32px;
+    margin-left: -32px;
+}
+
 #container {
     height: 100%;
     width: 100%;

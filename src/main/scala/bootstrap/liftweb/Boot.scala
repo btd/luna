@@ -21,6 +21,13 @@ import util._
 import http._
 import mongodb.{DefaultMongoIdentifier, MongoDB}
 import http.auth._
+
+import http.js.JE._
+import http.js.jquery._
+import http.js.{JsCmd, JsExp, JsMember}
+import JqJE._
+import JqJsCmds._
+
 import sitemap.SiteMap
 
 import util.Helpers._
@@ -38,6 +45,15 @@ import code.lib.Sitemap
 
 
 import main.Constants._
+
+
+case class JqShow() extends JsExp with JsMember {
+   def toJsCmd = "show()"
+}
+
+case class JqHide() extends JsExp with JsMember {
+   def toJsCmd = "hide()"
+}
 
 
 /**
@@ -141,7 +157,7 @@ class Boot extends Loggable {
       case (username, password, Req(userName :: repoName :: _, _, _)) if repoName.endsWith(".git") => { 
         UserDoc.byName(username) match {
           case Some(user) if user.suspended.get => false
-        
+
           case Some(user) if user.password.match_?(password) => 
             RepositoryDoc.byUserLoginAndRepoName(userName, repoName.substring(0, repoName.length - 4)) match {
               case Some(r) => r.canPush_?(Some(user))
@@ -155,6 +171,10 @@ class Boot extends Loggable {
     LiftRules.liftRequest.append {
       case Req("assets" :: Nil, _, _)  => false
     }
+
+    LiftRules.ajaxStart = Full(() => JqId("preloader") ~> JqShow())
+
+    LiftRules.ajaxEnd = Full(() => JqId("preloader") ~> JqHide())
 
     // Use jQuery 1.4
     //LiftRules.jsArtifacts = net.liftweb.http.js.jquery.JQuery14Artifacts

@@ -53,9 +53,10 @@ class AdminUsersOps extends Loggable with UserUI {
 			JqHtml(SHtml.a(Text(u.suspended.get.toString)) {
 				changeSuspendOption(u)
 			})
-	} 
+	}
 
-	def renderUsersTable = {
+
+	val memo = SHtml.memoize{
 		".user" #> UserDoc.allButNot(UserDoc.currentUser.get.id.get).map(u => 
 	      ".user [id]" #> u.id.get.toString &
 	      ".user *" #> (
@@ -73,12 +74,36 @@ class AdminUsersOps extends Loggable with UserUI {
 		      	changeSuspendOption(u)
 		      })
 	      	)
-	      
 	}
+
+	def renderUsersTable = {
+		".users" #> memo	      
+	}
+
+	def save(user: UserDoc)(): JsCmd = {
+		user.validate match {
+	      case Nil => {
+	        user.save
+	        Jq(".users") ~> JqHtml(memo.applyAgain())
+	      }
+	      case l => l.foreach(fe => S.error("person", fe.msg))
+	    }
+
+	}
+
+	
+
 
 	def addNewUser = {
 		val user = UserDoc.createRecord
-		userForm(user, "Add", saveUser(user, u => { S.redirectTo(adminUsers.loc.calcDefaultHref) }))
+		".form" #> SHtml.ajaxForm(
+			SHtml.text("", v => user.email(v.trim), "placeholder" -> "email@example.com", "class" -> "textfield large") ++
+			SHtml.password("",v => user.password(v.trim), "placeholder" -> "password", "class" -> "textfield large") ++
+			SHtml.text("", v => user.login(v.trim), "placeholder" -> "login", "class" -> "textfield large") ++
+			SHtml.button("Add", save(user) , "class" -> "button") ++
+			SHtml.hidden(save(user) _)
+		)
+		//userForm(user, "Add", saveUser(user, u => { S.redirectTo(adminUsers.loc.calcDefaultHref) }))
 	}
 }
 //
