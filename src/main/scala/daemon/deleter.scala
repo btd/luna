@@ -33,7 +33,7 @@ class DeleteUnneededReposJob extends Job with Loggable {
 	def execute(context: JobExecutionContext) {
 		logger.debug("Deleting repos job started")
 
-		val listOfFiles = fsDir.list.toSet
+		val listOfFiles = Option(fsDir.list).map(_.toSet).getOrElse(Set[String]())
 
 		val reposNames = RepositoryDoc.all.map(_.fsName.get).toSet
 
