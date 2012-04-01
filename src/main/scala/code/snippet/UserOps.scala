@@ -84,6 +84,8 @@ class UserOps(user: UserDoc) extends Loggable with RepositoryUI {
               
 
   val memo = SHtml.memoize {
+    if(repos.isEmpty) ".repo_holder" #> <p class="large">{user.login.get.capitalize} has no repositories.</p>
+    else
     ".repo" #> repos.map(repo =>
        renderRepositoryBlock(repo, user, 
         r => a(defaultTree.calcHref(r), 
@@ -94,10 +96,10 @@ class UserOps(user: UserDoc) extends Loggable with RepositoryUI {
 
   def renderRepositoryList = {   
 
-    if(repos.isEmpty)
-      "*" #> <span class="large">{user.login.get.capitalize} has no repos.</span>
-    else 
-     ".repo_list" #> memo    
+    //if(repos.isEmpty)
+    //  passThru
+    //else 
+     ".repo_list *" #> memo    
     
   }
 }
