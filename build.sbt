@@ -4,6 +4,8 @@ version := "1.1-SNAPSHOT"
 
 seq(webSettings :_*)
 
+seq(lessSettings : _*)
+
 scalaVersion := "2.9.1"
 
 scalacOptions += "-deprecation"
@@ -35,3 +37,7 @@ libraryDependencies ++= Seq (
   "org.eclipse.jetty"   % "jetty-webapp"                  % "8.0.4.v20111024"        % "container",
   "ch.qos.logback"      % "logback-classic"               % "1.0.0"                  
   )
+
+(webappResources in Compile) <+= (resourceManaged in Compile)
+
+(resourceManaged in (Compile, LessKeys.less)) <<= (sourceDirectory in Compile)(_ / "webapp" / "assets")
