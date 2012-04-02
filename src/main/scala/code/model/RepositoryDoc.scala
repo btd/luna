@@ -291,14 +291,19 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
     }
 
     def clone(user: UserDoc): RepositoryDoc = {
-      val uri = new URIish(fsPath)
+      
       val clonnedDoc = RepositoryDoc.createRecord.ownerId(user.id.get).name(chooseCloneName(user)).forkOf(id.get)
-      Git.cloneRepository.setURI(uri.toString)
-        .setDirectory(new File(clonnedDoc.git.fsPath))
-        .setBare(true)
-        .setCloneAllBranches(true)
-        .call
+
+      if(inited_?) {
+        val uri = new URIish(fsPath)
+        Git.cloneRepository.setURI(uri.toString)
+          .setDirectory(new File(clonnedDoc.git.fsPath))
+          .setBare(true)
+          .setCloneAllBranches(true)
+          .call
+      }
       clonnedDoc.save
+
     }
 
     private def chooseCloneName(user: UserDoc): String = {
