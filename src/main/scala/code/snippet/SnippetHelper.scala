@@ -58,26 +58,13 @@ object SnippetHelper {
 
   def suffix(list: List[String]) : String = suffix(list, "/", "")
 
-   def suffix(list: List[String], first: String, last: String): String =
+  def suffix(list: List[String], first: String, last: String): String =
     list match {
       case Nil => ""
       case l => l.mkString(first, "/", last)
     }
 
-  
-  //def cloneButtonAppend(r: RepositoryDoc, user: UserDoc) : NodeSeq =
-  //SHtml.a(() => jsExpToJsCmd(Jq(".repo_list") ~> JqAppend(urlBoxXhtml(r.git.clone(user), repoName _, cloneButtonAppend))), <span class="ui-icon ui-icon-shuffle "/>, "class" -> "admin_button")
-
-  //def cloneButtonRedirect(r: RepositoryDoc, user: UserDoc) =
-  //SHtml.a(() => S.redirectTo(r.git.clone(user).sourceTreeUrl), <span class="ui-icon ui-icon-shuffle "/>, "class" -> "admin_button")
-
-  def makeFork(repo: RepositoryDoc, u: UserDoc)():JsCmd = {
-    repo.git.clone(u)
-    S.redirectTo(userRepos.calcHref(u))
-  }
-
-
-  
+   
   def a(href: String, value: NodeSeq) = <a href={href}>{value}</a>
 
   private val dateFormatter = new SimpleDateFormat("MMM dd, yyyy")
@@ -191,11 +178,13 @@ object SnippetHelper {
         updateToggleOpenLink(repo)
       })
   }
-  
+ 
 
   def renderRepositoryBlock(repo: RepositoryDoc, 
                             user: UserDoc, 
-                            repoName: (RepositoryDoc) => NodeSeq): CssSel = {
+                            repoName: RepositoryDoc => NodeSeq,
+                            onForkOwn: RepositoryDoc => JsCmd, 
+                            onForkNotOwn: RepositoryDoc => JsCmd): CssSel = {
       ".repo [class+]" #> (if(repo.ownerId.get == user.id.get) 
                               if(repo.open_?.get) "public" else "private"
                            else "collaborated") &
@@ -204,7 +193,9 @@ object SnippetHelper {
       ".clone-url" #> (repo.cloneUrlsForCurrentUser.map(url => "a" #> a(url._1, Text(url._2)))) &
       (UserDoc.currentUser match {
         case Full(currentUser) if(repo.ownerId.get == currentUser.id.get) => 
-          ".fork *" #> SHtml.a(makeFork(repo, currentUser) _, Text("fork it")) &
+          ".fork *" #> SHtml.a(Text("fork it")) {
+             onForkOwn(repo.git.clone(currentUser))
+          } &
           ".notification_page *" #> a(notification.calcHref(repo), Text("notify")) &
           ".toggle_open *" #> SHtml.a(Text(if (repo.open_?.get) "make private" else "make public")) {
             updateToggleOpenLink(repo)
@@ -215,7 +206,9 @@ object SnippetHelper {
                 .openOr(".origin_link" #> NodeSeq.Empty) 
         
         case Full(currentUser) =>
-          ".fork *" #> SHtml.a(makeFork(repo, currentUser) _, Text("fork it")) &
+          ".fork *" #> SHtml.a(Text("fork it")) {
+            onForkNotOwn(repo.git.clone(currentUser))
+          } &
           ".notification_page *" #> a(notification.calcHref(repo), Text("notify")) &
           ".toggle_open" #> NodeSeq.Empty &
           ".admin_page" #> NodeSeq.Empty &

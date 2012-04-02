@@ -106,7 +106,7 @@ class PullRequestOps(repo: RepositoryDoc) extends Loggable {
           .srcRef(sourceRef)
           .destRef(destRef)
           .creatorId(u.id.get).description(description).save
-        S.redirectTo(pullRequests.calcHref(sourceRepo))
+        S.redirectTo(pullRequests.calcHref(destRepo))
     }
   }
 

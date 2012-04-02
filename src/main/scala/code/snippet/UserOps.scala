@@ -53,12 +53,16 @@ class UserOps(user: UserDoc) extends Loggable with RepositoryUI {
         case Nil => {
           repo.save
 
-          cleanForm("form") & 
-          Jq(".repo_list") ~> JqHtml(memo.applyAgain()) &
-          JE.JsRaw("setCloneUrls()") 
+          cleanForm("form") &
+          updateJs()
         }
         case l => l.foreach(fe => S.error("repo", fe.msg))
     }
+  }
+
+  def updateJs(): JsCmd = {
+    Jq(".repo_list") ~> JqHtml(memo.applyAgain()) &
+    JE.JsRaw("setCloneUrls()") 
   }
 
   def addNewRepo: NodeSeq => NodeSeq = 
@@ -87,10 +91,13 @@ class UserOps(user: UserDoc) extends Loggable with RepositoryUI {
     if(repos.isEmpty) ".repo_holder" #> <p class="large">{user.login.get.capitalize} has no repositories.</p>
     else
     ".repo" #> repos.map(repo =>
-       renderRepositoryBlock(repo, user, 
-        r => a(defaultTree.calcHref(r), 
-          if(r.ownerId.get == user.id.get) Text(r.name.get)
-          else Text(r.owner.login.get + "/" + r.name.get))))
+       renderRepositoryBlock(repo, 
+                            user, 
+                            r => a(defaultTree.calcHref(r), 
+                              if(r.ownerId.get == user.id.get) Text(r.name.get)
+                              else Text(r.owner.login.get + "/" + r.name.get)), 
+                            r => updateJs(),
+                            r => S.redirectTo(userRepos.calcHref(UserDoc.currentUser.get))) )
   }
  
 

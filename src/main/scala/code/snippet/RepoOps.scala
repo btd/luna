@@ -69,7 +69,9 @@ class RepoOps(repo: RepositoryDoc) extends Loggable {
 
   def renderRepositoryBlockDefault = renderRepositoryBlock(repo, 
                           repo.owner, 
-                          r => <span><a href={userRepos.calcHref(r.owner)}>{r.owner.login.get}</a>/{r.name.get}</span>)
+                          r => <span><a href={userRepos.calcHref(r.owner)}>{r.owner.login.get}</a>/{r.name.get}</span>,
+                          r => S.redirectTo(defaultTree.calcHref(r)),
+                          r => S.redirectTo(defaultTree.calcHref(r)) )
 
   
 
