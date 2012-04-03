@@ -539,6 +539,37 @@ input, textarea, button {
     border: 1px solid #B0281A;
 }
 
+.info_section {
+    border-bottom: 2px solid rgb(217, 217, 217);
+    margin-bottom: 50px;
+    padding-bottom: 30px;
+}
+
+.info_section .user_info {
+    width: 300px;
+}
+
+.info_section .notify_stream {
+    width: 700px;
+}
+
+.notify_event {
+    border: 2px solid #C2D7DD;
+    background-color: #F0F4F9;
+    border-radius: 3px;
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+
+    margin-bottom: 10px;
+    padding: 10px;
+}
+
+.notify_event ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
 .url-box {
     height: 30px;
     margin-right: 15px;
