@@ -26,7 +26,7 @@ $ cd luna
 $ ./sbt package
 ```
 
-Now use `./target/scala-2.9.1.final/luna-tool_2.9.1-{VERSION}.war`. Default settings help you to start an app. 
+Now use `./target/scala-2.9.1.final/luna-tool_2.9.1-{VERSION}.war`. Default settings help you to start an app. Check that your application server has javax.transaction api (you can take it here - http://repo1.maven.org/maven2/javax/transaction/jta/1.1/jta-1.1.jar).
 
 Configuration
 ======================
