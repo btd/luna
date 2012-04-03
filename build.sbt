@@ -11,7 +11,8 @@ scalacOptions += "-deprecation"
 resolvers ++= Seq (
   "jgit-repository" at "http://download.eclipse.org/jgit/maven",
   "Sonatype Snapshot" at "https://oss.sonatype.org/content/repositories/snapshots",
-  "my github repo" at "http://btd.github.com/maven2"
+  "my github repo" at "http://btd.github.com/maven2",
+  "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/"
   )
 
 
@@ -33,6 +34,9 @@ libraryDependencies ++= Seq (
   "net.liftweb"         %% "lift-mongodb-record"          % "2.5-SNAPSHOT"           % "compile",
   "com.foursquare"      %% "rogue"                        % "1.1.6"                  intransitive(),
   "org.eclipse.jetty"   % "jetty-webapp"                  % "8.0.4.v20111024"        % "container",
-  "ch.qos.logback"      % "logback-classic"               % "1.0.0"                  
+  "ch.qos.logback"      % "logback-classic"               % "1.0.0",
+  "javax.servlet"       % "servlet-api"                   % "2.5",
+  "com.typesafe.akka"   % "akka-actor"                    % "2.0",
+  "com.typesafe.akka"   % "akka-kernel"                   % "2.0"            
   )
 
