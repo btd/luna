@@ -1,0 +1,213 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Luna by btd</title>
+    
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <script src="javascripts/scale.fix.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Luna</h1>
+        <p>Git Review Tool</p>
+        <p class="view"><a href="https://github.com/btd/luna">View the Project on GitHub <small>btd/luna</small></a></p>
+        <ul>
+          <li><a href="https://github.com/btd/luna/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/btd/luna/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/btd/luna">Fork On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h1>Luna</h1>
+
+<p>If you want to have something like github but on your own server (and you have no 5000$) you can use this application.</p>
+
+<h1>What it can</h1>
+
+<ul>
+<li>Manage users. User registration, collaborators on repos</li>
+<li>Manage ssh public keys. You can add any number of keys for yourself or only for one repo</li>
+<li>Repositories. Can be public or private. You can add collaborator to repository.</li>
+<li>Forking. You can fork any visible for you repository and make pull requests for owner</li>
+<li>Ssh read+write access, http read+write access (use HTTPS!!!), git protocol read access</li>
+<li>Mail notification about push (in practice it is not difficult to add other)</li>
+</ul><h1>Installation</h1>
+
+<p>Assume you already have a server with any java web server (i use jetty) and mongodb 2.0 (yes as storage it uses mongo). </p>
+
+<p>The easiest way</p>
+
+<div class="highlight">
+<pre><span class="nv">$ </span>git clone git://github.com/btd/luna.git
+<span class="nv">$ </span><span class="nb">cd </span>luna
+<span class="nv">$ </span>./sbt package
+</pre>
+</div>
+
+
+<p>Now use <code>./target/scala-2.9.1.final/luna-tool_2.9.1-{VERSION}.war</code>. Default settings help you to start an app. </p>
+
+<h1>Configuration</h1>
+
+<p>All configuration are optional. If one setting depends from others it will be written. 
+<em>Next <code>/</code> in filepath means root of war package. <code>web.xml</code> means <code>/WEB-INF/web.xml</code>. and <code>props</code> means <code>/WEB-INF/classes/props/default.props</code></em>.</p>
+
+<p><em>Check that props file uses ASCII encoding</em></p>
+
+<h2>User Registration</h2>
+
+<p>Props:</p>
+
+<p><code>users.registration.enabled</code> (<code>true</code>) - enable or disable user registration.</p>
+
+<p>At first time luna check existence of user admin/admin, therefor dont forget to change password for him. If you remove all admins with <code>users.registration.enabled=false</code> one will be created =).</p>
+
+<h2>Lift</h2>
+
+<p>Props:</p>
+
+<p><code>run.mode</code> (<code>development</code>) - set it to production.</p>
+
+<h2>Session timeout</h2>
+
+<p>To change default session timeout you need to add to (or change) web.xml:</p>
+
+<div class="highlight">
+<pre><span class="nt">&lt;session-config&gt;</span>
+    <span class="nt">&lt;session-timeout&gt;</span>!!!time in minutes!!!<span class="nt">&lt;/session-timeout&gt;</span>
+<span class="nt">&lt;/session-config&gt;</span>
+</pre>
+</div>
+
+
+<h2>MongoDB</h2>
+
+<p>In development i use version 2.0, but at 1.8 it works too.</p>
+
+<p>Props settings:</p>
+
+<p><code>db.host</code> (<code>localhost</code>) - hostname of server where mongo located;</p>
+
+<p><code>dp.port</code> (<code>27017</code>) - port where mongo listen connections;</p>
+
+<p><code>db.name</code> (<code>grt</code>) - database name;</p>
+
+<p><code>db.user</code> - user for <code>db.name</code>. Depends on <code>db.password</code>;</p>
+
+<p><code>db.password</code> - password of <code>db.user</code>. Depends on <code>db.user</code>.</p>
+
+<h2>Stored paths</h2>
+
+<p>This is path in host fs where luna store own things.</p>
+
+<p>Props settings:</p>
+
+<p><code>repository.dir</code> (<code>./repo/</code>) - where is user repositories is located. Make sure that this ends with <code>/</code>.</p>
+
+<h2>Git transport</h2>
+
+<p>Settings for luna supported transports:</p>
+
+<p><code>daemon.sshd.cert.path</code> (<code>./</code>) - where is sshd store it keys. Make sure that this ends with <code>/</code>.</p>
+
+<p><code>daemon.sshd.port</code> (<code>22</code>) - sshd port</p>
+
+<p><code>daemon.gitd.port</code> (<code>9418</code>) - gitd port</p>
+
+<p>For http transport it uses web server port. If you want to use http make sure use HTTPS.</p>
+
+<h2>Notification</h2>
+
+<p>For mail notifications luna uses additional services.</p>
+
+<p><code>notification.url</code> - this is where luna-services listen connections. E.g. <code>http://localhost:8081/luna/services</code></p>
+
+<p>For notification service need to install other web app (<em>luna-services</em>). And you must have SMTP server.
+In <code>luna-services/WEB-INF/applicationContext.xml</code> see 2 places:</p>
+
+<div class="highlight">
+<pre><span class="nt">&lt;route&gt;</span>
+    <span class="nt">&lt;from</span> <span class="na">uri=</span><span class="s">"jetty:<a href="http://0.0.0.0:8081/luna/services/push">http://0.0.0.0:8081/luna/services/push</a>"</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;unmarshal</span> <span class="na">ref=</span><span class="s">"gsonPushDataFormat"</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;bean</span> <span class="na">ref=</span><span class="s">"recipientListBean"</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;to</span> <span class="na">uri=</span><span class="s">"seda:pushEvents"</span><span class="nt">/&gt;</span>
+<span class="nt">&lt;/route&gt;</span>
+</pre>
+</div>
+
+
+<p>You need to set <code>uri</code> attr of <code>from</code> tag to be relevant that use set for <code>notification.url</code>.</p>
+
+<p>Second is a email settings for gmail. You can do this for your own smtp.</p>
+
+<div class="highlight">
+<pre><span class="nt">&lt;route&gt;</span>
+    <span class="nt">&lt;from</span> <span class="na">uri=</span><span class="s">"seda:emailOutput"</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;to</span> <span class="na">uri=</span><span class="s">"smtp:smtp.gmail.com:587?password=PASSWORD&amp;amp;username=USERNAME&amp;amp;mail.smtp.starttls.enable=true&amp;amp;mail.smtp.auth=true&amp;amp;mapMailMessage=false"</span><span class="nt">/&gt;</span>
+<span class="nt">&lt;/route&gt;</span>
+</pre>
+</div>
+
+
+<h2>Fs repo deleter</h2>
+
+<p>This daemon delete repositories one time at day from filesystem of server.</p>
+
+<p>It store trigger settings in <code>/WEB-INF/classes/quartz/job.xml</code>.</p>
+
+<div class="highlight">
+<pre><span class="nt">&lt;repeat-interval&gt;</span>There is time in millis<span class="nt">&lt;/repeat-interval&gt;</span>
+</pre>
+</div>
+
+
+<h1>OS FAQ</h1>
+
+<p>Luna tested on windows and linux. There are my recomendations:</p>
+
+<p>Windows:</p>
+
+<ul>
+<li>Dont use in user repos not ASCII filenames (i mean local characters) will be a crash</li>
+<li>Install Mongo and Jetty as windows services</li>
+</ul><p>Linux (for jetty):</p>
+
+<ul>
+<li>If u use jetty dont use in repos (it is very outdated). Use 7 or 8. Install it by hands, add as daemon.</li>
+<li>If you want to use port numbers &lt; 1024. Read this (<a href="http://wiki.eclipse.org/Jetty/Howto/Port80">http://wiki.eclipse.org/Jetty/Howto/Port80</a>) how to do this.</li>
+<li>Use something for reverse proxy (i use nginx)</li>
+</ul><p>Both (for jetty):</p>
+
+<ul>
+<li>Optimaze it (<a href="http://wiki.eclipse.org/Jetty/Howto/Garbage_Collection">http://wiki.eclipse.org/Jetty/Howto/Garbage_Collection</a>, <a href="http://wiki.eclipse.org/Jetty/Howto/High_Load">http://wiki.eclipse.org/Jetty/Howto/High_Load</a>)</li>
+<li>Use resourceBase for context config and extract war in webapps</li>
+</ul><h1>Contributing</h1>
+
+<ul>
+<li>Check out the latest master to make sure the feature hasn't been implemented or the bug hasn't been fixed yet</li>
+<li>Check out the issue tracker to make sure someone already hasn't requested it and/or contributed it</li>
+<li>Fork the project</li>
+<li>Start a feature/bugfix branch</li>
+<li>Commit and push until you are happy with your contribution (make sensitive changes)</li>
+<li>Discuss with me, if your changes are big</li>
+<li>Please try not to mess with the build files, version, or history. If you want to have your own version, or is otherwise necessary, that is fine, but please isolate to its own commit so I can cherry-pick around it.</li>
+</ul><h1>License</h1>
+
+<p>Copyright (c) 2011 Bardadym Denis. See LICENSE.txt for further details.</p>
+      </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/btd">btd</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <!--[if !IE]><script>fixScale(document);</script><!--<![endif]-->
+  </body>
+</html>
