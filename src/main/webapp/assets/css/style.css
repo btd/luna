@@ -554,8 +554,8 @@ input, textarea, button {
 }
 
 .notify_event {
-    border: 2px solid #C2D7DD;
-    background-color: #F0F4F9;
+    border: 2px solid #E8E3EE;
+    background-color: #F9F8FB;
     border-radius: 3px;
     -webkit-border-radius: 3px;
     -moz-border-radius: 3px;
@@ -566,8 +566,12 @@ input, textarea, button {
 
 .notify_event ul {
     margin: 0;
-    padding: 0;
+    padding: 0 0 0 10px;
     list-style: none;
+}
+
+.hash {
+	font-family: Monaco, "Courier New", "DejaVu Sans Mono", "Bitstream Vera Sans Mono", monospace;
 }
 
 .url-box {
