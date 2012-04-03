@@ -43,7 +43,7 @@ Props:
 
 `users.registration.enabled` (`true`) - enable or disable user registration.
 
-At first time luna check existence of user admin/admin, therefor dont forget to change password for him. If you remove all admins with `users.registration.enabled=false` one will be created =).
+At first time luna check existence of user with admin rights. If noone will be found then it creates one `admin/admin` (login with this credentials and change its name, password, add other users).
 
 Lift
 ----------------
