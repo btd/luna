@@ -15,26 +15,30 @@ class AkkaFilter extends javax.servlet.Filter {
 
 	private val logger = LoggerFactory.getLogger(this.getClass)
 
-	var bootableClass: Option[String] = _
 	var bootable: Option[Bootable] = _
 
 	def destroy() {
 		for (boot <- bootable) {
-			logger.info("Shutdowning " + boot.getClass.getName)
+			logger.info("Shuting down " + boot.getClass.getName)
 			boot.shutdown()
 		}
 	}
 	def doFilter(request: ServletRequest, response: ServletResponse , chain: FilterChain) {
+		chain.doFilter(request, response)
+	}
+
+	def init(filterConfig: FilterConfig) {
+		val bootableClass = Option(filterConfig.getInitParameter("bootable"))
+
 		if(bootableClass.isEmpty) {
 			logger.error("Bootable class not specified")
 		} else {
-
 			val classLoader = Thread.currentThread.getContextClassLoader
 
     		bootable = bootableClass map { 
     			classLoader.loadClass(_).newInstance.asInstanceOf[Bootable] 
     		}
-
+    		
     		for (boot <- bootable) {
 		      logger.info("Starting up " + boot.getClass.getName)
 		      boot.startup()
@@ -42,11 +46,6 @@ class AkkaFilter extends javax.servlet.Filter {
 
     		logger.info("Successfully started Akka")
 		}
-
-		chain.doFilter(request, response)
-	}
-	def init(filterConfig: FilterConfig) {
-		bootableClass = Option(filterConfig.getInitParameter("bootable"))
 	}
 
 }

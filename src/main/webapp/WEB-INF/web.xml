@@ -8,10 +8,22 @@
         <filter-class>net.liftweb.http.LiftFilter</filter-class>
     </filter>
 
-    
+    <filter>
+        <filter-name>AkkaFilter</filter-name>
+        <filter-class>filter.AkkaFilter</filter-class>
+        <init-param>
+            <param-name>bootable</param-name>
+            <param-value>actor.LunaKernel</param-value>
+        </init-param>
+    </filter>
 
     <filter-mapping>
         <filter-name>LiftFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+
+    <filter-mapping>
+        <filter-name>AkkaFilter</filter-name>
         <url-pattern>/*</url-pattern>
     </filter-mapping>
 
