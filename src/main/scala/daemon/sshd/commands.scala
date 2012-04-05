@@ -17,7 +17,7 @@ package daemon.sshd
 
 import notification.client._
 import java.io.{OutputStream, InputStream}
-import actors.Actor
+import scala.actors.Actor
 import org.eclipse.jgit.transport.{ReceivePack, UploadPack}
 import net.liftweb.common._
 import org.apache.sshd.server.{SessionAware, Environment, ExitCallback, Command => SshCommand}
@@ -25,6 +25,14 @@ import org.apache.sshd.server.session.ServerSession
 
 import org.eclipse.jgit.lib.{Repository => JRepository, Constants}
 import code.model._
+
+import actors.CanUseRepository
+
+import akka.actor.ActorRef
+import akka.pattern.ask
+import akka.dispatch.Await
+import akka.dispatch.Future
+import akka.util.duration._
 
 trait CommandBase extends SshCommand with SessionAware with Loggable with daemon.Resolver {
 
@@ -38,16 +46,14 @@ trait CommandBase extends SshCommand with SessionAware with Loggable with daemon
 
   protected var onExit: Int = EXIT_SUCCESS
 
-  protected var user: UserDoc = _
-  protected var keys: Seq[SshKeyBase[_]] = _
+  protected var actor: ActorRef = _
 
   val EXIT_SUCCESS = 0
   val EXIT_ERROR = 127
 
 
   def setSession(session: ServerSession) {
-    keys = session.getAttribute(DatabasePubKeyAuth.SSH_KEYS_KEY)
-    user = session.getAttribute(DatabasePubKeyAuth.USER_KEY)
+    actor = session.getAttribute(DatabasePubKeyAuth.ACTOR_KEY)
   }
 
   def setInputStream(in: InputStream) {
@@ -61,20 +67,16 @@ trait CommandBase extends SshCommand with SessionAware with Loggable with daemon
   }
 
   def start(env: Environment) = {
-    new Actor {
-
-      def act() {
-        try {
-          run(env)
-        } finally {
-          in.close
-          out.close
-          err.close
-          callback.onExit(onExit)
-        }
+    Actor.actor {
+      try {
+        run(env)
+      } finally {
+        in.close
+        out.close
+        err.close
+        callback.onExit(onExit)
       }
-
-    }.start
+    }
   }
 
 
@@ -94,21 +96,27 @@ trait CommandBase extends SshCommand with SessionAware with Loggable with daemon
     onExit = EXIT_ERROR
   }
 
-  def checkRepositoryAccess(r: RepositoryDoc) = {
-    if(user.id.get == r.ownerId.get) { // user@server:repo 
-      !keys.filter(_.acceptableFor(r)).isEmpty
-    } else {// cuser@server:user/repo
-      !r.collaborators.filter(_.login.get == user.login.get).isEmpty
-    }
-  }
+  implicit val timeout = akka.util.Timeout(5000)
+
 }
 
 class UploadPackCommand(val repoPath: String) extends CommandBase {
   logger.debug("Upload pack command executed")
   def run(env: Environment) = {
-    for(proc <- packProcessing(repoByPath(repoPath, Some(user)), uploadPack, checkRepositoryAccess)) {
-          proc(in, out, err)
-    } 
+    val f = actor ? CanUseRepository(repoPath)
+
+    Await.result(f, timeout.duration) match {
+      case id: org.bson.types.ObjectId => 
+        RepositoryDoc.byId(id) match {
+          case Some(repo) => uploadPack(repo)(in, out, err)
+          case _ => sendError("Repository not founded. Maybe already deleted?")
+        }
+        
+
+      case s: String => 
+        logger.error(s)
+        sendError(s)
+    }
   }
  
 }
@@ -116,9 +124,22 @@ class UploadPackCommand(val repoPath: String) extends CommandBase {
 class ReceivePackCommand(val repoPath: String) extends CommandBase {
   logger.debug("Receive pack command executed")
   def run(env: Environment) = {
-    for(proc <- packProcessing(repoByPath(repoPath, Some(user)), receivePack, checkRepositoryAccess)) {
-          proc(in, out, err)
-    } 
+
+    logger.debug("Check that user has access to this repository")
+    val f = actor ? CanUseRepository(repoPath)
+
+    Await.result(f, timeout.duration) match {
+      case id: org.bson.types.ObjectId => 
+        logger.debug("Found id of repository")
+        RepositoryDoc.byId(id) match {
+          case Some(repo) => receivePack(repo)(in, out, err)
+          case _ => sendError("Repository not founded. Maybe already deleted?")
+        }        
+
+      case s: String => 
+        logger.error(s)
+        sendError(s)
+    }
   }
 
   

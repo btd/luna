@@ -97,8 +97,6 @@ class ReceivePack(val repo: RepositoryDoc, twoWay: Boolean = true) extends Pack 
 
 trait Resolver {
 
-  self: Loggable =>
-
   val GIT_UPLOAD_PACK = "git-upload-pack"
 
   val GIT_RECEIVE_PACK = "git-receive-pack"

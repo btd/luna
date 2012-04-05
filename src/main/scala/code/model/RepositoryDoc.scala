@@ -391,6 +391,8 @@ object RepositoryDoc extends RepositoryDoc with MongoMetaRecord[RepositoryDoc] {
       (RepositoryDoc where (_.ownerId eqs u.id.get) and (_.name eqs repoName) get))
   }
 
+  def byId(_id: org.bson.types.ObjectId) = RepositoryDoc where (_.id eqs _id) get
+
   def all = {
     RepositoryDoc fetch
   }

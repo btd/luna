@@ -23,8 +23,18 @@ import net.liftweb.util.Helpers._
 import org.apache.sshd.common.Session.AttributeKey
 import code.model._
 
-class DatabasePubKeyAuth extends PublickeyAuthenticator with Loggable {
+import actors.{AuthActor, PublicKeyCred}
+import akka.actor.{Props => AProps, ActorRef}
+import akka.pattern.ask
+import akka.dispatch.Await
+import akka.dispatch.Future
+import akka.util.Timeout
+import akka.util.duration._
 
+import bootstrap.liftweb.Boot._
+
+class DatabasePubKeyAuth extends PublickeyAuthenticator with Loggable {
+  implicit val timeout = Timeout(5000)
 
   /**
    * Check the validity of a public key.
@@ -35,22 +45,21 @@ class DatabasePubKeyAuth extends PublickeyAuthenticator with Loggable {
    * @return a boolean indicating if authentication succeeded or not
    */
   def authenticate(username: String, key: PublicKey, session: ServerSession): Boolean = {
-    //logger.debug("User " + username + " tried to authentificate")
-    UserDoc.byName(username) match {
-      case Some(u) if u.suspended.get => false
-      case Some(u) => {
-        tryo {
-          val keys = (u.keys ++ u.repos.flatMap(_.keys))
-                .filter(SshUtil.parse((_: SshKeyBase[_])) == key)
-          session.setAttribute(DatabasePubKeyAuth.SSH_KEYS_KEY, keys)
-          session.setAttribute(DatabasePubKeyAuth.USER_KEY, u)
+    val future = system.actorOf(AProps[AuthActor]) ? PublicKeyCred(username, key)
 
-          !keys.isEmpty
-        } openOr {
-          false
-        }
-      }
-      case _ => false
+    Await.result(future, timeout.duration) match { // TODO change to configuration property
+      case error: String => 
+        logger.error("Auth failed: %s".format(error))
+        false
+
+      case actor: ActorRef => 
+        logger.info("Auth ok")
+        session.setAttribute(DatabasePubKeyAuth.ACTOR_KEY, actor)
+        true
+
+      case other => 
+        logger.warn("Got unrecognized answer: %s".format(other.toString))
+        false
     }
   }
 
@@ -58,7 +67,6 @@ class DatabasePubKeyAuth extends PublickeyAuthenticator with Loggable {
 }
 
 object DatabasePubKeyAuth {
-  val SSH_KEYS_KEY = new AttributeKey[Seq[SshKeyBase[_]]]
-  val USER_KEY = new AttributeKey[UserDoc]
+  val ACTOR_KEY = new AttributeKey[ActorRef]
 }
 

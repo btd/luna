@@ -37,6 +37,7 @@ libraryDependencies ++= Seq (
   "ch.qos.logback"      % "logback-classic"               % "1.0.0",
   "javax.servlet"       % "servlet-api"                   % "2.5",
   "com.typesafe.akka"   % "akka-actor"                    % "2.0",
-  "com.typesafe.akka"   % "akka-kernel"                   % "2.0"            
+  "com.typesafe.akka"   % "akka-kernel"                   % "2.0",           
+  "com.typesafe.akka"   % "akka-slf4j"                    % "2.0"          
   )
 

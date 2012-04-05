@@ -39,21 +39,24 @@
             </div>
         </div>
 
-        <div class="lift:UserOps.addNewRepo sub_menu replaceDialog" data-button-text="Add new repository">
-            <form class="lift:form.ajax">
-                <div class="form">
-                    <input name="name" type="text" class="textfield font large" placeholder="Repository name"/>
-                    <br/>
-                    <label><input name="open" type="checkbox"/> Public repo?</label>
-                    <br/>
-                    <button class="button" type="button" value="New">New repository</button>
-                </div>
-            </form>
-
-            <div class="lift:Msgs?errorClass=error"></div>
-            
-        </div>
+        
         <h1>User's repositories:</h1>
+        <div>
+            <div class="lift:UserOps.addNewRepo sub_menu replaceDialog" data-button-text="Add new repository">
+                <form class="lift:form.ajax">
+                    <div class="form">
+                        <input name="name" type="text" class="textfield font large" placeholder="Repository name"/>
+                        <br/>
+                        <label><input name="open" type="checkbox"/> Public repo?</label>
+                        <br/>
+                        <button class="button" type="button" value="New">New repository</button>
+                    </div>
+                </form>
+
+                <div class="lift:Msgs?errorClass=error"></div>
+                
+            </div>
+        </div>
         <div class="repo_list lift:UserOps.renderRepositoryList">
             <div class="repo_holder">
                 <div class="repo long">

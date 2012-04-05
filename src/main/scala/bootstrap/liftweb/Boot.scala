@@ -46,6 +46,9 @@ import code.lib.Sitemap
 
 import main.Constants._
 
+import actors.{AuthActor, UsersActor}
+import akka.actor.{ActorSystem, Actor, Props => AProps}
+
 
 case class JqShow() extends JsExp with JsMember {
    def toJsCmd = "show()"
@@ -55,6 +58,9 @@ case class JqHide() extends JsExp with JsMember {
    def toJsCmd = "hide()"
 }
 
+object Boot {
+  val system = ActorSystem("lunaweb")
+}
 
 /**
  * A class that's instantiated early and run.  It allows the application
@@ -75,6 +81,9 @@ class Boot extends Loggable {
         MongoDB.defineDb(DefaultMongoIdentifier, new Mongo(dbHost, dbPort), dbName)
     }
 
+    val authActor = Boot.system.actorOf(AProps[AuthActor], "auth")
+    val usersActor = Boot.system.actorOf(AProps[UsersActor], "users")
+
     try { 
       SshDaemon.init
     } catch {
@@ -91,6 +100,7 @@ class Boot extends Loggable {
         SshDaemon.shutdown
         GitDaemon.shutdown
         notification.client.NotifyActor.onShutdown
+        Boot.system.shutdown
       }
     )
 
