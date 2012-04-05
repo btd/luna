@@ -81,9 +81,6 @@ class Boot extends Loggable {
         MongoDB.defineDb(DefaultMongoIdentifier, new Mongo(dbHost, dbPort), dbName)
     }
 
-    val authActor = Boot.system.actorOf(AProps[AuthActor], "auth")
-    val usersActor = Boot.system.actorOf(AProps[UsersActor], "users")
-
     try { 
       SshDaemon.init
     } catch {
