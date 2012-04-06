@@ -66,8 +66,6 @@ html,body{height:100%;}
 .repo.collaborated{border-color:#95B3D7;background-color:#DCE6F2;}.repo.collaborated >.sub.admin{border-color:#95B3D7;}
 .repo >.sub.admin{border-top:2px solid black;margin:0;padding:0 15px 0 0;}.repo >.sub.admin:empty{display:none;}
 .repo >.sub.admin >li{display:inline-block;margin-left:15px;}.repo >.sub.admin >li *{font-size:1.1em;line-height:2em;}
-.opened_pr{border-color:#C3D69B;background-color:#EBF1DE;}
-.closed_pr{border-color:#D99694;background-color:#F2DCDB;}
 .button{color:white;background-image:-moz-linear-gradient(top, #dd4b39, #d14836);background-image:-o-linear-gradient(top, #dd4b39, #d14836);background-image:-webkit-gradient(linear, left top, left bottom, from(#dd4b39), to(#d14836));-o-transition:border-top-color 0.218s,border-right-color 0.218s,border-bottom-color 0.218s,border-left-color 0.218s;-webkit-transition:border-color 0.218s;min-width:72px;padding:1em;font-family:arial,sans-serif;border:1px solid rgba(0, 0, 0, 0.1);border-radius:2px;-webkit-border-radius:2px;-moz-border-radius:2px;-o-border-radius:2px;text-transform:uppercase;text-decoration:none;text-align:center;vertical-align:middle;white-space:nowrap;outline:none;position:relative;display:inline-block;}.button:active{border:1px solid #992A1B;box-shadow:inset 0 1px rgba(0, 0, 0, 0.3);-webkit-box-shadow:inset 0 1px rgba(0, 0, 0, 0.3);background-image:-moz-linear-gradient(top, #dd4b39, #b0281a);background-image:-o-linear-gradient(top, #dd4b39, #b0281a);background-image:-webkit-gradient(linear, left top, left bottom, from(#dd4b39), to(#b0281a));}
 .button:hover{box-shadow:0 1px rgba(0, 0, 0, 0.2);-webkit-box-shadow:0 1px rgba(0, 0, 0, 0.2);background-image:-moz-linear-gradient(top, #dd4b39, #c53727);background-image:-o-linear-gradient(top, #dd4b39, #c53727);background-image:-webkit-gradient(linear, left top, left bottom, from(#dd4b39), to(#c53727));border:1px solid #B0281A;}
 .url-box{height:30px;margin-right:15px;margin-top:15px;}.url-box .textfield{float:left;width:400px;padding:3px 5px 2px 5px;margin:0;height:23px;border:1px solid #ccc;border-left:none;font-family:Monaco,"Courier New","DejaVu Sans Mono","Bitstream Vera Sans Mono",monospace;border-radius:0px 3px 3px 0px;-webkit-border-radius:0px 3px 3px 0px;-moz-border-radius:0px 3px 3px 0px;-o-border-radius:0px 3px 3px 0px;}
@@ -95,8 +93,8 @@ table.users .user_suspended{width:25%;text-align:center;}
 .blob pre{font-size:12px;font-family:'Bitstream Vera Sans Mono','Courier',monospace;line-height:1.4;width:10000px;margin:0;padding:1em .5em;}.blob pre code{margin:0;padding:0;}
 .blob .img{text-align:center;}
 .jFloatingScroller{position:fixed;bottom:0;overflow:auto;}
-.line_numbers{position:absolute;top:0;left:0;background-color:#ececec;}.line_numbers pre{width:auto;text-align:right;}.line_numbers pre:hover{background-color:#E4DDCC;}
-.line{width:100%;display:inline-block;}
+.line_numbers{position:absolute;top:0;left:0;background-color:#ececec;}.line_numbers pre{width:auto;text-align:right;}
+.line{width:100%;}.line:hover{background-color:#E4DDCC;}
 .blob_header{padding:5px 10px;border-bottom:2px solid #dcdcdc;background-color:white;}.blob_header .manage{font-size:20px;float:right;}.blob_header .manage a{text-decoration:none;margin-left:10px;}
 .blob_header .status{font-size:16px;line-height:26px;}.blob_header .status::before{margin-right:15px;}
 .blob.diff .modified,#floatingChangesetDiffHeader .modified{color:#599bdc;}
@@ -112,6 +110,8 @@ table.users .user_suspended{width:25%;text-align:center;}
 .commit{padding:10px 15px;border-top:2px solid #E6E6B8;font-size:1.3em;}.commit p{margin:15px 0;}
 .commit_author{font-size:0.9em;color:#599bdc;}
 .commit .source_tree_link{margin-right:15px;}
+.opened_pr{border-color:#C3D69B;background-color:#EBF1DE;}
+.closed_pr{border-color:#D99694;background-color:#F2DCDB;}
 .pull_request_box .repo_selector{width:200px;}
 .pull_request{font-size:1.1em;border:2px solid #dcdcdc;border-radius:3px;-webkit-border-radius:3px;-moz-border-radius:3px;-o-border-radius:3px;padding:15px;width:970px;margin:10px 0;}
 .pull_request_box{border:1px solid gray;padding:20px;margin:20px;border-radius:3px;-webkit-border-radius:3px;-moz-border-radius:3px;-o-border-radius:3px;}
