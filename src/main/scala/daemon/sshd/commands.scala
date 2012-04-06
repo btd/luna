@@ -17,7 +17,7 @@ package daemon.sshd
 
 import notification.client._
 import java.io.{OutputStream, InputStream}
-import actors.Actor
+import scala.actors.Actor
 import org.eclipse.jgit.transport.{ReceivePack, UploadPack}
 import net.liftweb.common._
 import org.apache.sshd.server.{SessionAware, Environment, ExitCallback, Command => SshCommand}
@@ -61,9 +61,7 @@ trait CommandBase extends SshCommand with SessionAware with Loggable with daemon
   }
 
   def start(env: Environment) = {
-    new Actor {
-
-      def act() {
+    Actor.actor {
         try {
           run(env)
         } finally {
@@ -72,9 +70,8 @@ trait CommandBase extends SshCommand with SessionAware with Loggable with daemon
           err.close
           callback.onExit(onExit)
         }
-      }
-
-    }.start
+      
+    }
   }
 
 
