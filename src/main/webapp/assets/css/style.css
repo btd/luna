@@ -54,7 +54,7 @@ body {
 }
 
 body, button, input, select, textarea {
-    font-family: sans-serif;
+    font-family: arial;
     color: #222;
 }
 
@@ -760,6 +760,10 @@ table.users .user_suspended {
 
 .source_tree .last_commit {
     width: 50%;
+}
+
+.source_tree .folder_element {
+	font-weight: bold;
 }
 
 .source_tree td {

@@ -19,7 +19,7 @@ import net.liftweb.common._
 import net.liftweb.util.Helpers._
 import org.lunatool.linguist._
 
-trait SourceElement {
+trait SourceElement extends Ordered[SourceElement] {
    def name = pathLst.last
 
    def pathLst: List[String]
@@ -35,6 +35,13 @@ case class Blob(repo: RepositoryDoc, commit: String, pathLst: List[String], size
   def path = pathLst.mkString("/")
 
   def data = repo.git.ls_cat(pathLst, commit)
+  
+  override def compare(a: SourceElement) = {
+     a match {
+       case b @ Blob(_, _, _, _) => name compare b.name
+       case _ => 1
+     }
+  }
 }
 
 case class Tree(repo: RepositoryDoc, commit: String, pathLst: List[String]) extends SourceElement {
@@ -43,6 +50,13 @@ case class Tree(repo: RepositoryDoc, commit: String, pathLst: List[String]) exte
       list of source elements in Tree
    */
    def data = tryo(repo.git.ls_tree(pathLst, commit))
+   
+   override def compare(a: SourceElement) = {
+     a match {
+       case t @ Tree(_, _, _) => name compare t.name
+       case _ => -1
+     }
+  }
 }
 
 object SourceElement {
@@ -54,4 +68,5 @@ object SourceElement {
    }
 
    def rootAt(repo: RepositoryDoc, commit: String) = Tree(repo, commit, Nil)
+   
 }
