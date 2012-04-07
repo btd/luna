@@ -65,11 +65,11 @@ class SourceElementOps(se: SourceElement) extends Loggable {
    (se match {
       case t @ Tree(_, _, _) => {
         t.data.map(sourceList => 
-         ".source_element *" #> sourceList.map(s => {
+         ".source_element *" #> sourceList.sortWith(_ < _).map(s => {
               val c = tryo { se.repo.git.log(se.commit, s.pathLst).next } 
               ".name *" #> {
                   s match {
-                    case t @ Tree(_, _, _) => <a href={treeAtCommit.calcHref(t)}>{t.name}/</a>
+                    case t @ Tree(_, _, _) => <a class="folder_element" href={treeAtCommit.calcHref(t)}>{t.name}/</a>
                     case b @ Blob(_, _, _, _) => <a href={blobAtCommit.calcHref(b)}>{b.name}</a>
                   }} &
               ".date *" #> c.map(cc => escape(dateFormat(cc.getCommitterIdent.getWhen))) &
