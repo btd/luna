@@ -73,7 +73,7 @@ class SourceElementOps(se: SourceElement) extends Loggable {
                     case b @ Blob(_, _, _, _) => <a href={blobAtCommit.calcHref(b)}>{b.name}</a>
                   }} &
               ".date *" #> c.map(cc => escape(dateFormat(cc.getCommitterIdent.getWhen))) &
-              ".last_commit *" #> c.map(cc => escape(cc.getShortMessage) )
+              ".last_commit *" #> c.map(cc => "%s [%s]".format(escape(cc.getShortMessage), cc.getCommitterIdent().getName()))
          })).openOr(".source_element" #> NodeSeq.Empty)
          
       }
