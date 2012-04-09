@@ -58,9 +58,7 @@ object GitDaemon extends daemon.Service with Loggable {
 
     acceptor.setHandler( new GitServerHandler )
 
-    acceptor.setReuseAddress(true)
-
-    
+    acceptor.setReuseAddress(true)    
     
     acceptor.bind(new InetSocketAddress(port))   
     logger.debug("Git daemon started on port %s".format(port))

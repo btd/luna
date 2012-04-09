@@ -89,6 +89,7 @@ table.users .user_suspended{width:25%;text-align:center;}
 .current_branch_select_holder{margin:10px 0;}
 .source_container{position:relative;padding-left:30px;}
 .source_tree{display:block;width:1000px;border:2px solid #d9d9d9;background-color:#f2f2f2;border-radius:3px;-webkit-border-radius:3px;-moz-border-radius:3px;-o-border-radius:3px;}.source_tree .last_commit{width:50%;}
+.source_tree .folder_element{font-weight:bold;}
 .blob{width:1000px;overflow:hidden;border:2px solid #dcdcdc;border-radius:3px;-webkit-border-radius:3px;-moz-border-radius:3px;-o-border-radius:3px;margin-bottom:10px;background-color:#ECECEC;}.blob .source{background:#FDF6E3;overflow:auto;}
 .blob pre{font-size:12px;font-family:'Bitstream Vera Sans Mono','Courier',monospace;line-height:1.4;width:10000px;margin:0;padding:1em .5em;}.blob pre code{margin:0;padding:0;}
 .blob .img{text-align:center;}

@@ -26,7 +26,7 @@ $ cd luna
 $ ./sbt package
 ```
 
-Now use `./target/scala-2.9.1.final/luna-tool_2.9.1-{VERSION}.war`. Default settings help you to start an app. 
+Now use `./target/scala-2.9.1.final/luna-tool_2.9.1-{VERSION}.war`. Default settings help you to start an app. Check that your application server has javax.transaction api (you can take it here - http://repo1.maven.org/maven2/javax/transaction/jta/1.1/jta-1.1.jar).
 
 Configuration
 ======================
@@ -43,7 +43,7 @@ Props:
 
 `users.registration.enabled` (`true`) - enable or disable user registration.
 
-At first time luna check existence of user admin/admin, therefor dont forget to change password for him. If you remove all admins with `users.registration.enabled=false` one will be created =).
+At first time luna check existence of user with admin rights. If noone will be found then it creates one `admin/admin` (login with this credentials and change its name, password, add other users).
 
 Lift
 ----------------
@@ -175,6 +175,7 @@ Contributing
 * Commit and push until you are happy with your contribution (make sensitive changes)
 * Discuss with me, if your changes are big
 * Please try not to mess with the build files, version, or history. If you want to have your own version, or is otherwise necessary, that is fine, but please isolate to its own commit so I can cherry-pick around it.
+* By default i suppose that contributor agreed with Apache License and Individual Contributor License Agreement (http://www.apache.org/licenses/icla.txt).
 
 License
 ===========

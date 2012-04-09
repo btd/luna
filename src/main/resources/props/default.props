@@ -1,4 +1,3 @@
 repository.dir = ./repo/
 notification.url = http://localhost:8081/luna/services
 run.mode = development
-users.registration.enabled = false
