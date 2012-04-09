@@ -109,4 +109,19 @@ class UserOps(user: UserDoc) extends Loggable with RepositoryUI {
      ".repo_list *" #> memo    
     
   }
+
+  def userStat = {
+    ".user_login *" #> ("User " + user.login.get.capitalize) &
+    ".user_email *" #> ( "a" #> <a href={"mailto:" + user.email.get}>{user.email.get}</a> ) &
+    ".silly_stat *" #> 
+    (<li>{user.publicRepos.size} public</li> ++
+    (UserDoc.currentUser match {
+      case Full(u) if u.login.get == user.login.get => 
+        <li>{user.privateRepos.size} private</li> ++
+        <li>{user.collaboratedRepos.size} collaborated</li>
+      case _ => NodeSeq.Empty
+    }))
+
+  }
 }
+

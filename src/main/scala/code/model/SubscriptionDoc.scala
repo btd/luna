@@ -15,7 +15,7 @@
 */
 package code.model
 
-
+import notification._
 import notification.client._
 
 import net.liftweb._

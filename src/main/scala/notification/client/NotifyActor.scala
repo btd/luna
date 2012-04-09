@@ -19,9 +19,10 @@ import net.liftweb._
 import util._
 import common._
 
-import actor._
+import actor.{LiftActor, ActorLogger}
 
 import code.model._
+import NotifyEvents._
 
 import org.eclipse.jgit._
 import revwalk.RevCommit
@@ -34,20 +35,7 @@ import json.JsonAST._
 import json.Printer._
 
 
-object NotifyEvents extends Enumeration {
-	val Push = Value
 
-		
-}
-
-/*
-	This event for git-recieve-pack command.
-	where - this is repository where this command appear
-	who - optional user (because we can push through specific ssh key)
-	pusher - this will be who make a push from JGit identification
-	what - this is func that get me a seq of commits (i do not what ask sender convert for me a RevWalk to Seq)
-*/
-case class PushEvent(where: RepositoryDoc, pusher: PersonIdent, what: Map[String, Ref])
 
 object NotifyActor extends LiftActor {
 	lazy val notifyServerUrl = Props.get("notification.url")
@@ -124,7 +112,7 @@ object NotifyActor extends LiftActor {
 
 	lazy val h = new nio.Http
 
-	def onShutdown() = {//TODO add to LiftRules
+	def onShutdown() = {
 		h.shutdown
 	}
 

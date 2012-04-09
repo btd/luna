@@ -25,6 +25,7 @@ import util._
 import xml._
 import js._
 import code.model._
+import notification._
 import notification.client._
 import code.lib.Sitemap._
 

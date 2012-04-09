@@ -25,6 +25,8 @@ import org.eclipse.jgit.transport._
 import org.eclipse.jgit.transport.RefAdvertiser.PacketLineOutRefAdvertiser
 import org.eclipse.jgit.revwalk.RevWalk
 
+import notification._
+
 import java.io._
 
 trait Service {
@@ -88,7 +90,7 @@ class ReceivePack(val repo: RepositoryDoc, twoWay: Boolean = true) extends Pack 
  
     try {
       p.receive(in, out, err)
-      NotifyActor ! PushEvent(repo, ident, oldHeads)
+      ActivityActor ! PushEvent(repo, ident, oldHeads)
     } catch {
       case e: IOException => logger.warn("IOException: %s".format(e.getMessage))
     }
