@@ -36,3 +36,4 @@ libraryDependencies ++= Seq (
   "ch.qos.logback"      % "logback-classic"               % "1.0.0"                  
   )
 
+(resourceManaged in (Compile, LessKeys.less)) <<= (sourceDirectory in Compile)(_ / "webapp" / "assets")

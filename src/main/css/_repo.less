@@ -1,0 +1,64 @@
+.repo {
+    border: 2px solid black;
+    .border-radius;
+
+    margin-bottom: 10px;
+
+    * {
+        font-family: arial, sans-serif;
+        font-weight: normal;
+    }
+
+    .repo_name {
+        margin-left: 15px;
+        font-size: 2em;
+        line-height: 0.6em;
+    }
+
+    &.public {
+        border-color: #C3D69B;
+        background-color: #EBF1DE;
+
+        & > .sub.admin {
+            border-color: #C3D69B;
+        }
+    }
+
+    &.private {
+        border-color: #D99694;
+        background-color: #F2DCDB;
+
+        & > .sub.admin {
+            border-color: #D99694;
+        }
+    }
+
+    &.collaborated {
+        border-color: #95B3D7;
+        background-color: #DCE6F2;
+
+        & > .sub.admin {
+            border-color: #95B3D7;
+        }
+    }
+
+
+    & > .sub.admin {
+        border-top: 2px solid black;
+        margin: 0;
+        padding: 0 15px 0 0;
+
+        &:empty { display: none; }
+
+        & > li {
+            display: inline-block;
+            margin-left: 15px;
+
+            * {
+                font-size: 1.1em;
+                line-height: 2em;
+            }
+        }
+    }
+}
+

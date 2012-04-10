@@ -26,7 +26,7 @@ import main.Constants
 import java.net.InetSocketAddress
 import java.io._
 
-import actors.Actor //TODO ExecutorService
+import scala.actors.Actor //TODO ExecutorService
 
 import org.eclipse.jgit.lib.Repository 
 import org.eclipse.jgit.transport._
