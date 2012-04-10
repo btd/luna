@@ -4,6 +4,8 @@ version := "1.1-SNAPSHOT"
 
 seq(webSettings :_*)
 
+seq(lessSettings :_*)
+
 scalaVersion := "2.9.1"
 
 scalacOptions += "-deprecation"
