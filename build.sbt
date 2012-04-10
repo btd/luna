@@ -33,7 +33,8 @@ libraryDependencies ++= Seq (
   "net.liftweb"         %% "lift-mongodb-record"          % "2.5-SNAPSHOT"           % "compile",
   "com.foursquare"      %% "rogue"                        % "1.1.6"                  intransitive(),
   "org.eclipse.jetty"   % "jetty-webapp"                  % "8.0.4.v20111024"        % "container",
-  "ch.qos.logback"      % "logback-classic"               % "1.0.0"                  
+  "ch.qos.logback"      % "logback-classic"               % "1.0.0",
+  "io.netty"            % "netty"                         % "3.3.1.Final"            % "compile"
   )
 
 (resourceManaged in (Compile, LessKeys.less)) <<= (sourceDirectory in Compile)(_ / "webapp" / "assets")
