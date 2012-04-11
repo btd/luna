@@ -17,51 +17,38 @@ package daemon.http
 
 import net.liftweb.common.Loggable
 
-import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory
-import org.jboss.netty.channel._
-import org.jboss.netty.handler.codec.http._
-import org.jboss.netty.bootstrap.ServerBootstrap
-import org.jboss.netty.util.CharsetUtil
-
-import java.net.InetSocketAddress
-import java.util.concurrent.Executors
+import unfiltered.request._
+import unfiltered.response._
+import unfiltered.netty._
 
 import code.model.RepositoryDoc
 
-object SmartHttpDaemon extends daemon.Service with Loggable {
+import daemon.{UploadPack, ReceivePack, Resolver, Pack, Service}
+
+import java.io._
+
+import org.eclipse.jgit.util.TemporaryBuffer
+import org.eclipse.jgit.util.HttpSupport._
+import org.eclipse.jgit.transport._
+import org.eclipse.jgit.transport.RefAdvertiser.PacketLineOutRefAdvertiser
+import org.eclipse.jgit.revwalk.RevWalk
+
+object SmartHttpDaemon extends Service with Loggable {
 
   var inited = false
+  val server = Http.local(9081).plan(GitSmartHttp.plan)
 
   def init() {
-    val factory = new NioServerSocketChannelFactory(Executors.newCachedThreadPool, Executors.newCachedThreadPool)
-    
-    val bootstrap = new ServerBootstrap(factory)
-
-    bootstrap.setPipelineFactory(new ChannelPipelineFactory() {
-      def getPipeline() = {
-      	val pipeline = Channels.pipeline
-
-      	pipeline.addLast("decoder", new HttpRequestDecoder )
-        pipeline.addLast("encoder", new HttpResponseEncoder )
-      	pipeline.addLast("aggregator", new HttpChunkAggregator(5242880))
-      	pipeline.addLast("authHandler", new SmartHttpMessageHandler )
-
-      	pipeline
-      }
-    })
-
-    //b.setOption("localAddress", new InetSocketAddress(8080))
-
-    bootstrap.setOption("reuseAddress", true)
-    bootstrap.setOption("child.tcpNoDelay", true)
-    bootstrap.setOption("child.keepAlive", true)
-
-    bootstrap.bind(new InetSocketAddress(80));
-
-
+ 	scala.actors.Actor.actor {
+  		server.start()
+  		logger.debug("Smart http daemon started on port %s".format(9081))
+    	inited = true
+ 	}
   }
 
-  def shutdown() {}
+  def shutdown() {
+ 	server.stop()
+  }
 
   
 
@@ -69,67 +56,88 @@ object SmartHttpDaemon extends daemon.Service with Loggable {
 
 }
 
-class SmartHttpMessageHandler extends SimpleChannelHandler with Loggable {
-  override def exceptionCaught(ctx: ChannelHandlerContext, e: ExceptionEvent) {
-  	logger.error("Exception recieved in smart http daemon", e.getCause)
-    ctx.getChannel.close
-  }
+//object GitSmartHttpPlan extends async.Planify(GitSmartHttp.intent)
 
-  override def messageReceived(ctx: ChannelHandlerContext, e: MessageEvent) {
-  	val response = new DefaultHttpResponse(HTTP_1_1, OK)
-    val request = e.getMessage.asInstanceOf[HttpRequest]
-    val request = req.asInstanceOf[HttpServletRequest]
- 	 22	
-+        val response = res.asInstanceOf[HttpServletResponse]
- 	 23	
-+
- 	 24	
-+        val user = authPassed_?(request)
- 	 25	
-+
- 	 26	
-+    user match {
- 	 27	
-+      case Some(u) => {
- 	 28	
-+        val wrapped = new HttpServletRequestWrapper(request)
- 	 29	
-+        wrapped.setAttribute("username", u.login.get)
- 	 30	
-+        wrapped.setAttribute("email", u.email.get)
- 	 31	
-+          chain.doFilter(wrapped, response)
- 	 32	
-+      }
- 	 33	
-+      case _ => {
- 	 34	
-+        response.addHeader("WWW-Authenticate", "Basic realm=\"" + realmName + "\"")
- 	 35	
-+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Not authenticated")
- 	 36	
-+      }
- 	 37	
-+    }
-  }
+case class AdvertisedResponce(svc: String, r: RepositoryDoc, resolver: RepositoryDoc => Pack) extends ResponseStreamer with Loggable  {
+	def stream(os: OutputStream) {
+		logger.debug("Begin adv streaming")
+		val bout = new BufferedOutputStream(os)
 
-  def authPassed_?(request: HttpRequest): Option[UserDoc] = {
-  	for {
-  		header <- Option(request.getHeader("Authorization"))
-  		if header.startsWith("Basic ")
-  	} yield {
-  		val (username, password) = extractAndDecodeHeader(header)
-  		UserDoc.byName(username).filter(u => u.password.match_?(password))
+		val buf = new PacketLineOut(bout)
+        buf.writeString("# service=" + svc + "\n")
+        buf.end
+
+        val pp = resolver(r)
+        pp.sendInfoRefs(buf)
+
+        bout.flush
+        bout.close
+        logger.debug("Finish adv streaming")
+	}
+}
+
+case class GitPackResponce(svc: String, r: RepositoryDoc, resolver: RepositoryDoc => Pack, in: InputStream) extends ResponseStreamer with Loggable {
+	def stream(os: OutputStream) { 
+		val bout = new BufferedOutputStream(os)
+		try {
+			val pp = resolver(r)
+			pp.sendPack(in, bout, null) 
+		} catch {
+			case e: Throwable => logger.warn("Exception occured, while " + svc, e)
+		} finally {
+			bout.flush
+        	bout.close
+		}
+	}
+}
+
+
+object GitSmartHttp extends daemon.Resolver with Loggable {
+  private val svcPackMap = Map[String, RepositoryDoc => Pack](
+		(GIT_UPLOAD_PACK -> ((r:RepositoryDoc) => new UploadPack(r, false))),
+		(GIT_RECEIVE_PACK -> ((r:RepositoryDoc) => new ReceivePack(r, false))))
+
+  val plan = async.Planify {
+  	case GET(Path(Seg(userName :: Repo(repoName) :: "info" :: "refs" :: Nil))) & Params(Svc(svc)) => {
+  		logger.debug("Try to send advertisement for %s".format(svc))
+  		svcPackMap.get(svc) match {
+  			case Some(resolver) => 
+  				RepositoryDoc.byUserLoginAndRepoName(userName, repoName.substring(0, repoName.length - 4)) match {
+					case Some(repo) => AdvertisedResponce(svc, repo, resolver) ~> ContentType("application/x-" + svc + "-advertisement")
+					case _ => Forbidden ~> ResponseString("No such repo")
+				}
+				
+			case _ => Forbidden ~> ResponseString("No such svc")
+  		}
   	}
+  	case req @ POST(Path(Seg(userName :: Repo(repoName) :: GitService(svc) :: Nil))) 
+  		if RequestContentType(req).filter(_ == "application/x-" + svc + "-request").isEmpty => {
+		logger.debug("Try to send pack for %s".format(svc))
+		svcPackMap.get(svc) match {
+  			case Some(resolver) => 
+  				RepositoryDoc.byUserLoginAndRepoName(userName, repoName.substring(0, repoName.length - 4)) match {
+					case Some(repo) => GitPackResponce(svc, repo, resolver, req.inputStream) ~> ContentType("application/x-" + svc + "-result")
+					case _ => Forbidden ~> ResponseString("No such repo")
+				}
+				
+			case _ => Forbidden ~> ResponseString("No such svc")
+  		}
+  	}
+			
+    case _ => Pass
   }
+}
 
-  def extractAndDecodeHeader(header: String): (String, String) = {
- 	val base64Token = header.substring(6).getBytes("UTF-8")
+object Repo {
+	def unapply(name: String) = if (name.endsWith(".git")) Some(name) else None
+}
 
- 	val token = new String(Base64.decodeBase64(base64Token), "UTF-8")
+object Svc extends Params.Extract(
+  "service",
+  Params.first ~> Params.pred(GitService.isGitPackName)
+)
 
- 	val tokens = token.split(":")
- 	tokens(0) -> tokens(1)
-  }
-
+object GitService {
+	def isGitPackName(name: String) = name == GitSmartHttp.GIT_UPLOAD_PACK || name == GitSmartHttp.GIT_RECEIVE_PACK
+	def unapply(name: String) = Some(name).filter(isGitPackName)
 }

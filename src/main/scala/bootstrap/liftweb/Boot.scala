@@ -36,6 +36,7 @@ import xml.{NodeSeq, Text}
 
 import daemon.git.GitDaemon
 import daemon.sshd.SshDaemon
+import daemon.http.SmartHttpDaemon
 
 import com.mongodb.Mongo
 
@@ -86,10 +87,17 @@ class Boot extends Loggable {
       case e => logger.warn("Exception while start gitd", e)
     }
 
+    try { 
+      SmartHttpDaemon.init
+    } catch {
+      case e => logger.warn("Exception while start httpd", e)
+    }
+
     LiftRules.unloadHooks.append(
       () => {
         SshDaemon.shutdown
         GitDaemon.shutdown
+        SmartHttpDaemon.shutdown
         notification.client.NotifyActor.onShutdown
       }
     )
@@ -125,7 +133,7 @@ class Boot extends Loggable {
     
 
     LiftRules.dispatch.append(code.snippet.RawFileStreamingSnippet)
-    LiftRules.dispatch.append(code.snippet.GitHttpSnippet)
+    //LiftRules.dispatch.append(code.snippet.GitHttpSnippet)
 
     LiftRules.ajaxRetryCount = Full(1)
     LiftRules.ajaxPostTimeout = 15000
@@ -140,7 +148,7 @@ class Boot extends Loggable {
         case _ => false
       }
     }
-
+    /*
     LiftRules.httpAuthProtectedResource.prepend{ 
       case Req(userName :: repoName :: "info" :: "refs" :: Nil, _, _) 
         if(repoName.endsWith(".git") && 
@@ -167,9 +175,12 @@ class Boot extends Loggable {
         } 
       } 
     }
-
+    */
     LiftRules.liftRequest.append {
       case Req("assets" :: Nil, _, _)  => false
+      case Req(userName :: repoName :: "info" :: "refs" :: Nil, _, GetRequest) if repoName.endsWith(".git") => false
+      case Req(userName :: repoName :: "git-receive-pack" :: Nil, _, PostRequest) if repoName.endsWith(".git") => false
+      case Req(userName :: repoName :: "git-upload-pack" :: Nil, _, PostRequest) if repoName.endsWith(".git") => false
     }
 
     LiftRules.ajaxStart = Full(() => JqId("preloader") ~> JqShow())
