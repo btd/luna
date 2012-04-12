@@ -80,18 +80,17 @@ class PullRequestOneOps(pullRequest: PullRequestDoc) extends Loggable {
 
   def renderForm = {
       "p" #> <p>{pullRequest.description.get}</p> &
-      "button" #> (if (!pullRequest.accepted_?.get && pullRequest.destRepo.canPush_?(UserDoc.currentUser)) 
+      "button" #> (if (!pullRequest.closed_? && pullRequest.destRepo.canPush_?(UserDoc.currentUser)) 
                     SHtml.button("Close", processPullRequestClose(pullRequest), "class" -> "button") 
                   else NodeSeq.Empty)
     }
 
 
-  def processPullRequestClose(pullRequest: PullRequestDoc)() = {
-    pullRequest
+  def processPullRequestClose(pr: PullRequestDoc)() = {
+    pr
       .accepted_?(true)
-      .srcRef(pullRequest.srcRepo.git.resolve(pullRequest.srcRef.get))
-      .destRef(pullRequest.destRepo.git.resolve(pullRequest.destRef.get))
       .save
+    S.redirectTo(Sitemap.pullRequest.calcHref(pr))
   }
 
 }

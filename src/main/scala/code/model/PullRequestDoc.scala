@@ -19,6 +19,7 @@ import net.liftweb.mongodb.record.field._
 import net.liftweb.mongodb.record._
 import net.liftweb.record.field._
 import net.liftweb.record._
+import net.liftweb.util.Helpers._
 import java.util.Date
 
 
@@ -30,9 +31,17 @@ class PullRequestDoc private() extends MongoRecord[PullRequestDoc] with ObjectId
 
   object destRepoId extends ObjectIdRefField(this, RepositoryDoc)
 
+  /**
+    This ref will be used for user input, eg user input master therefor it will be master
+    Instead of this srcRepoRef will be a sha of master at creattion moment.
+  */
   object srcRef extends StringField(this, 30)
 
+  object srcRepoRef extends StringField(this, 30)
+
   object destRef extends StringField(this, 30)
+
+  //object destRepoRef extends StringField(this, 30)
 
   object creatorId extends ObjectIdRefField(this, UserDoc)
 
@@ -49,6 +58,15 @@ class PullRequestDoc private() extends MongoRecord[PullRequestDoc] with ObjectId
   def destRepo = destRepoId.obj.get
 
   def meta = PullRequestDoc
+
+  def closed_? = {
+    if(!accepted_?.get && 
+        !tryo(destRepo.git.fs_repo_!.resolve(destRef.get)).isEmpty &&
+        !tryo(destRepo.git.fs_repo_!.resolve(srcRepoRef.get)).isEmpty) {
+      this.accepted_?(true).save
+    }
+    accepted_?.get
+  }
 
 }
 

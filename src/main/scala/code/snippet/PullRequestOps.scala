@@ -93,8 +93,10 @@ class PullRequestOps(repo: RepositoryDoc) extends Loggable {
 
 
   def processNewPullRequest(u : UserDoc)() = {
+    val shaSrcRef = sourceRepo.git.resolve(sourceRef)
+
     val destHistory = destRepo.git.log(destRef).toList.reverse
-    val srcHistory = sourceRepo.git.log(sourceRef).toList.reverse
+    val srcHistory = sourceRepo.git.log(shaSrcRef).toList.reverse
 
     val diff = srcHistory.diff(destHistory)
 
@@ -105,6 +107,7 @@ class PullRequestOps(repo: RepositoryDoc) extends Loggable {
           .destRepoId(destRepo.id.get)
           .srcRef(sourceRef)
           .destRef(destRef)
+          .srcRepoRef(shaSrcRef)
           .creatorId(u.id.get).description(description).save
         S.redirectTo(pullRequests.calcHref(destRepo))
     }
