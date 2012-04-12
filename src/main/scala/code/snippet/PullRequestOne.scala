@@ -80,7 +80,7 @@ class PullRequestOneOps(pullRequest: PullRequestDoc) extends Loggable {
 
   def renderForm = {
       "p" #> <p>{pullRequest.description.get}</p> &
-      "button" #> (if (!pullRequest.accepted_?.get && UserDoc.loggedIn_?) 
+      "button" #> (if (!pullRequest.accepted_?.get && pullRequest.destRepo.canPush_?(UserDoc.currentUser)) 
                     SHtml.button("Close", processPullRequestClose(pullRequest), "class" -> "button") 
                   else NodeSeq.Empty)
     }
