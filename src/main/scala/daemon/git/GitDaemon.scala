@@ -95,7 +95,7 @@ class GitServerHandler extends StreamIoHandler with daemon.Resolver with Loggabl
 
             cmd.trim.split(" ").toList match {
               case GIT_UPLOAD_PACK :: path :: Nil => 
-                for(proc <- packProcessing(repoByPath(path), uploadPack, (r: RepositoryDoc) => {r.open_?.get})) {
+                for(proc <- packProcessing(repoByPath(path), uploadPack(_, None), (r: RepositoryDoc) => {r.open_?.get})) {
                   proc(in, out, null)
                 } 
 

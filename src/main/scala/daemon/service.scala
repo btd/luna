@@ -39,12 +39,14 @@ trait Service {
 trait Pack {
   val repo: RepositoryDoc
 
+  val user: Option[UserDoc]
+
   def sendInfoRefs(out: PacketLineOut): Unit
 
   def sendPack(in: InputStream, out: OutputStream, err: OutputStream): Unit
 }
 
-class UploadPack(val repo: RepositoryDoc, twoWay: Boolean = true) extends Pack with Loggable {
+class UploadPack(val repo: RepositoryDoc, val user: Option[UserDoc], twoWay: Boolean = true) extends Pack with Loggable {
   private val p = repo.git.upload_pack
   p.setBiDirectionalPipe(twoWay)
 
@@ -67,7 +69,7 @@ class UploadPack(val repo: RepositoryDoc, twoWay: Boolean = true) extends Pack w
   }
 }
 
-class ReceivePack(val repo: RepositoryDoc, twoWay: Boolean = true) extends Pack with Loggable {
+class ReceivePack(val repo: RepositoryDoc, val user: Option[UserDoc], twoWay: Boolean = true) extends Pack with Loggable {
   private val p = repo.git.receive_pack
   p.setBiDirectionalPipe(twoWay)
 
@@ -86,11 +88,10 @@ class ReceivePack(val repo: RepositoryDoc, twoWay: Boolean = true) extends Pack 
     import notification.client._
 
     val oldHeads = repo.git.refsHeads.map(ref => (ref.getName, ref)).toMap
-    val ident = p.getRefLogIdent //TODO fill this
  
     try {
       p.receive(in, out, err)
-      ActivityActor ! PushEvent(repo, ident, oldHeads)
+      ActivityActor ! PushEvent(repo.id.get, user.map(_.id.get), oldHeads)
     } catch {
       case e: IOException => logger.warn("IOException: %s".format(e.getMessage))
     }
@@ -126,9 +127,9 @@ trait Resolver {
     }
   }
 
-  def uploadPack(r: RepositoryDoc) = new UploadPack(r).sendPack _
+  def uploadPack(r: RepositoryDoc, user: Option[UserDoc]) = new UploadPack(r, user).sendPack _
 
-  def receivePack(r: RepositoryDoc) = new ReceivePack(r).sendPack _
+  def receivePack(r: RepositoryDoc, user: Option[UserDoc]) = new ReceivePack(r, user).sendPack _
 
   val ident = """[0-9a-zA-Z\.-]+"""
   

@@ -18,12 +18,45 @@ package notification
 
 import net.liftweb.actor.LiftActor
 
-import client.NotifyActor
+import client.{NotifyActor, Msg}
 
+import code.model._
 
 object ActivityActor extends LiftActor {
 	def messageHandler = {
-		case m =>
-			NotifyActor ! m
+		case PushEvent(id, ident, oldRefs) =>
+         for{repo <- RepositoryDoc.byId(id)} {
+            val newRefs = repo.git.refsHeads.map(ref => (ref.getName, ref)).toMap
+
+            val (changedBranchesOld, deletedBranches) = oldRefs.partition(r => newRefs.contains(r._1))//(changed, deleted)
+            val (changedBranchesNew, newBranches) = newRefs.partition(r => oldRefs.contains(r._1))//(changed, new)       
+
+            val changedHistory = 
+               for{(s, oldRef) <- changedBranchesOld
+                  newRef <- changedBranchesNew.get(s)
+                  if(oldRef.getObjectId != newRef.getObjectId)
+               } yield {
+                 val commits = repo.git.log(oldRef.getObjectId, newRef.getObjectId).toList
+
+                 val commitDocs: List[CommitDoc] = commits.map { c =>
+                     val ident = c.getAuthorIdent
+                     CommitDoc
+                        .when(ident.getWhen)
+                        .msg(c.getFullMessage)
+                        .ident(IdentDoc.name(ident.getName).email(ident.getEmailAddress))
+                 }
+
+                 ChangedBranchDoc.name(s).commits(commitDocs)
+               }
+
+            val push = PushEventDoc
+                        .repo(id)
+                        .added(newBranches.keys.toList)
+                        .deleted(deletedBranches.keys.toList)
+                        .changed(changedHistory.toList).save
+
+            NotifyActor ! Msg(NotifyEvents.Push, id, push.asJValue)
+         }
+
 	}
 }

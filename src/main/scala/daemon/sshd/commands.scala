@@ -103,7 +103,7 @@ trait CommandBase extends SshCommand with SessionAware with Loggable with daemon
 class UploadPackCommand(val repoPath: String) extends CommandBase {
   logger.debug("Upload pack command executed")
   def run(env: Environment) = {
-    for(proc <- packProcessing(repoByPath(repoPath, Some(user)), uploadPack, checkRepositoryAccess)) {
+    for(proc <- packProcessing(repoByPath(repoPath, Some(user)), uploadPack(_, Some(user)), checkRepositoryAccess)) {
           proc(in, out, err)
     } 
   }
@@ -113,7 +113,7 @@ class UploadPackCommand(val repoPath: String) extends CommandBase {
 class ReceivePackCommand(val repoPath: String) extends CommandBase {
   logger.debug("Receive pack command executed")
   def run(env: Environment) = {
-    for(proc <- packProcessing(repoByPath(repoPath, Some(user)), receivePack, checkRepositoryAccess)) {
+    for(proc <- packProcessing(repoByPath(repoPath, Some(user)), receivePack(_, Some(user)), checkRepositoryAccess)) {
           proc(in, out, err)
     } 
   }

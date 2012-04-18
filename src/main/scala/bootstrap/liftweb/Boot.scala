@@ -159,6 +159,7 @@ class Boot extends Loggable {
           case Some(user) if user.suspended.get => false
 
           case Some(user) if user.password.match_?(password) => 
+            S.setSessionAttribute("user", user.id.get.toString)
             RepositoryDoc.byUserLoginAndRepoName(userName, repoName.substring(0, repoName.length - 4)) match {
               case Some(r) => r.canPush_?(Some(user))
               case _ => false

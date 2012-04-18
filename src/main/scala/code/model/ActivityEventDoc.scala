@@ -22,7 +22,10 @@ import common._
 import record.field._
 import util._
 
+import Helpers._
+
 import org.eclipse.jgit.lib.{Ref, PersonIdent}
+import org.bson.types.ObjectId
 import code.model._
 
 object NotifyEvents extends Enumeration {
@@ -36,7 +39,7 @@ object NotifyEvents extends Enumeration {
    pusher - this will be who make a push from JGit identification
    what - this is func that get me a seq of commits (i do not what ask sender convert for me a RevWalk to Seq)
 */
-case class PushEvent(where: RepositoryDoc, pusher: PersonIdent, what: Map[String, Ref])
+case class PushEvent(repo: ObjectId, pusher: Option[ObjectId], what: Map[String, Ref])
 
 trait EventDoc {
 
@@ -51,7 +54,7 @@ trait EventBaseDoc[MyType <: EventBaseDoc[MyType]] extends MongoRecord[MyType] w
    self: MyType =>
 
    object when extends DateField(this) {
-      override def defaultValue = new java.util.Date
+      override def defaultValue = new java.util.Date(millis)
    }
 
    
@@ -123,8 +126,6 @@ class ChangedBranchDoc extends BsonRecord[ChangedBranchDoc] {
 object ChangedBranchDoc extends ChangedBranchDoc with BsonMetaRecord[ChangedBranchDoc]
 
 class PushEventDoc extends EventBaseDoc[PushEventDoc] {
-   object commits extends MongoListField[PushEventDoc, String](this)
-
    object onWhat extends EnumNameField(this, NotifyEvents) {
       override def defaultValue = NotifyEvents.Push
    }
