@@ -53,7 +53,13 @@ object ActivityActor extends LiftActor {
                         .repo(id)
                         .added(newBranches.keys.toList)
                         .deleted(deletedBranches.keys.toList)
-                        .changed(changedHistory.toList).save
+                        .changed(changedHistory.toList)
+
+            ident.foreach { user =>
+               push.who(user)
+            }
+
+            push.save
 
             NotifyActor ! Msg(NotifyEvents.Push, id, push.asJValue)
          }

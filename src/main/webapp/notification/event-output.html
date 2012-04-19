@@ -1,0 +1,39 @@
+<div id="main" role="main" class="lift:surround?with=default;at=content">
+    <div class="top_menu">
+        <nav class="repo_menu">
+            <ul>
+                <li class="lift:RepoOps.renderSourceTreeDefaultLink repo_menu_link"></li>
+                <li class="lift:RepoOps.renderCommitsDefaultLink repo_menu_link"></li>
+                <li class="lift:RepoOps.renderPullRequestsDefaultLink repo_menu_link"></li>
+            </ul>
+        </nav>
+        <nav class="main_menu">
+            <ul>
+                <li class="lift:MyMenu.admin">Admin</li>
+                <li class="lift:MyMenu.your">Your page</li>
+                <li class="lift:MyMenu.signIn">Sign In</li>
+            </ul>
+        </nav>
+    </div>
+    <div >
+    	<form class="lift:RepoOps.notifyForm?form=post">
+            <fieldset class="web">
+                <h1>Web</h1>
+                <label for="activated">Activated</label>
+                <input type="checkbox" name="activated"/><br/>
+                <select data-placeholder="Events" multiple="" class="czn events_name" name="events"></select>
+            </fieldset>
+            <hr/>
+    		<fieldset class="email">
+    			<h1>Email</h1>
+    			<label for="emails">Input semicolon-separated list of emails</label>
+    			<input type="text" name="emails"  class="textfield large font"/>
+    			<label for="activated">Activated</label>
+    			<input type="checkbox" name="activated"/><br/>
+                <select data-placeholder="Events" multiple="" class="czn events_name" name="events"></select>
+    		</fieldset>
+            <hr/>
+    		<button class="button">Update settings</button>
+    	</form>
+    </div>
+</div>

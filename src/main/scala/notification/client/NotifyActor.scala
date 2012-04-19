@@ -38,10 +38,10 @@ case class Msg(event: NotifyEvents.Value, repo: ObjectId, content: JValue)
 object NotifyActor extends LiftActor {
 	lazy val notifyServerUrl = Props.get("notification.url")
 
-	private def subscribers(t: NotifyEvents.Value, repoId: ObjectId) = {
+	private def subscribers(repoId: ObjectId) = {
 		import com.foursquare.rogue.Rogue._
 
-		for { subscription <- (NotifySubscriptionDoc where (_.repo eqs repoId) and (_.onWhat eqs t) fetch) 
+		for { subscription <- (NotifySubscriptionDoc where (_.repo eqs repoId) fetch) 
 				user <- subscription.who.obj} 
 		yield {
 			ActorLogger.debug(subscription) 
@@ -49,13 +49,18 @@ object NotifyActor extends LiftActor {
 		}
 	}
 
+	private val eventToAddress = Map(
+		NotifyEvents.Push -> "/push", 
+		NotifyEvents.PullRequestOpen -> "/pull-request/open", 
+		NotifyEvents.PullRequestClose -> "/pull-request/close")
+
 	def messageHandler = {
 		case Msg(eventType, repoId, content) =>
 			for{
 				urlAddress <- notifyServerUrl
-				(user, output) <- subscribers(eventType, repoId)
+				(user, output) <- subscribers(repoId)
 			} {
-				h((url(urlAddress + "/push") <<< pretty(render(
+				h((url(urlAddress + eventToAddress(eventType)) <<< pretty(render(
 								("services", output.asJValue) ~
 								("content", content)
 				))) >|)

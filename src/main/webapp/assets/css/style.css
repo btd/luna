@@ -54,6 +54,7 @@ form{padding:10px 0;}
 input,textarea,button{margin:10px 0;}
 .textfield{width:100%;}
 #login_form{width:700px;}
+.events_name{width:100%;}
 .large{font-size:3em;}
 html,body{height:100%;}
 #main{padding:50px 0;}

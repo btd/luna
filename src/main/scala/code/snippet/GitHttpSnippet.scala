@@ -39,17 +39,16 @@ import java.io._
 
 object GitHttpSnippet extends Loggable with RestHelper with Resolver {
 
-	def getUser = {
-		logger.debug("Try to get userId from session")
-		S.getSessionAttribute("user").flatMap{ s => 
-			logger.debug("Get is from session " + s)
-			UserDoc.byId(new org.bson.types.ObjectId(s))
-		}.toOption
+	object basicAuthedUser extends RequestVar[Option[UserDoc]](None)
+
+	def user = {
+		logger.debug("Try to get userId from session" + UserDoc.currentUser)
+		UserDoc.currentUser.toOption
 	}
 
 	private val svcPackMap = Map[String, RepositoryDoc => Pack](
-		(GIT_UPLOAD_PACK -> ((r:RepositoryDoc) => new UploadPack(r, getUser, false))),
-		(GIT_RECEIVE_PACK -> ((r:RepositoryDoc) => new ReceivePack(r, getUser, false))))
+		(GIT_UPLOAD_PACK -> ((r:RepositoryDoc) => new UploadPack(r, user, false))),
+		(GIT_RECEIVE_PACK -> ((r:RepositoryDoc) => new ReceivePack(r, user, false))))
 
 
 	private def makeAdvResponce(svc: String, r: RepositoryDoc): LiftResponse = {

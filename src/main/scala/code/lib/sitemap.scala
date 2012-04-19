@@ -209,7 +209,7 @@ object Sitemap extends Loggable {
         for {
           r <- _
           if UserDoc.loggedIn_? && r.canPull_?(UserDoc.currentUser) //
-          tpl <- Templates("notification" :: "push" :: Nil)} yield tpl)
+          tpl <- Templates("notification" :: "event-output" :: Nil)} yield tpl)
 
 
    

@@ -44,18 +44,27 @@ class RepoOps(repo: RepositoryDoc) extends Loggable {
   def renderPullRequestsDefaultLink: NodeSeq => NodeSeq = 
     renderPullRequestsLink(repo)
 
-  def notifyEmailForm = w(UserDoc.currentUser){ u => 
+  def notifyForm = w(UserDoc.currentUser){ u => 
     
     import com.foursquare.rogue.Rogue._
 
-    val settings = (NotifySubscriptionDoc where (_.who eqs u.id.get) and (_.repo eqs repo.id.get) and (_.onWhat eqs NotifyEvents.Push) get) 
-        .getOrElse(NotifySubscriptionDoc.createRecord.who(u.id.get).repo(repo.id.get).onWhat(NotifyEvents.Push))
-    emailForm(settings.output.get.email.get, u) &
+    val settings = (NotifySubscriptionDoc where (_.who eqs u.id.get) and (_.repo eqs repo.id.get) get) 
+        .getOrElse(NotifySubscriptionDoc.createRecord.who(u.id.get).repo(repo.id.get))
+    ".email * " #> emailForm(settings.output.get.email.get, u) &
+    ".web * " #> webForm(settings.output.get.web.get, u) &
     "button" #> SHtml.button("Update settings", saveNotifySettings(settings) _)
   }
 
   private def saveNotifySettings(s : NotifySubscriptionDoc)() {
     s.save
+  }
+
+  private def webForm(webOutput: Web, user: UserDoc): CssSel = {
+    "name=activated" #> SHtml.checkbox(webOutput.activated.get, v => webOutput.activated(v)) &
+    "name=events" #> SHtml.multiSelectObj(
+      Event.options,
+      webOutput.events.get.map(_.name.get),
+      (l:List[NotifyEvents.Value]) => { /*logger.debug(l); webOutput.events(l.map(e => Event.name(NotifyEvents.withName(e))))*/}, "class" -> "czn")
   }
 
   private def emailForm(emailOutput: Email, user: UserDoc): CssSel = {
@@ -65,14 +74,23 @@ class RepoOps(repo: RepositoryDoc) extends Loggable {
 
     "name=emails" #> SHtml.text(emails.mkString("; "), v => emailOutput.to(v.split(";").map(_.trim).toList),
       "class" -> "textfield large") &
-    "name=activated" #> SHtml.checkbox(emailOutput.activated.get, v => emailOutput.activated(v))
+    "name=activated" #> SHtml.checkbox(emailOutput.activated.get, v => emailOutput.activated(v))  &
+    "name=events" #> SHtml.multiSelectObj(
+      Event.options, 
+      emailOutput.events.get.map(_.name.get), 
+      (l:List[NotifyEvents.Value]) => { 
+      logger.debug("Getted " + l)
+      val el : List[Event] = l.map(e => Event.name(e))
+      logger.debug("Computed " +el)
+      emailOutput.events(el)}, "class" -> "czn")
   }
 
-  def renderRepositoryBlockDefault = renderRepositoryBlock(repo, 
-                          repo.owner, 
-                          r => <span><a href={userRepos.calcHref(r.owner)}>{r.owner.login.get}</a>/{r.name.get}</span>,
-                          r => S.redirectTo(defaultTree.calcHref(r)),
-                          r => S.redirectTo(defaultTree.calcHref(r)) )
+  def renderRepositoryBlockDefault = 
+    renderRepositoryBlock(repo, 
+      repo.owner, 
+      r => <span><a href={userRepos.calcHref(r.owner)}>{r.owner.login.get}</a>/{r.name.get}</span>,
+      r => S.redirectTo(defaultTree.calcHref(r)),
+      r => S.redirectTo(defaultTree.calcHref(r)) )
 
   
 

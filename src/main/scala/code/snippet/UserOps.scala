@@ -123,5 +123,9 @@ class UserOps(user: UserDoc) extends Loggable with RepositoryUI {
     }))
 
   }
+
+  def acivityOnWatchingStream = {
+    "*" #> NodeSeq.Empty
+  }
 }
 

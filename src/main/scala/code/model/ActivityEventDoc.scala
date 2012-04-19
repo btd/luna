@@ -29,7 +29,9 @@ import org.bson.types.ObjectId
 import code.model._
 
 object NotifyEvents extends Enumeration {
-   val Push, PullRequestOpen, PullRequestClose = Value
+   val Push = Value("Push")
+   val PullRequestOpen = Value("Open Pull Request")
+   val PullRequestClose = Value("Close Pull Request")
 }
 
 /*

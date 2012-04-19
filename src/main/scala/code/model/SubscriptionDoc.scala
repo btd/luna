@@ -30,7 +30,29 @@ import util._
 
 trait NotificationService {
   def activated: BooleanField[_]
+
+  def events: BsonRecordListField[_, Event]
 }
+
+class Event extends BsonRecord[Event] {
+  def meta = Event
+
+  object name extends EnumNameField(this, NotifyEvents)
+}
+
+object Event  extends Event with BsonMetaRecord[Event] {
+  val options = NotifyEvents.values.map(v => v -> v.toString).toSeq
+} 
+
+class Web extends BsonRecord[Web] with NotificationService {
+  def meta = Web
+
+  object activated extends BooleanField(this, false)
+
+  object events extends BsonRecordListField[Web, Event](this, Event)
+}
+
+object Web  extends Web with BsonMetaRecord[Web] 
 
 class Email extends BsonRecord[Email] with NotificationService {
   def meta = Email
@@ -38,6 +60,8 @@ class Email extends BsonRecord[Email] with NotificationService {
   object to extends MongoListField[Email, String](this)
 
   object activated extends BooleanField(this, false)
+
+  object events extends BsonRecordListField[Email, Event](this, Event)
 
   override def asJValue = {
     if(activated.get) {
@@ -53,6 +77,8 @@ object Email extends Email with BsonMetaRecord[Email]
 class NotifyOptions extends BsonRecord[NotifyOptions] {
 	def meta = NotifyOptions
 
+  object web extends BsonRecordField(this, Web)
+
   object email extends BsonRecordField(this, Email)
 }
 
@@ -65,8 +91,6 @@ class NotifySubscriptionDoc extends MongoRecord[NotifySubscriptionDoc]
   object who extends ObjectIdRefField(this, UserDoc)
 
   object repo extends ObjectIdRefField(this, RepositoryDoc)
-
-  object onWhat extends EnumNameField(this, NotifyEvents)
 
   object output extends BsonRecordField(this, NotifyOptions) 
 

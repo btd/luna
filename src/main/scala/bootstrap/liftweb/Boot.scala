@@ -43,8 +43,9 @@ import code.model._
 
 import code.lib.Sitemap
 
-
 import main.Constants._
+
+import org.apache.commons.codec.binary._
 
 
 case class JqShow() extends JsExp with JsMember {
@@ -61,6 +62,9 @@ case class JqHide() extends JsExp with JsMember {
  * to modify lift's environment
  */
 class Boot extends Loggable {
+
+  
+
   def boot {
     val dbHost = Props.get("db.host", "localhost")
     val dbPort = Props.getInt("db.port", 27017)
@@ -142,31 +146,40 @@ class Boot extends Loggable {
     }
 
     LiftRules.httpAuthProtectedResource.prepend{ 
-      case Req(userName :: repoName :: "info" :: "refs" :: Nil, _, _) 
+      case r @ Req(userName :: repoName :: "info" :: "refs" :: Nil, _, _) 
         if(repoName.endsWith(".git") && 
           !S.param("service").isEmpty && (
               S.param("service").get == "git-receive-pack" || 
               !open_?(userName, repoName))) => Empty
       case Req(userName :: repoName :: "git-receive-pack" :: Nil, _, PostRequest) 
         if(repoName.endsWith(".git")) => Empty
-      case Req(userName :: repoName :: "git-upload-pack" :: Nil, _, PostRequest) 
-        if(repoName.endsWith(".git") && !open_?(userName, repoName)) => Empty 
+      case r @ Req(userName :: repoName :: "git-upload-pack" :: Nil, _, PostRequest) 
+        if(repoName.endsWith(".git") && (!open_?(userName, repoName))) => Empty 
     } 
 
+
+
     LiftRules.authentication = HttpBasicAuthentication("lift") { 
-      case (username, password, Req(userName :: repoName :: _, _, _)) if repoName.endsWith(".git") => { 
+      case (username, password, r @ Req(userName :: repoName :: _, _, _)) if repoName.endsWith(".git") => {
         UserDoc.byName(username) match {
           case Some(user) if user.suspended.get => false
 
           case Some(user) if user.password.match_?(password) => 
-            S.setSessionAttribute("user", user.id.get.toString)
+            
             RepositoryDoc.byUserLoginAndRepoName(userName, repoName.substring(0, repoName.length - 4)) match {
-              case Some(r) => r.canPush_?(Some(user))
+              case Some(r) if r.canPush_?(Some(user)) => code.snippet.GitHttpSnippet.basicAuthedUser(Some(user)); true
               case _ => false
             }
           case _ => false 
         } 
       } 
+    }
+
+    LiftRules.earlyInStateful.append {
+      case _ => 
+        code.snippet.GitHttpSnippet.basicAuthedUser.get.foreach {user => 
+          UserDoc.logUserIn(user)
+        }
     }
 
     LiftRules.liftRequest.append {
@@ -176,9 +189,6 @@ class Boot extends Loggable {
     LiftRules.ajaxStart = Full(() => JqId("preloader") ~> JqShow())
 
     LiftRules.ajaxEnd = Full(() => JqId("preloader") ~> JqHide())
-
-    // Use jQuery 1.4
-    //LiftRules.jsArtifacts = net.liftweb.http.js.jquery.JQuery14Artifacts
 
     // Force the request to be UTF-8
     LiftRules.early.append(_.setCharacterEncoding("UTF-8"))
