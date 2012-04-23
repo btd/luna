@@ -65,9 +65,16 @@ trait CommandBase extends SshCommand with SessionAware with Loggable with daemon
         try {
           run(env)
         } finally {
-          in.close
-          out.close
-          err.close
+          try {
+            out.flush
+          } catch {
+            case _ =>
+          }
+          try {
+            err.flush
+          } catch {
+            case _ =>
+          }
           callback.onExit(onExit)
         }
       
@@ -103,8 +110,13 @@ trait CommandBase extends SshCommand with SessionAware with Loggable with daemon
 class UploadPackCommand(val repoPath: String) extends CommandBase {
   logger.debug("Upload pack command executed")
   def run(env: Environment) = {
-    for(proc <- packProcessing(repoByPath(repoPath, Some(user)), uploadPack, checkRepositoryAccess)) {
-          proc(in, out, err)
+    for {
+      repo <- repoByPath(repoPath, Some(user))
+      if checkRepositoryAccess(repo)
+    } {
+       val up = uploadPack(repo)
+       up(in, out, err)
+       repo.git.fs_repo_!.close
     } 
   }
  
@@ -113,9 +125,14 @@ class UploadPackCommand(val repoPath: String) extends CommandBase {
 class ReceivePackCommand(val repoPath: String) extends CommandBase {
   logger.debug("Receive pack command executed")
   def run(env: Environment) = {
-    for(proc <- packProcessing(repoByPath(repoPath, Some(user)), receivePack, checkRepositoryAccess)) {
-          proc(in, out, err)
-    } 
+    for {
+      repo <- repoByPath(repoPath, Some(user))
+      if checkRepositoryAccess(repo)
+    } {
+       val up = receivePack(repo)
+       up(in, out, err)
+       repo.git.fs_repo_!.close
+    }
   }
 
   
