@@ -122,7 +122,7 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
 
       val list = new ArrayBuffer[SourceElement](50)
       while (walk.next) {
-        val fullPath = (guessString(Some(walk.getRawPath)) getOrElse "").split("/").toList
+        val fullPath = (guessString(Some(walk.getRawPath)) getOrElse walk.getPathString()).split("/").toList
 
         list +=
           (if (walk.getFileMode(level) == FileMode.TREE) 
