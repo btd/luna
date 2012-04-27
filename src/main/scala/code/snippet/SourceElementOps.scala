@@ -72,8 +72,8 @@ class SourceElementOps(se: SourceElement) extends Loggable {
                     case t @ Tree(_, _, _) => <a class="folder_element" href={treeAtCommit.calcHref(t)}>{t.name}/</a>
                     case b @ Blob(_, _, _, _) => <a href={blobAtCommit.calcHref(b)}>{b.name}</a>
                   }} &
-              ".date *" #> c.map(cc => escape(dateFormat(cc.getCommitterIdent.getWhen))) &
-              ".last_commit *" #> c.map(cc => "%s [%s]".format(escape(cc.getShortMessage), cc.getCommitterIdent().getName()))
+              ".date *" #> c.map(cc => dateFormat(cc.getCommitterIdent.getWhen)) &
+              ".last_commit *" #> c.map(cc => "%s [%s]".format(cc.getShortMessage, cc.getCommitterIdent().getName()))
          })).openOr(".source_element" #> NodeSeq.Empty)
          
       }
