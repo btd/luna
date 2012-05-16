@@ -31,6 +31,8 @@ import code.model._
 import SnippetHelper._
 import org.bson.types.ObjectId
 
+import code.lib.Sitemap._
+
 trait UserUI extends Loggable{
   private var login = ""
   private var email = ""
@@ -53,23 +55,20 @@ trait UserUI extends Loggable{
 
   private object whence extends RequestVar[Box[String]](S.referer)
 
-   def userAuthForm = {
-      val w = whence.get
-
-     "name=email" #> SHtml.text(email, v => email = v.trim, "placeholder" -> "email or login") &
-     "name=password" #> (SHtml.password(password, v => password = v.trim, 
-              "placeholder" -> "password", "class" -> "textfield large") ++ 
-            SHtml.hidden(() => whence.set(w))) &
-     "button" #> SHtml.button("Enter", logUserIn)
-   }
+  def userAuthForm = {
+    val w = whence.get
+    "name=email" #> SHtml.text(email, v => email = v.trim, "placeholder" -> "email or login") &
+    "name=password" #> (SHtml.password(password, v => password = v.trim, 
+            "placeholder" -> "password", "class" -> "textfield large") ++ 
+          SHtml.hidden(() => whence.set(w))) &
+    "button" #> SHtml.button("Enter", logUserIn)   
+  }
 
 
 
  private def logUserIn() = {
     def logIn(u: UserDoc) = {
       UserDoc.logUserIn(u, () => {
-        import code.lib.Sitemap._
-        //logger.debug(S.referer)
         S.redirectTo(whence openOr userRepos.calcHref(u))
       })
     }

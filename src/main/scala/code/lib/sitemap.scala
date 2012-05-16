@@ -190,9 +190,11 @@ object Sitemap extends Loggable {
     val signIn: Menu = Menu("Sign In") / "user" / "m" / "signin" >> 
           If(() => !UserDoc.loggedIn_?, () => RedirectResponse(userRepos.calcHref(UserDoc.currentUser.get)))
 
-    val login: Menu = Menu("Log In") / "user" / "m" / "login"
+    val login: Menu = Menu("Log In") / "user" / "m" / "login" >> 
+          If(() => !UserDoc.loggedIn_?, () => RedirectResponse(userRepos.calcHref(UserDoc.currentUser.get)))
 
-    val newUser: Menu = Menu("Registration") / "user" / "m" / "new"
+    val newUser: Menu = Menu("Registration") / "user" / "m" / "new" >> 
+          If(() => !UserDoc.loggedIn_?, () => RedirectResponse(userRepos.calcHref(UserDoc.currentUser.get)))
 
     val adminUsers: Menu = Menu("Users") / "admin" / "users" >> 
       TemplateBox ( () =>
