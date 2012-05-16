@@ -197,7 +197,7 @@ $(function() {
         var linesCount = numberLines(code[0], true);
 
         var rawLN = "";
-        for(var i = 0; i < linesCount; i++){
+        for(var i = 1; i <= linesCount; i++){
             rawLN += "<span class='line_number'>"+ i +"</span>\n";
         }
         
