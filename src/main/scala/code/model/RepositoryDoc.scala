@@ -363,7 +363,7 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
   }
 
   def deleteDependend = {
-    logger.info("%s deleted repo %s".format(UserDoc.currentUser.get.login.get, name.get))
+    //logger.info("%s deleted repo %s".format(UserDoc.currentUser.get.login.get, name.get))
 
     CollaboratorDoc where (_.repoId eqs id.get) bulkDelete_!!
 
