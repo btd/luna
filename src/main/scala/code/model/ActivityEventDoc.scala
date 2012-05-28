@@ -29,9 +29,9 @@ import org.bson.types.ObjectId
 import code.model._
 
 object NotifyEvents extends Enumeration {
-   val Push = Value("Push")
-   val PullRequestOpen = Value("Open Pull Request")
-   val PullRequestClose = Value("Close Pull Request")
+   val Push = Value(1, "Push")
+   val PullRequestOpen = Value(2, "Open Pull Request")
+   val PullRequestClose = Value(3, "Close Pull Request")
 }
 
 /*
@@ -56,7 +56,7 @@ trait EventBaseDoc[MyType <: EventBaseDoc[MyType]] extends MongoRecord[MyType] w
    self: MyType =>
 
    object when extends DateField(this) {
-      override def defaultValue = new java.util.Date(millis)
+      override def defaultValue = Helpers.now
    }
 
    
@@ -113,12 +113,15 @@ class CommitDoc extends BsonRecord[CommitDoc] {
 
    object msg extends StringField(this, 2000)
 
+   object hash extends StringField(this, 30)
+
    def meta = CommitDoc
 }
 object CommitDoc extends CommitDoc with BsonMetaRecord[CommitDoc]
 
 class ChangedBranchDoc extends BsonRecord[ChangedBranchDoc] {
    object commits extends BsonRecordListField(this, CommitDoc)
+
 
    object name extends StringField(this, 20)
 

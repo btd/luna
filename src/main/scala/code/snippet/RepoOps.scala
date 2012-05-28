@@ -61,28 +61,29 @@ class RepoOps(repo: RepositoryDoc) extends Loggable {
 
   private def webForm(webOutput: Web, user: UserDoc): CssSel = {
     "name=activated" #> SHtml.checkbox(webOutput.activated.get, v => webOutput.activated(v)) &
-    "name=events" #> SHtml.multiSelectObj(
+    "name=events" #> SHtml.multiSelect(
       Event.options,
-      webOutput.events.get.map(_.name.get),
-      (l:List[NotifyEvents.Value]) => { /*logger.debug(l); webOutput.events(l.map(e => Event.name(NotifyEvents.withName(e))))*/}, "class" -> "czn")
+      webOutput.events.get.map(_.name.get.id.toString),
+      (l:List[String]) => { 
+        webOutput.events(l.map(e => Event.createRecord.name(NotifyEvents(e.toInt))))
+      }, "class" -> "czn")
   }
 
   private def emailForm(emailOutput: Email, user: UserDoc): CssSel = {
     var emails:List[String] = emailOutput.to.get
 
     if(emails.isEmpty) emails = user.email.get :: Nil
+    "*" #> NodeSeq.Empty
 
     "name=emails" #> SHtml.text(emails.mkString("; "), v => emailOutput.to(v.split(";").map(_.trim).toList),
       "class" -> "textfield large") &
     "name=activated" #> SHtml.checkbox(emailOutput.activated.get, v => emailOutput.activated(v))  &
-    "name=events" #> SHtml.multiSelectObj(
+    "name=events" #> SHtml.multiSelect(
       Event.options, 
-      emailOutput.events.get.map(_.name.get), 
-      (l:List[NotifyEvents.Value]) => { 
-      logger.debug("Getted " + l)
-      val el : List[Event] = l.map(e => Event.name(e))
-      logger.debug("Computed " +el)
-      emailOutput.events(el)}, "class" -> "czn")
+      emailOutput.events.get.map(_.name.get.id.toString),
+      (l:List[String]) => { 
+        emailOutput.events(l.map(e => Event.createRecord.name(NotifyEvents(e.toInt))))
+      }, "class" -> "czn")
   }
 
   def renderRepositoryBlockDefault = 

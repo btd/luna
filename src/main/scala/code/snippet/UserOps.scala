@@ -125,7 +125,60 @@ class UserOps(user: UserDoc) extends Loggable with RepositoryUI {
   }
 
   def acivityOnWatchingStream = {
-    "*" #> NodeSeq.Empty
+    val subscriptions = (NotifySubscriptionDoc where (_.who eqs user.id.get) fetch) filter (_.output.get.web.get.activated.get)
+    val events = subscriptions.flatMap(s => PushEventDoc where (_.repo eqs s.repo.get) fetch).sortBy(_.when.get)
+    logger.debug("Push events" + events)
+    ".notify_stream *" #> events.map(e => 
+        (".username" #> e.who.obj.map(u => <a href={userRepos.calcHref(u)}>{u.login.get}</a>).openOr(Text("Someone")) &
+        ".reponame" #> e.repo.obj.map(o => <a href={defaultTree.calcHref(o)}>{o.name.get}</a>).openOr(Text("something")) &
+        (if(!e.added.get.isEmpty) {
+          val lst: List[NodeSeq] = e.added.get.map { b => 
+            val shortName = b.split("/").last
+            e.repo.obj.map { o => 
+              <a href={treeAtCommit.calcHref(SourceElement.rootAt(o, shortName))}>{shortName}</a>
+            }.openOr(Text(shortName))
+          }
+          ".addedbranches" #> (".branches *" #> lst.reduce(_ ++ Text(", ") ++ _))
+        } else ".addedbranches" #> NodeSeq.Empty) &
+        (if(!e.deleted.get.isEmpty) {
+          val lst: List[NodeSeq] = e.deleted.get.map { b => 
+            val shortName = b.split("/").last
+            e.repo.obj.map { o => 
+              <a href={treeAtCommit.calcHref(SourceElement.rootAt(o, shortName))}>{shortName}</a>
+            }.openOr(Text(shortName))
+          }
+          ".deletedbranches" #> (".branches *" #> lst.reduce(_ ++ Text(", ") ++ _))
+        } else ".deletedbranches" #> NodeSeq.Empty) &
+        (if(!e.changed.get.isEmpty) {
+          ".changedbranches" #> (".branch *" #> e.changed.get.map( b =>
+            ".branchname" #> {
+              val shortName = b.name.get.split("/").last
+              e.repo.obj.map { o => 
+                <a href={treeAtCommit.calcHref(SourceElement.rootAt(o, shortName))}>{shortName}</a>
+              }.openOr(Text(shortName))
+            } &
+            "li *" #> b.commits.get.map(c =>
+              ".link [href]" #> commit.calcHref(SourceElement.rootAt(e.repo.obj.get, c.hash.get)) &
+              ".hash *" #> c.hash.get.substring(0, 6) &
+              ".msg *" #> c.msg.get
+            )
+          ))
+        } else ".changedbranches" #> NodeSeq.Empty))(pushEventTpl)
+    )
   }
+
+  val pushEventTpl: NodeSeq = 
+      <div class="push_event notify_event">
+        <div><span class="username"></span> make a push in <span class="reponame"></span>.</div>
+        <div class="addedbranches">Branches added: <span class="branches"/>.</div>
+        <div class="deletedbranches">Branches deleted: <span class="branches"/>.</div>
+        <div class="changedbranches">
+          <div class="branch">Change in <span class="branchname"/>:
+            <ul>
+              <li><a class="link" href=""><span class="hash">1das12</span></a> <span class="msg">Message of commit</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
 }
 

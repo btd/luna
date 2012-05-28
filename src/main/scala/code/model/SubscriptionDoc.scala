@@ -37,11 +37,11 @@ trait NotificationService {
 class Event extends BsonRecord[Event] {
   def meta = Event
 
-  object name extends EnumNameField(this, NotifyEvents)
+  object name extends EnumField(this, NotifyEvents)
 }
 
 object Event  extends Event with BsonMetaRecord[Event] {
-  val options = NotifyEvents.values.map(v => v -> v.toString).toSeq
+  val options = NotifyEvents.values.map(v => v.id.toString -> v.toString).toSeq
 } 
 
 class Web extends BsonRecord[Web] with NotificationService {

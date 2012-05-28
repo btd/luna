@@ -40,13 +40,14 @@ object ActivityActor extends LiftActor {
 
                  val commitDocs: List[CommitDoc] = commits.map { c =>
                      val ident = c.getAuthorIdent
-                     CommitDoc
+                     CommitDoc.createRecord
                         .when(ident.getWhen)
-                        .msg(c.getFullMessage)
-                        .ident(IdentDoc.name(ident.getName).email(ident.getEmailAddress))
+                        .hash(org.eclipse.jgit.lib.ObjectId.toString(c.toObjectId))
+                        .msg(c.getShortMessage)
+                        .ident(IdentDoc.createRecord.name(ident.getName).email(ident.getEmailAddress))
                  }
 
-                 ChangedBranchDoc.name(s).commits(commitDocs)
+                 ChangedBranchDoc.createRecord.name(s).commits(commitDocs)
                }
 
             val push = PushEventDoc
