@@ -32,7 +32,8 @@ import code.lib.Sitemap._
 
 import org.pegdown._
 
-import java.io.File
+import java.io._
+import java.util._
 
 import main._
 
@@ -44,7 +45,7 @@ import main._
 
 object Welcome {
 
-  def welcomeFileContent = tryo(io.Source.fromFile(new File(P.welcomePage)).getLines.mkString("\n"))
+  def welcomeFileContent = tryo(new Scanner( new File(P.welcomePage) ).useDelimiter("\\A").next)
   private val processor = new PegDownProcessor
 
   def processContent(c: String): NodeSeq = xml.Unparsed(processor.markdownToHtml(c))
