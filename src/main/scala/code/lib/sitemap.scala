@@ -217,6 +217,7 @@ object Sitemap extends Loggable {
    
 
   def defaultEntries = List[Menu](
+      index,
       userAdmin,
       repoAdmin,
       userRepos,

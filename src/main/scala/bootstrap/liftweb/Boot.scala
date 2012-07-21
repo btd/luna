@@ -107,7 +107,7 @@ class Boot extends Loggable {
       LiftRules.statelessRewrite.append {
         case RewriteRequest(ParsePath("index" :: Nil, _, _, true), _, _) =>
 
-          RewriteResponse("user" :: "m" :: "signin" :: Nil, true)
+          RewriteResponse("index" :: Nil, true)
       }
 
     } else {
@@ -176,13 +176,12 @@ class Boot extends Loggable {
 
     LiftRules.ajaxEnd = Full(() => JqId("preloader") ~> JqHide())
 
-    // Use jQuery 1.4
-    //LiftRules.jsArtifacts = net.liftweb.http.js.jquery.JQuery14Artifacts
-
     // Force the request to be UTF-8
     LiftRules.early.append(_.setCharacterEncoding("UTF-8"))
 
     LiftRules.htmlProperties.default.set((r: Req) => new Html5Properties(r.userAgent))
+
+    main.P.init
 
   }
 
