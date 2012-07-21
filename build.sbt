@@ -4,7 +4,7 @@ version := "1.1-SNAPSHOT"
 
 seq(webSettings :_*)
 
-seq(lessSettings : _*)
+seq(styleSettings : _*)
 
 scalaVersion := "2.9.1"
 
@@ -18,6 +18,7 @@ resolvers ++= Seq (
 
 
 libraryDependencies ++= Seq (
+  "org.pegdown"         % "pegdown"                       % "1.1.0",
   "net.databinder"      %% "dispatch-nio"                 % "0.8.7",
   "org.mindrot"         % "jbcrypt"                       % "0.3m",
   "org.eclipse.jgit"    % "org.eclipse.jgit"              % "1.3.0.201202151440-r",
@@ -35,8 +36,10 @@ libraryDependencies ++= Seq (
   "net.liftweb"         %% "lift-mongodb-record"          % "2.5-SNAPSHOT"           % "compile",
   "com.foursquare"      %% "rogue"                        % "1.1.6"                  intransitive(),
   "org.eclipse.jetty"   % "jetty-webapp"                  % "8.0.4.v20111024"        % "container",
-  "ch.qos.logback"      % "logback-classic"               % "1.0.0"                  
+  "ch.qos.logback"      % "logback-classic"               % "1.0.6"                  
   )
 
 
-(resourceManaged in (Compile, LessKeys.less)) <<= (sourceDirectory in Compile)(_ / "webapp" / "assets")
+(resourceManaged in (Compile, StyleKeys.less)) <<= (sourceDirectory in Compile)(_ / "webapp" / "assets")
+
+(StyleKeys.minify in (Compile, StyleKeys.combine)) := false
