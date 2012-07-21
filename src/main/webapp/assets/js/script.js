@@ -139,32 +139,6 @@ function numberLines(node, isPreformatted) {
   }
 
 $(function() {
-    if (!Modernizr.input.placeholder) {
-
-        $('[placeholder]').focus(
-            function() {
-                var input = $(this);
-                if (input.val() == input.attr('placeholder')) {
-                    input.val('');
-                    input.removeClass('placeholder');
-                }
-            }).blur(
-            function() {
-                var input = $(this);
-                if (input.val() == '' || input.val() == input.attr('placeholder')) {
-                    input.addClass('placeholder');
-                    input.val(input.attr('placeholder'));
-                }
-            }).blur();
-        $('[placeholder]').parents('form').submit(function() {
-            $(this).find('[placeholder]').each(function() {
-                var input = $(this);
-                if (input.val() == input.attr('placeholder')) {
-                    input.val('');
-                }
-            })
-        });
-    }
     
     setCloneUrls();
 
@@ -187,8 +161,6 @@ $(function() {
         el.parent().prepend(newButton)
         el.dialog({ autoOpen: false, modal: true, width: "600px" });        
     });
-
-    $(".selectmenu").selectmenu();
     
 
     $(".blob").each(function(i, el) {
@@ -205,6 +177,12 @@ $(function() {
         $(".source", el).append($("pre", el)[0]);
         $(".source_container", el).css("padding-left", $(".line_numbers", el).width());
     });
+
+    $(".wiki pre code").each(function(i, el) {
+      hljs.highlightBlock(el);
+    });
+
+    //$('.dropdown-toggle').dropdown();
 
     CodeScrolling.initFloatingScrollbars($(window));
     DiffHeader.init();
