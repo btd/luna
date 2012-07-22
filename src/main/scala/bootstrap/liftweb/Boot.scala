@@ -64,7 +64,7 @@ class Boot extends Loggable {
   def boot {
     val dbHost = Props.get("db.host", "localhost")
     val dbPort = Props.getInt("db.port", 27017)
-    val dbName = Props.get("db.name", "grt")
+    val dbName = Props.get("db.name", "luna")
 
     Props.get("db.user") match {
       case Full(userName) => {
@@ -126,8 +126,9 @@ class Boot extends Loggable {
 
     LiftRules.dispatch.append(code.snippet.RawFileStreamingSnippet)
     LiftRules.dispatch.append(code.snippet.GitHttpSnippet)
+    LiftRules.dispatch.append(code.rest.ApiV1)
 
-    LiftRules.autoIncludeAjax = _ => false
+    LiftRules.autoIncludeAjaxCalc.default.set(() => (session: LiftSession) => false) 
     LiftRules.autoIncludeComet = _ => false
 
     def open_?(userName: String, repoName: String):Boolean = {
@@ -174,6 +175,7 @@ class Boot extends Loggable {
     LiftRules.htmlProperties.default.set((r: Req) => new Html5Properties(r.userAgent))
 
     main.P.init
+
 
   }
 

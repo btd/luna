@@ -16,7 +16,8 @@ require.config({
     "underscore": "lib/underscore",
     "backbone": "lib/backbone",
     "text": "lib/text",
-    "bootstrap": "lib/bootstrap"
+    "bootstrap": "lib/bootstrap",
+    "luna": "lib/luna"
   }
 });
 

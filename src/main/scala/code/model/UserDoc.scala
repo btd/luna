@@ -44,6 +44,8 @@ class UserDoc private() extends MongoRecord[UserDoc] with ObjectIdPk[UserDoc] {
                                 valRegex(".*@.*".r.pattern, "Email address must contain @") _ :: 
                                 valMaxLen(maxLength, "Email cannot be more than 50 symbols") _ ::
                                 unique_?("This email already used") _ :: super.validations
+
+    override def optional_? = true
   }
 
   object login extends StringField(this, 50) {
@@ -54,7 +56,7 @@ class UserDoc private() extends MongoRecord[UserDoc] with ObjectIdPk[UserDoc] {
         Nil 
     }
     override def validations = valMinLen(1, "Login cannot be empty") _ :: 
-                                valRegex("""[a-zA-Z0-9\.\-]+""".r.pattern, "Login can contains only US-ASCII letters, digits, .(point), -(minus)") _ :: 
+                                valRegex("""[a-zA-Z0-9\.\-]+""".r.pattern, "Login can contains only latin letters, digits, .(point), -(minus)") _ :: 
                                 valMaxLen(maxLength, "Login cannot be more than 50 symbols") _ ::
                                 unique_?("This login already used") _ :: super.validations
   }
@@ -127,25 +129,31 @@ object UserDoc extends UserDoc with MongoMetaRecord[UserDoc] with Loggable {
 
   val destroySessionOnLogin = true
 
-  def logUserIn(who: UserDoc, postLogin: () => Nothing): Nothing = {
+  def logUserIn(who: UserDoc, postLogin: () => Nothing): String = {
+    var token: String = ""
     if (destroySessionOnLogin) {
       S.session.open_!.destroySessionAndContinueInNewSession(() => {
-        logUserIn(who)
+        token = logUserIn(who)
         postLogin()
       })
     } else {
-      logUserIn(who)
+      token = logUserIn(who)
       postLogin()
     }
+    token
   }
 
-  def logUserIn(who: UserDoc) {
+  def logUserIn(who: UserDoc): String = {
     curUserId.remove()
     curUser.remove()
     curUserId(who.id.valueBox)
     curUser(Full(who))
 
     Sessions + who.login.get
+
+    var token = java.util.UUID.randomUUID.toString
+    currentUserToken(Full(token))
+    token
   }
 
   def logoutCurrentUser = logUserOut()
@@ -164,6 +172,9 @@ object UserDoc extends UserDoc with MongoMetaRecord[UserDoc] with Loggable {
     override lazy val __nameSalt = Helpers.nextFuncName
   }
 
+  object currentUserToken extends SessionVar[Box[String]](Empty) {
+    override lazy val __nameSalt = Helpers.nextFuncName
+  }
 
 
   def currentUserId: Box[ObjectId] = curUserId.get

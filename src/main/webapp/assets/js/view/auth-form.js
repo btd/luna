@@ -1,4 +1,5 @@
-define(["jquery", "underscore", "backbone", "text!template/auth-form-not-loggedin.js", "model/state", "bootstrap", "lib/serializeObject.jquery"], function($, _, Backbone, tplAuthNotLoggedIn, state) {
+define(["jquery", "underscore", "backbone", "text!template/auth-form-not-loggedin.js", "model/state", "luna", "bootstrap", "lib/serializeObject.jquery"], 
+  function($, _, Backbone, tplAuthNotLoggedIn, state, Luna) {
   var TplAuthFormNotLoggedIn = _.template(tplAuthNotLoggedIn);
 
 
@@ -17,8 +18,8 @@ define(["jquery", "underscore", "backbone", "text!template/auth-form-not-loggedi
         this.$el.append(TplAuthFormNotLoggedIn());//show login here
         this.$el.find(".dropdown-toggle").dropdown();
         this.$el.find(".auth-dropdown-form .login_btn").on("click", function(evt) {
-          $.getJSON('/api/1/auth/token', self.$el.find(".auth-dropdown-form").serializeObject(), function(data) {
-            
+          Luna.authorize(self.$el.find(".auth-dropdown-form").serializeObject(), function(data) {
+            console.log(data);
           });
           return false;
         });
