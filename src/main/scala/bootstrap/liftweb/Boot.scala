@@ -127,12 +127,8 @@ class Boot extends Loggable {
     LiftRules.dispatch.append(code.snippet.RawFileStreamingSnippet)
     LiftRules.dispatch.append(code.snippet.GitHttpSnippet)
 
-    LiftRules.ajaxRetryCount = Full(1)
-    LiftRules.ajaxPostTimeout = 15000
-
-    
-
-
+    LiftRules.autoIncludeAjax = _ => false
+    LiftRules.autoIncludeComet = _ => false
 
     def open_?(userName: String, repoName: String):Boolean = {
       RepositoryDoc.byUserLoginAndRepoName(userName, repoName.substring(0, repoName.length - 4)) match {
@@ -171,10 +167,6 @@ class Boot extends Loggable {
     LiftRules.liftRequest.append {
       case Req("assets" :: Nil, _, _)  => false
     }
-
-    LiftRules.ajaxStart = Full(() => JqId("preloader") ~> JqShow())
-
-    LiftRules.ajaxEnd = Full(() => JqId("preloader") ~> JqHide())
 
     // Force the request to be UTF-8
     LiftRules.early.append(_.setCharacterEncoding("UTF-8"))
