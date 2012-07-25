@@ -1,23 +1,3 @@
-.box-center () {
-    display: -webkit-box;
-    -webkit-box-orient: horizontal;
-    -webkit-box-pack: center;
-    -webkit-box-align: center;
-
-    display: -moz-box;
-    -moz-box-orient: horizontal;
-    -moz-box-pack: center;
-    -moz-box-align: center;
-
-    display: box;
-    box-orient: horizontal;
-    box-pack: center;
-    box-align: center;
-}
-
-.long {
-    width: 1000px;
-}
 
 .left {
     float: left;
@@ -45,32 +25,4 @@
     background-image: -moz-linear-gradient(top, @from, @to);
     background-image: -o-linear-gradient(top, @from, @to);
     background-image: -webkit-gradient(linear, left top, left bottom, from(@from), to(@to));
-}
-
-
-.table {
-    width: 100%;
-    margin: 10px 0;
-    border: 2px solid rgb(217, 217, 217);
-    background-color: rgb(242,242,242);
-
-    .border-radius;
-
-    table {
-        width: 100%;
-    }
-
-    tr {
-        border-top: 1px solid rgb(217, 217, 217);
-        font-size: 1.3em;
-        line-height: 2em;
-
-        &:first-child {
-            border-top: 0;
-        }
-    }
-
-    td {
-        padding: 0 10px;
-    }
 }

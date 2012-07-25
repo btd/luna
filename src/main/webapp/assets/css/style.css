@@ -6297,64 +6297,17 @@ pre .tex .formula {
 }
 /* @end */
 
-.long {
-  width: 1000px;
-}
 .left {
   float: left;
 }
 .right {
   float: right;
 }
-.table {
-  width: 100%;
-  margin: 10px 0;
-  border: 2px solid #d9d9d9;
-  background-color: #f2f2f2;
-  border-radius: 3px;
-  -webkit-border-radius: 3px;
-  -moz-border-radius: 3px;
-  -o-border-radius: 3px;
-}
-.table table {
-  width: 100%;
-}
-.table tr {
-  border-top: 1px solid #d9d9d9;
-  font-size: 1.3em;
-  line-height: 2em;
-}
-.table tr:first-child {
-  border-top: 0;
-}
-.table td {
-  padding: 0 10px;
-}
 .large {
   font-size: 3em;
 }
-html,
-body {
-  height: 100%;
-}
 #main {
   padding: 50px 0;
-}
-#container {
-  height: 100%;
-  width: 100%;
-  display: -webkit-box;
-  -webkit-box-orient: horizontal;
-  -webkit-box-pack: center;
-  -webkit-box-align: center;
-  display: -moz-box;
-  -moz-box-orient: horizontal;
-  -moz-box-pack: center;
-  -moz-box-align: center;
-  display: box;
-  box-orient: horizontal;
-  box-pack: center;
-  box-align: center;
 }
 #preloader {
   z-index: 10000;
@@ -6537,40 +6490,6 @@ ul.clone-urls li a:hover {
   background-image: -o-linear-gradient(top, #599bdc, #3072b3);
   background-image: -webkit-gradient(linear, left top, left bottom, from(#599bdc), to(#3072b3));
 }
-.top_menu {
-  padding: 5px 0;
-  position: fixed;
-  top: 0;
-  right: 0;
-  width: 100%;
-  background-color: black;
-  -moz-box-shadow: 0 10px 15px #ccc;
-  -webkit-box-shadow: 0 10px 15px #ccc;
-  box-shadow: 0 10px 15px #ccc;
-  z-index: 100;
-}
-.top_menu * {
-  font-family: Arial, serif;
-  color: white;
-}
-.top_menu ul {
-  padding: 0;
-}
-.top_menu li {
-  display: inline-block;
-  margin-right: 15px;
-}
-.top_menu .repo_menu {
-  width: 500px;
-  float: left;
-  margin-left: 10%;
-}
-.top_menu a:visited {
-  color: white;
-}
-.main_menu {
-  float: right;
-}
 .auth-dropdown-form {
   padding: 19px;
   margin: 0;
@@ -6593,24 +6512,6 @@ ul.clone-urls li a:hover {
 .options_holder.warn {
   padding: 0 10px;
   width: 680px;
-}
-table.users {
-  width: 100%;
-}
-table.users .user_name {
-  width: 50%;
-}
-table.users .user_delete {
-  width: 25%;
-  text-align: center;
-}
-table.users .user_admin {
-  width: 25%;
-  text-align: center;
-}
-table.users .user_suspended {
-  width: 25%;
-  text-align: center;
 }
 .current_branch {
   width: 200px;
