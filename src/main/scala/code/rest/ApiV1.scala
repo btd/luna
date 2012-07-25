@@ -30,20 +30,23 @@ import net.liftweb.http.rest._
 
 object ApiV1 extends Loggable with RestHelper {
 
+  def loginSuccessResponce(user: UserDoc) = {
+    JsonResponse(JObject(JField("access_token", UserDoc.logUserIn(user)) :: JField("user", user.asJValue) :: Nil))
+  }
 
   serve { "api" / "1" prefix {
     case "auth" :: "token" :: Nil JsonGet _ => {
       (S.param("login"), S.param("password")) match {
         case (Full(login), Full(password)) => 
           UserDoc.byName(login) match {
-            case Some(user) if user.password.match_?(password) => JsonResponse(JObject(JField("access_token", UserDoc.logUserIn(user)) :: Nil))
+            case Some(user) if user.password.match_?(password) => loginSuccessResponce(user)
             case Some(user) => ForbiddenResponse("Wrong password.")
             case _ => 
               val user = UserDoc.createRecord.login(login).password(password)
               user.validate match {
                 case Nil => 
                   user.save 
-                  JsonResponse(JObject(JField("access_token", UserDoc.logUserIn(user)) :: Nil))
+                  loginSuccessResponce(user)
                 case l => ForbiddenResponse(l.map(_.msg).mkString(". "))
               }
             
@@ -51,6 +54,7 @@ object ApiV1 extends Loggable with RestHelper {
         case _ => BadResponse()
       }
     }
+    case "wiki" :: "root" :: Nil JsonGet _ => JsonResponse(JObject(JField("content", code.snippet.WelcomeWiki.finalContent) :: Nil))
   }}
 
 

@@ -16,6 +16,15 @@ define(['jquery'], function($) {
           this.access_token = data.access_token;
           success(data);
         }).fail(error || this.setupFail);
+      },
+      mainWiki: function(success) {
+        $.ajax({
+          dataType: 'json',
+          url: '/api/' + version + "/wiki/root",
+          type: 'GET'
+        }).done(function(data) {
+          success(data);
+        })
       }
     }
   }();

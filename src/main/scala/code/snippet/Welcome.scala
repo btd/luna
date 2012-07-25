@@ -43,19 +43,19 @@ import main._
  * Time: 5:29 PM
  */
 
-object Welcome {
+object WelcomeWiki {
 
   def welcomeFileContent = tryo(new Scanner( new File(P.welcomePage) ).useDelimiter("\\A").next)
   private val processor = new PegDownProcessor
 
-  def processContent(c: String): NodeSeq = xml.Unparsed(processor.markdownToHtml(c))
+  def processContent(c: String): String = processor.markdownToHtml(c)
 
-  lazy val content = welcomeFileContent
-
-  lazy val processedContent = content.map(processContent(_))
+  lazy val processedContent = welcomeFileContent.map(processContent(_))
   
   def render = {
-    "*" #> (if(Props.devMode) welcomeFileContent.map(processContent(_)) else processedContent).openOr(xml.Text("Hello, this is Luna!"))
+    "*" #> xml.Unparsed(finalContent)
   }
+
+  def finalContent = (if(Props.devMode) welcomeFileContent.map(processContent(_)) else processedContent).openOr("Hello, this is Luna!")
 
 }
