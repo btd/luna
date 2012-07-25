@@ -1,33 +1,45 @@
-define(["jquery", "underscore", "backbone", "text!template/auth-form-not-loggedin.js", "model/state", "luna", "bootstrap", "lib/serializeObject.jquery"], 
-  function($, _, Backbone, tplAuthNotLoggedIn, state, Luna) {
+define(["jquery", "underscore", "backbone", "model/user", "text!template/auth-form-not-loggedin.js", "text!template/auth-form-loggedin.js", "model/state", "luna", "bootstrap", "lib/serializeObject.jquery"], 
+  function($, _, Backbone, User, tplAuthNotLoggedIn, tplAuthLoggedIn, state, Luna) {
   var TplAuthFormNotLoggedIn = _.template(tplAuthNotLoggedIn);
+  var TplAuthFormLoggedIn = _.template(tplAuthLoggedIn);
 
 
   var authForm = Backbone.View.extend({
     el: "#authorization-form",
 
-    initialize: function() {
-      this.render();
+    loginEvents: {
+      "click .login_btn" : "tryAuthorize"
     },
 
-    render: function() {
+    initialize: function() {
+      state.on("login", function(user) {
+        this.clean().render(user);
+      }, this);
+    },
+
+    tryAuthorize: function() {
+      Luna.authorize(this.$(".auth-dropdown-form").serializeObject(), function(data) {
+        state.logUserIn(new User(data.user));
+      });
+      return false;
+    },
+
+    render: function(user) {
       var self = this;
       if(state.isLoggedIn()) {
-        //show logout there
+        this.$el.append(TplAuthFormLoggedIn({"user": user}));
       } else {
-        this.$el.append(TplAuthFormNotLoggedIn());//show login here
+        this.$el.append(TplAuthFormNotLoggedIn());
         this.$el.find(".dropdown-toggle").dropdown();
-        this.$el.find(".auth-dropdown-form .login_btn").on("click", function(evt) {
-          Luna.authorize(self.$el.find(".auth-dropdown-form").serializeObject(), function(data) {
-            console.log(data);
-          });
-          return false;
-        });
+        this.delegateEvents(this.loginEvents);
       }
+      return self;
     },
 
     clean: function() {
+      this.undelegateEvents();
       this.$el.empty();
+      return this;
     }
   });
   return authForm;
