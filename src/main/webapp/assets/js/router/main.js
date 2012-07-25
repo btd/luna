@@ -7,15 +7,25 @@ define(["backbone", "model/state"], function(Backbone, state) {
       this.on("all", function(eventName) {
         this.previousRouteEvent = eventName;
       }, this);
+
+      state.on("login", function(user) {
+        this.previousRouteEvent === 'route:root' ? 
+          this.navigate(user.get("login"), {trigger: true}) : 
+          Backbone.history.loadUrl(Backbone.history.fragment);
+      }, this);
     },
 
     routes: {
-      "":                 "root"
+      "" :                 "root",
+      ":userName" :        "userPage"
     },
 
     root: function() {
       state.get("mainView").clean().showWiki();
-      state.get("authForm").render();
+    },
+
+    userPage: function() {
+      state.get("mainView").clean().showUserPage();
     }
 
   });

@@ -99,29 +99,24 @@ class Boot extends Loggable {
 
     LiftRules.explicitlyParsedSuffixes = Set()
 
+
+    LiftRules.setSiteMap(SiteMap(Sitemap.entries: _*))
+
+    LiftRules.statelessRewrite.append {
+      case RewriteRequest(ParsePath(userName :: Nil, _, _, _), _, _) => RewriteResponse("index" :: Nil, true)
+      case RewriteRequest(ParsePath(userName :: repoName :: Nil, _, _, _), _, _) => RewriteResponse("index" :: Nil, true)
+    }
+
     //not so good but enough
-    if(Props.getBool(USER_REGISTRATION_ENABLED, true)) {
+    if(!Props.getBool(USER_REGISTRATION_ENABLED, true)) {
 
-      LiftRules.setSiteMap(SiteMap(Sitemap.entries: _*))
-      
-      LiftRules.statelessRewrite.append {
-        case RewriteRequest(ParsePath("index" :: Nil, _, _, true), _, _) =>
-
-          RewriteResponse("index" :: Nil, true)
-      }
-
-    } else {
       if(!UserDoc.adminExists_?) {
         UserDoc.addDefaultAdmin
       }
-      LiftRules.setSiteMap(SiteMap(Sitemap.defaultEntries: _*))
-      
-      LiftRules.statelessRewrite.append {
-        case RewriteRequest(ParsePath("index" :: Nil, _, _, true), _, _) =>
-
-          RewriteResponse("user" :: "m" :: "login" :: Nil, true)
-      }
+  
     }
+
+    
     
 
     LiftRules.dispatch.append(code.snippet.RawFileStreamingSnippet)

@@ -183,9 +183,7 @@ object Sitemap extends Loggable {
           if r.canPull_?(UserDoc.currentUser)//TODO check
           tpl <- Templates("repo" :: "pull-request" :: "one" :: Nil)} yield tpl)
 
-    val index = Menu.i("Home") / "index" >> 
-      If(() => !UserDoc.loggedIn_?, () => RedirectResponse(userRepos.calcHref(UserDoc.currentUser.get)))
-
+    val index = Menu.i("Home") / "index"
 
     val signIn: Menu = Menu("Sign In") / "user" / "m" / "signin" >> 
           If(() => !UserDoc.loggedIn_?, () => RedirectResponse(userRepos.calcHref(UserDoc.currentUser.get)))
@@ -216,8 +214,8 @@ object Sitemap extends Loggable {
 
    
 
-  def defaultEntries = List[Menu](
-      index,
+  def entries = List[Menu](
+      index/*,
       userAdmin,
       repoAdmin,
       userRepos,
@@ -238,7 +236,7 @@ object Sitemap extends Loggable {
       signIn,
       newUser
     )
-
+*/)
 }
 
 import Menu._

@@ -5,12 +5,12 @@ define(["jquery", "underscore", "backbone", "model/state", "luna"],
     el: "#main",
 
     initialize: function() {
-      //this.render();
+      
     },
 
     render: function() {
       
-      return self;
+      return this;
     },
 
     showWiki: function() {
@@ -18,6 +18,12 @@ define(["jquery", "underscore", "backbone", "model/state", "luna"],
       Luna.mainWiki(function(data) {
         self.$el.append(data.content);
       });
+      return self;
+    },
+
+    showUserPage: function() {
+      var self = this;
+      console.log("user page");
       return self;
     },
 

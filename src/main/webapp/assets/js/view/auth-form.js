@@ -15,12 +15,15 @@ define(["jquery", "underscore", "backbone", "model/user", "text!template/auth-fo
       state.on("login", function(user) {
         this.clean().render(user);
       }, this);
+
+      this.render();
     },
 
     tryAuthorize: function() {
       Luna.authorize(this.$(".auth-dropdown-form").serializeObject(), function(data) {
         state.logUserIn(new User(data.user));
       });
+
       return false;
     },
 
