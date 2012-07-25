@@ -1,11 +1,15 @@
 define(["jquery", "underscore", "backbone"], function($, _, Backbone) {
   var State = Backbone.Model.extend({
     defaults: {
-      access_token: ""
+      
     },
 
     isLoggedIn: function() {
-      return this.get("access_token") !== "";
+      return this.has("user");
+    },
+    logUserIn: function(user) {
+      this.set("user", user);
+      this.trigger("login", user);
     }
   });
   _(State).extend(Backbone.Events);
