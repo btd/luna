@@ -61,6 +61,8 @@ case class JqHide() extends JsExp with JsMember {
  * to modify lift's environment
  */
 class Boot extends Loggable {
+
+  
   def boot {
     val dbHost = Props.get("db.host", "localhost")
     val dbPort = Props.getInt("db.port", 27017)
@@ -169,7 +171,9 @@ class Boot extends Loggable {
 
     LiftRules.htmlProperties.default.set((r: Req) => new Html5Properties(r.userAgent))
 
-    main.P.init
+    code.rest.Config.init
+    code.rest.P.init
+    code.rest.Session.init
 
 
   }

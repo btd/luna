@@ -35,7 +35,7 @@ import org.pegdown._
 import java.io._
 import java.util._
 
-import main._
+import code.rest._
 
 /**
  * User: denis.bardadym

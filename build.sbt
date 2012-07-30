@@ -1,6 +1,6 @@
-name := "luna-tool"
+name := "luna"
 
-version := "1.1-SNAPSHOT"
+version := "2.0-SNAPSHOT"
 
 seq(webSettings :_*)
 
@@ -18,6 +18,8 @@ resolvers ++= Seq (
 
 
 libraryDependencies ++= Seq (
+  "com.typesafe"        % "config"                        % "0.5.0",
+  "com.google.guava"    % "guava"                         % "12.0",
   "org.pegdown"         % "pegdown"                       % "1.1.0",
   "net.databinder"      %% "dispatch-nio"                 % "0.8.7",
   "org.mindrot"         % "jbcrypt"                       % "0.3m",
@@ -42,4 +44,4 @@ libraryDependencies ++= Seq (
 
 (resourceManaged in (Compile, StyleKeys.less)) <<= (sourceDirectory in Compile)(_ / "webapp" / "assets")
 
-(StyleKeys.minify in (Compile, StyleKeys.combine)) := false
+(StyleKeys.minify in (Compile, StyleKeys.combine)) := true
