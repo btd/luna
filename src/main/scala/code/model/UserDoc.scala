@@ -56,7 +56,7 @@ class UserDoc private() extends MongoRecord[UserDoc] with ObjectIdPk[UserDoc] {
         Nil 
     }
     override def validations = valMinLen(1, "Login cannot be empty") _ :: 
-                                valRegex("""[a-zA-Z0-9\.\-]+""".r.pattern, "Login can contains only latin letters, digits, .(point), -(minus)") _ :: 
+                                valRegex("""[a-zA-Z0-9\.\-\.\!\~\*\\\(\)]+""".r.pattern, "Login can contains only latin letters, digits, .(point), -(minus)") _ :: 
                                 valMaxLen(maxLength, "Login cannot be more than 50 symbols") _ ::
                                 unique_?("This login already used") _ :: super.validations
   }
@@ -151,9 +151,14 @@ object UserDoc extends UserDoc with MongoMetaRecord[UserDoc] with Loggable {
 
     Sessions + who.login.get
 
-    var token = java.util.UUID.randomUUID.toString
-    currentUserToken(Full(token))
-    token
+    currentUserToken.get match {
+      case Full(token) => token
+      case _ =>
+        var token = java.util.UUID.randomUUID.toString
+        currentUserToken(Full(token))
+        token
+    }
+    
   }
 
   def logoutCurrentUser = logUserOut()
