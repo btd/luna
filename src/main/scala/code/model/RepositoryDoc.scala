@@ -16,8 +16,8 @@
 package code.model
 
 import net.liftweb._
-import mongodb.record.{MongoMetaRecord, MongoRecord}
-import mongodb.record.field.{ObjectIdRefField, ObjectIdPk}
+import mongodb.record._
+import mongodb.record.field._
 import record.field._
 import util._
 
@@ -66,7 +66,7 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
     }
 
     override def validations = valMinLen(1, "Name cannot be empty") _ :: 
-                                valRegex("""[a-zA-Z0-9\.\-]+""".r.pattern, "Name can contains only US-ASCII letters, digits, .(point), -(minus)") _ :: 
+                                valRegex("""[a-zA-Z0-9\.\-\.\!\~\*\\\(\)]+""".r.pattern, "Name can contains only US-ASCII letters, digits, .(point), -(minus)") _ :: 
                                 valMaxLen(maxLength, "Name cannot be more than "+maxLength+" symbols") _ ::
                                 unique_?("Repository with such name already exists") _ :: super.validations
   }
@@ -85,8 +85,9 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
 
   def owner = ownerId.obj.get
 
-
-  def collaborators = CollaboratorDoc.findAll("repoId", id.get).flatMap(c => c.userId.obj)
+  object collaborators extends ObjectIdRefListField(this, UserDoc) {
+    override def optional_? = true
+  }
 
   def keys = SshKeyRepoDoc.findAll("ownerId", id.is)
 
@@ -325,23 +326,11 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
   }
 
 
-  //lazy val pullRequestsUrl = homePageUrl + "/pull-requests"
-
-  //lazy val homePageUrl = "/" + owner.login.get + "/" + name.get
-
- // lazy val sourceTreeUrl = homePageUrl + "/tree" + (if(git.currentBranch == "") "" else ("/" + git.currentBranch))
-
-  //lazy val commitsUrl = homePageUrl + "/commits/" + git.currentBranch
-
-  //def commitsUrl(commit: String) = homePageUrl + "/commits/" + commit
-
- // def commitUrl(commit: String) = homePageUrl + "/commit/" + commit
-
   def canPush_?(user: Box[UserDoc]) = {
     //logger.debug(user)
     user match {
       case Full(u) if u.login.get == owner.login.get => true //владелец
-      case Full(u) => !collaborators.filter(_.login.get == u.login.get).isEmpty //коллаборатор
+      case Full(u) => !collaborators.objs.filter(_.login.get == u.login.get).isEmpty //коллаборатор
       case _ => false
     }
   }

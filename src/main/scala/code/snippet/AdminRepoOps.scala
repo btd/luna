@@ -42,7 +42,7 @@ class AdminRepoOps(repo: RepositoryDoc) extends Loggable with SshKeyUI with Repo
   private var collaborator_login = ""
 
   def renderCollaboratorsTable = 
-    ".collaborator" #> repo.collaborators.map(c => {
+    ".collaborator" #> repo.collaborators.objs.map(c => {
       ".collaborator [id]" #> c.id.get.toString &
       ".collaborator_name *" #> c.login.get &
       ".collaborator_delete *" #> SHtml.a(EntityRef("times")) {

@@ -102,7 +102,7 @@ trait CommandBase extends SshCommand with SessionAware with Loggable with daemon
     if(user.id.get == r.ownerId.get) { // user@server:repo 
       !keys.filter(_.acceptableFor(r)).isEmpty
     } else {// cuser@server:user/repo
-      !r.collaborators.filter(_.login.get == user.login.get).isEmpty
+      !r.collaborators.objs.filter(_.login.get == user.login.get).isEmpty
     }
   }
 }
