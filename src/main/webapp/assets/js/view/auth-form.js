@@ -12,6 +12,8 @@ define(["jquery", "underscore", "backbone", "model/user", "text!template/auth-fo
     },
 
     initialize: function() {
+      this.tryAuthorize();
+      
       state.on("login", function(user) {
         this.clean().render(user);
       }, this);

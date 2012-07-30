@@ -1,5 +1,5 @@
-define(["jquery", "underscore", "backbone", "model/state", "luna"], 
-  function($, _, Backbone, state, Luna) {
+define(["jquery", "underscore", "backbone", "model/state", "luna", "view/root-wiki"], 
+  function($, _, Backbone, state, Luna, RootWiki) {
 
   var mainView = Backbone.View.extend({
     el: "#main",
@@ -13,11 +13,12 @@ define(["jquery", "underscore", "backbone", "model/state", "luna"],
       return this;
     },
 
-    showWiki: function() {
+    showWiki: function(getContent) {
       var self = this;
-      Luna.mainWiki(function(data) {
-        self.$el.append(data.content);
+      getContent(function(content) {
+        self.subView = new RootWiki({ content: content });
       });
+    
       return self;
     },
 
@@ -28,7 +29,7 @@ define(["jquery", "underscore", "backbone", "model/state", "luna"],
     },
 
     clean: function() {
-      this.$el.empty();
+      this.subView && this.subView.clean();
       return this;
     }
   });

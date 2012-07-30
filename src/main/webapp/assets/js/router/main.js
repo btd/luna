@@ -1,4 +1,4 @@
-define(["backbone", "model/state"], function(Backbone, state) {
+define(["backbone", "model/state", "luna"], function(Backbone, state, Luna) {
 
   //main and alone...
   var MainRouter = Backbone.Router.extend({
@@ -21,7 +21,11 @@ define(["backbone", "model/state"], function(Backbone, state) {
     },
 
     root: function() {
-      state.get("mainView").clean().showWiki();
+      state.get("mainView").clean().showWiki(function(callback) {
+        Luna.mainWiki(function(data) {
+          callback(data.content);
+        });
+      });
     },
 
     userPage: function() {
