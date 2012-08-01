@@ -12,12 +12,19 @@ scalacOptions += "-deprecation"
 
 resolvers ++= Seq (
   "jgit-repository" at "http://download.eclipse.org/jgit/maven",
-  "Sonatype Snapshot" at "https://oss.sonatype.org/content/repositories/snapshots",
+  "Sonatype Release" at "http://oss.sonatype.org/content/repositories/releases",
+  "Sonatype Snapshots" at "http://oss.sonatype.org/content/repositories/snapshots",
   "my github repo" at "http://btd.github.com/maven2"
   )
 
 
 libraryDependencies ++= Seq (
+  "com.novus"           %% "salat"                        % "1.9.0",
+  "javax.servlet"       % "servlet-api"                   % "2.5" % "provided",
+  "net.databinder"      %% "unfiltered"                   % "0.6.3",
+  "net.databinder"      %% "unfiltered-filter"            % "0.6.3",
+  "net.databinder"      %% "unfiltered-jetty"             % "0.6.3",
+  "net.databinder"      %% "unfiltered-json"              % "0.6.3",
   "com.typesafe"        % "config"                        % "0.5.0",
   "com.google.guava"    % "guava"                         % "12.0",
   "org.pegdown"         % "pegdown"                       % "1.1.0",

@@ -3,16 +3,20 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd">
 
+    <listener>
+        <listener-class>luna.boot.Boot</listener-class>
+    </listener>
+
     <filter>
-        <filter-name>LiftFilter</filter-name>
-        <filter-class>net.liftweb.http.LiftFilter</filter-class>
+        <filter-name>V1Filter</filter-name>
+        <filter-class>luna.api.V1Filter</filter-class>
     </filter>
 
     
 
     <filter-mapping>
-        <filter-name>LiftFilter</filter-name>
-        <url-pattern>/*</url-pattern>
+        <filter-name>V1Filter</filter-name>
+        <url-pattern>/api/1/*</url-pattern>
     </filter-mapping>
 
   

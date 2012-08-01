@@ -28,8 +28,12 @@ import Utility._
 import com.foursquare.rogue.Rogue._
 import net.liftweb.http.rest._
 
+case class RepositoryParams(name: String, isPublic: Boolean)
+
 object ApiV1 extends Loggable with RestHelper {
   import Helpers._
+
+  //implicit val formats = net.liftweb.json.DefaultFormats
 
   def loginSuccessResponce(user: UserDoc) = {
     val token = Session.put(SessionData(Some(user)))
@@ -67,10 +71,39 @@ object ApiV1 extends Loggable with RestHelper {
     }
     case "wiki" :: "root" :: Nil JsonGet _ => JsonResponse(JObject(JField("content", code.snippet.WelcomeWiki.finalContent) :: Nil))
 
-    case "user" :: id :: "repositories" :: Nil JsonGet _ => BadResponse()
+    case "user" :: id :: "repository" :: "all" :: Nil JsonGet _ => {
+      UserDoc.find(id) match {
+        case Full(user) => JsonResponse(JArray(user.publicRepos.map(r => r.asJValue)))
+        case _ => NotFoundResponse("User not founded")
+      }
+      
+    }
+
+    case "user" :: id :: "repository" :: "create" :: Nil Post r => {
+      (r.body, r.param("access_token")) match {
+        case (Full(body), Full(access_token)) =>
+          (UserDoc.find(id), Session.get(access_token).user) match {
+            case (Full(user), Some(sessionUser)) if user.id.get == sessionUser.id.get =>
+              logger.debug("Getting such body:" + new String(body, "UTF-8"))
+              tryo(Serialization.read[RepositoryParams](new String(body, "UTF-8")))
+                .map{ p => 
+                  val r = RepositoryDoc.createRecord.name(p.name).open_?(p.isPublic).ownerId(user.id.get)
+                  r.save
+                  JsonResponse(r.asJValue)
+                }
+            case (Empty, _) => NotFoundResponse("User with such id doesn't exists")
+            case (_, None) =>  UnauthorizedResponse("Token already has expired")
+            case _ => BadResponse()
+          }
+          
+        case (_, Empty) =>  UnauthorizedResponse("There is no access token in request")
+        case _ => BadResponse()
+      }
+    }
+
   }}
 
-
+//
 }
 
 trait Init {
