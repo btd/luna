@@ -34,9 +34,7 @@ trait JSON {
     private val Class = classOf[ObjectId]
 
     def deserialize(implicit format: Formats): PartialFunction[(TypeInfo, JValue), ObjectId] = {
-      case (TypeInfo(Class, _), json) => 
-        new ObjectId((json \ "id").extract[String])
-      
+      case (TypeInfo(Class, _), json) => new ObjectId((json \ "id").extract[String])
     }
 
     def serialize(implicit format: Formats): PartialFunction[Any, JValue] = {
@@ -50,6 +48,8 @@ trait JSON {
   def asJValue = Extraction.decompose(this)(defaultFormats)
 }
 
+case class Hidden[A:Manifest](value: A)
+
 case class User(
   @Key("_id") id: ObjectId = new ObjectId, 
   email: Option[String] = None, 
@@ -59,8 +59,28 @@ case class User(
   suspended: Boolean = false
 ) extends JSON
 
-object Users extends SalatDAO[User, ObjectId](
+object User extends SalatDAO[User, ObjectId](
   collection = MongoConnection()(P.dbName)("users")
 ) {
   def byLogin(login: String) = findOne(MongoDBObject("login" -> login))
+
+  def byId(id: ObjectId) = findOneByID(id)
+  def byId(id: String) = findOneByID(new ObjectId(id))
+}
+
+case class RepositoryCommon(name: String, isPublic: Boolean)
+
+case class Repository(
+  @Key("_id") id: ObjectId = new ObjectId, 
+  name: String, 
+  isPublic: Boolean = true,
+  ownerId: ObjectId
+) extends JSON
+
+object Repository extends SalatDAO[Repository, ObjectId](
+  collection = MongoConnection()(P.dbName)("repositories")
+) {
+  def byOwnerId(id: ObjectId) = find(ref = MongoDBObject("id" -> id)).toList
+
+  def byOwnerId(id: ObjectId, isPublic: Boolean) = find(ref = MongoDBObject("id" -> id, "isPublic" -> isPublic)).toList
 }

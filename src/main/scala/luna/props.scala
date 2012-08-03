@@ -35,14 +35,16 @@ object P extends Loggable   {
    private def propStr(p: (String, () => Any)) = code.rest.Config.getString(p._1, p._2().toString)
 
    val workingDirProperty = ("luna.working_dir", () => Path.userHome / ".luna")
+   val welcomePageProperty = ("luna.welcome_file", () => workingDir / "welcome.md")
+   val sessionLifeTimeProperty = ("luna.session_life_time", () => "10m")
+   val dbNameProperty = ("luna.db_name", () => "luna")
+   val runModeProperty = ("luna.run_mode", () => "dev")
 
    def workingDir = propStr(workingDirProperty)
 
-   val welcomePageProperty = ("luna.working_dir", () => workingDir / "welcome.md")
+   def runMode = propStr(runModeProperty)
 
-   val sessionLifeTimeProperty = ("luna.session_life_time", () => "10m")
-
-   val dbNameProperty = ("luna.db_name", () => "luna")
+   def devMode = runMode == "dev"
 
    def dbName = propStr(dbNameProperty)
 

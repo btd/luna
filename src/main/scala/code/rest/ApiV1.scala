@@ -196,11 +196,11 @@ object P extends net.liftweb.common.Loggable   {
 
    val workingDirProperty = ("luna.working_dir", () => Path.userHome / ".luna")
 
-   def workingDir = propStr(workingDirProperty)
-
    val welcomePageProperty = ("luna.working_dir", () => workingDir / "welcome.md")
 
    val sessionLifeTimeProperty = ("luna.session_life_time", () => "10m")
+
+   def workingDir = propStr(workingDirProperty)
 
    def sessionLifeTime = propStr(sessionLifeTimeProperty)
 
