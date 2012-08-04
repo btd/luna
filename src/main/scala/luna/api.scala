@@ -40,13 +40,17 @@ object V1 extends Loggable {
   def intent = unfiltered.Cycle.Intent[Any, Any] {
     case req @ GET(Path(Seg("api" :: "1" :: "auth" :: "token" :: Nil))) => req match {
         case Params(AccessToken(accessToken)) => 
-          Session.get(accessToken).user match {
+          Session.get(accessToken) match {
             case None => Forbidden ~> ResponseString("There is no any session for this token")
-            case Some(user) => Json(JObject(JField("access_token", accessToken) :: JField("user", user.asJValue) :: Nil))
+            case Some(id) => 
+              User.byId(id) match {
+                case Some(user) => Json(JObject(JField("access_token", accessToken) :: JField("user", user.asJValue) :: Nil))
+                case _ => NotFound ~> ResponseString("User does not exists")
+              }
           }
         case Params(Login(login) & Password(password)) => 
           def successfulAuthResponse(user: User) = {
-            val token = Session.put(SessionData(Some(user)))
+            val token = Session.put(user.id)
             Json(JObject(JField("access_token", token) :: JField("user", user.asJValue) :: Nil))
           }
 
@@ -74,28 +78,29 @@ object V1 extends Loggable {
           req match {
             case req @ POST(_) => req match {
               case Params(AccessToken(accessToken)) =>
-                Session.get(accessToken).user match {
+                Session.get(accessToken) match {
                   case None => Forbidden ~> ResponseString("There is no any session for this token")
 
-                  case Some(user) if user.id == owner.id => 
+                  case Some(userId) if userId == owner.id => 
                     tryo(Serialization.read[RepositoryCommon](Body.string(req))).map{ p => 
-                      val r = Repository(name = p.name, isPublic = p.isPublic, ownerId = user.id)
+                      val r = Repository(name = p.name, isPublic = p.isPublic, ownerId = userId)
                       
                       Repository.insert(r)
                       Json(r.asJValue)
                     }.getOrElse(BadRequest ~> ResponseString("Repository property could not be read"))
 
-                  case Some(user) => Unauthorized ~> ResponseString("You cannot create repositories for this user")
+                  case Some(_) => Unauthorized ~> ResponseString("You cannot create repositories for this user")
                 }
               case _ => Forbidden ~> ResponseString("You need to add access_token param")
             }
             case req @ GET(_) =>
-              def publicRepositoriesResponse(user: User) = Json(JArray(Repository.byOwnerId(user.id, true).map(_.asJValue)))
+              def publicRepositoriesResponse(user: User) = 
+                Json(JArray(Repository.byOwnerId(user.id, true).map(_.asJValue)))
 
               req match {
                 case Params(AccessToken(accessToken)) =>
-                  Session.get(accessToken).user match {
-                    case Some(user) if owner.id == user.id => Json(JArray(Repository.byOwnerId(owner.id).map(_.asJValue)))
+                  Session.get(accessToken) match {
+                    case Some(userId) if owner.id == userId => Json(JArray(Repository.byOwnerId(owner.id).map(_.asJValue)))
                     case _ => publicRepositoriesResponse(owner)
                   }
                 case _ => publicRepositoriesResponse(owner)

@@ -4,7 +4,7 @@ import luna.help._
 import luna.props._
 import luna.model._
 
-case class SessionData(user: Option[User])
+import com.mongodb.casbah.Imports._ 
 
 object Session extends Init {
   import com.google.common.cache._
@@ -12,11 +12,11 @@ object Session extends Init {
 
   def newToken = java.util.UUID.randomUUID.toString
 
-  private var loader = new CacheLoader[String, SessionData] {
-    def load(token: String) = SessionData(None)
+  private var loader = new CacheLoader[String, Option[ObjectId]] {
+    def load(token: String) = None
   }
 
-  private var cache: Option[LoadingCache[String, SessionData]] = None
+  private var cache: Option[LoadingCache[String, Option[ObjectId]]] = None
 
   def init {
     val ttl = P.sessionLifeTime
@@ -26,15 +26,15 @@ object Session extends Init {
   }
   def isInited = !cache.isEmpty
 
-  def put(data: SessionData): Option[String] = {
+  def put(data: ObjectId): Option[String] = {
     for {
       c <- cache
       token = newToken
     } yield {
-      c.put(token, data)
+      c.put(token, Some(data))
       token
     }
   }
 
-  def get(token: String) = cache.get(token)
+  def get(token: String): Option[ObjectId] = cache.flatMap(_.get(token))
 }
