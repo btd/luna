@@ -10,6 +10,25 @@ define(['jquery'], function($) {
       }
       return data;
     };
+
+    var makeRequest = function(params, context) {
+      var opts = params = $.extend({
+        data : {},
+        method : 'GET',
+        error: context.setupFail
+      }, params);
+
+      $.ajax({
+        dataType: 'json',
+        url: '/api/' + version + params.url,
+        data: addToken(opts.data, context.getToken()),
+        type: opts.method
+      }).done(function(data) {
+        opts.success(data);
+      }).fail(function(jqXHR, textStatus, errorThrown) {
+        opts.error(jqXHR, textStatus, errorThrown);
+      });
+    };
   
     return {
       setupFail: function(jqXHR, textStatus, errorThrown) {
@@ -20,34 +39,32 @@ define(['jquery'], function($) {
         return this.access_token || (localStorage && localStorage.getItem("access_token"));
       },
 
-      authorize: function(data, success, error) {
+      authorize: function(data, callback, error) {
         var self = this;
-        try {
-          $.ajax({
-            dataType: 'json',
-            url: '/api/' + version + "/auth/token",
-            data: addToken(data || {}, self.getToken()),
-            type: 'GET'
-          }).done(function(data) {
+        makeRequest({
+          url: "/auth/token",
+          data: data,
+          success: function(data) {
             self.access_token = data.access_token;
             localStorage && localStorage.setItem("access_token", self.access_token);
-            success(data);
-          }).fail(function(jqXHR, textStatus, errorThrown) {
+            callback(data);
+          },
+          error: function(jqXHR, textStatus, errorThrown) {
             localStorage && localStorage.removeItem("access_token", self.access_token);
-            (error || self.setupFail).apply(this, arguments)
-          });
-        } catch(exception) {
-          
-        }
+          }
+        }, this);
       },
-      mainWiki: function(success) {
-        $.ajax({
-          dataType: 'json',
-          url: '/api/' + version + "/wiki/root",
-          type: 'GET'
-        }).done(function(data) {
-          success(data);
-        })
+      mainWiki: function(callback) {
+        makeRequest({
+          success: callback,
+          url: "/wiki/root"
+        }, this);
+      },
+      userRepositories: function(userName, callback) {
+        makeRequest({
+          success: callback,
+          url: "/user/" + userName + "/repositories"
+        }, this);
       }
     }
   }();

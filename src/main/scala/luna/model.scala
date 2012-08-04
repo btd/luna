@@ -54,7 +54,7 @@ case class User(
   @Key("_id") id: ObjectId = new ObjectId, 
   email: Option[String] = None, 
   login: String,
-  password: Password,
+  @transient password: Password,
   admin: Boolean = false,
   suspended: Boolean = false
 ) extends JSON
@@ -64,8 +64,7 @@ object User extends SalatDAO[User, ObjectId](
 ) {
   def byLogin(login: String) = findOne(MongoDBObject("login" -> login))
 
-  def byId(id: ObjectId) = findOneByID(id)
-  def byId(id: String) = findOneByID(new ObjectId(id))
+  def byId(id: ObjectId) = findOneById(id)
 }
 
 case class RepositoryCommon(name: String, isPublic: Boolean)

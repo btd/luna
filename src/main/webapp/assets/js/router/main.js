@@ -28,8 +28,12 @@ define(["backbone", "model/state", "luna"], function(Backbone, state, Luna) {
       });
     },
 
-    userPage: function() {
-      state.get("mainView").clean().showUserPage();
+    userPage: function(userName) {
+      state.get("mainView").clean().showUserPage(function(callback) {
+        Luna.userRepositories(userName, function(data) {
+          callback(data);
+        });
+      });
     }
 
   });

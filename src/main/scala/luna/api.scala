@@ -54,15 +54,11 @@ object V1 extends Loggable {
             Json(JObject(JField("access_token", token) :: JField("user", user.asJValue) :: Nil))
           }
 
-          logger.debug("Try to find user by login: " + login)
-
           User.byLogin(login) match {
             case Some(user) if user.password.match_?(password) => successfulAuthResponse(user)
             case Some(user) => Forbidden ~> ResponseString("Wrong password")
             case _ =>
-              logger.debug("User not founded")
               val user = User(login = login, password = PasswordHash(password))
-              logger.debug("User: " + user)
 
               User.insert(user)
               successfulAuthResponse(user)
@@ -72,8 +68,8 @@ object V1 extends Loggable {
 
     case GET(Path(Seg("api" :: "1" :: "wiki" :: "root" :: Nil))) => Json(JObject(JField("content", luna.wiki.Wiki.finalContent) :: Nil))
 
-    case req @ Path(Seg("api" :: "1" :: "user" :: id :: "repositories" :: Nil)) => 
-      User.byId(id) match {
+    case req @ Path(Seg("api" :: "1" :: "user" :: login :: "repositories" :: Nil)) => 
+      User.byLogin(login) match {
         case Some(owner) =>
           req match {
             case req @ POST(_) => req match {
@@ -109,10 +105,21 @@ object V1 extends Loggable {
         case _ => NotFound ~> ResponseString("User with such id does not exist")
       }
 
+    case GET(Path(Seg("api" :: "1" :: "user" :: login :: Nil))) => 
+      User.byLogin(login) match {
+        case Some(owner) => Json(owner.asJValue)
+        case _ => NotFound ~> ResponseString("User with such login does not exist")
+      }
+
+    case req @ Path(Seg("api" :: "1" :: "users" :: Nil)) => req match {
+      case GET(_) => MethodNotAllowed
+      case POST(_) => MethodNotAllowed
+    } 
+
     case _ => MethodNotAllowed
   }
 }
 
 
-//in the future it will be separated project luna-war (also will be luna-netty)
+//TODO in the future it will be separated project luna-war (also will be luna-netty)
 class V1Filter extends unfiltered.filter.Planify(V1.intent)

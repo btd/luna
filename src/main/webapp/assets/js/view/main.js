@@ -1,5 +1,5 @@
-define(["jquery", "underscore", "backbone", "model/state", "luna", "view/root-wiki"], 
-  function($, _, Backbone, state, Luna, RootWiki) {
+define(["jquery", "underscore", "backbone", "model/state", "luna", "view/root-wiki", "view/user-repo-list", "collection/repository"], 
+  function($, _, Backbone, state, Luna, RootWikiView, RepoListView, RepositoryList) {
 
   var mainView = Backbone.View.extend({
     el: "#main",
@@ -13,18 +13,21 @@ define(["jquery", "underscore", "backbone", "model/state", "luna", "view/root-wi
       return this;
     },
 
-    showWiki: function(getContent) {
+    showWiki: function(subViewCallback) {
       var self = this;
-      getContent(function(content) {
-        self.subView = new RootWiki({ content: content });
+      subViewCallback(function(content) {
+        self.clean();
+        self.subView = new RootWikiView({ content: content });
       });
-    
       return self;
     },
 
-    showUserPage: function() {
+    showUserPage: function(subViewCallback) {
       var self = this;
-      console.log("user page");
+      subViewCallback(function(content) {
+        self.clean();
+        self.subView = new RepoListView({ collection: new RepositoryList(content)});
+      });
       return self;
     },
 
