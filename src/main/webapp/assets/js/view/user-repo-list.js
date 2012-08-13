@@ -18,12 +18,12 @@ define(["jquery", "underscore", "backbone", "model/state", "luna", "text!templat
     },
 
     createNewRepository: function() {
-      val newRepo = new Repository({
+      var newRepo = new Repository({
         name: $("#new-repository-name").val(),
         isPublic: $("#new-repository-public").prop("checked")
       });
-      if(state.get("user").get("name") === this.userName && newRepo.isValid()) {
-        Luna.createRepository(newRepo.toJSON(), function(data) {
+      if(state.get("user").get("login") === this.userName && newRepo.isValid()) {
+        Luna.createRepository(this.userName, newRepo.toJSON(), function(data) {
           newRepo.set(data);
           this.collection.add(newRepo);
         });

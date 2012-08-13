@@ -7,3 +7,5 @@ target
 *.sublime-workspace
 .DS_Store
 logs/*
+
+.history

@@ -11,6 +11,7 @@ scalaVersion := "2.9.1"
 scalacOptions += "-deprecation"
 
 resolvers ++= Seq (
+  "Local Maven Repository" at "file://"+Path.userHome.absolutePath+"/.m2/repository",
   "jgit-repository" at "http://download.eclipse.org/jgit/maven",
   "Sonatype Release" at "http://oss.sonatype.org/content/repositories/releases",
   "Sonatype Snapshots" at "http://oss.sonatype.org/content/repositories/snapshots",

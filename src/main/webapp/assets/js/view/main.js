@@ -22,11 +22,11 @@ define(["jquery", "underscore", "backbone", "model/state", "luna", "view/root-wi
       return self;
     },
 
-    showUserPage: function(subViewCallback) {
+    showUserPage: function(userName, subViewCallback) {
       var self = this;
       subViewCallback(function(content) {
         self.clean();
-        self.subView = new RepoListView({ collection: new RepositoryList(content)});
+        self.subView = new RepoListView({ collection: new RepositoryList(content), userName: userName});
       });
       return self;
     },

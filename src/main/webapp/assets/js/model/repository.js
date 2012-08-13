@@ -1,6 +1,8 @@
 define(["jquery", "underscore", "backbone"], function($, _, Backbone) {
   var Repository = Backbone.Model.extend({
-    idAttribute: "_id"
+    validate: function() {
+
+    }
   });
   return Repository;
 });

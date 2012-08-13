@@ -48,8 +48,6 @@ trait JSON {
   def asJValue = Extraction.decompose(this)(defaultFormats)
 }
 
-case class Hidden[A:Manifest](value: A)
-
 case class User(
   @Key("_id") id: ObjectId = new ObjectId, 
   email: Option[String] = None, 

@@ -9,7 +9,7 @@
       <input type="text" id="new-repository-name" placeholder="Repository name">
       <span class="help-block">Repository name can have only such symbols: a ... z, A ... Z, 0 ... 9, ., -, !, ~, *, \, (, )</span>
       <label class="checkbox">
-        <input type="checkbox" class="new-repository-public"> Make repository public
+        <input type="checkbox" id="new-repository-public"> Make repository public
       </label>
     </div>
     <div class="modal-footer">
