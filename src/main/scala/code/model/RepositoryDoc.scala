@@ -123,11 +123,12 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
       val list = new ArrayBuffer[SourceElement](50)
       while (walk.next) {
         val fullPath = (guessString(Some(walk.getRawPath)) getOrElse walk.getPathString()).split("/").toList
+        val fileMode = walk.getFileMode(level)
 
         list +=
-          (if (walk.getFileMode(level) == FileMode.TREE) 
+          (if (fileMode == FileMode.TREE || fileMode == FileMode.GITLINK) {
             Tree(RepositoryDoc.this, commit, fullPath)
-          else {
+          } else {
             val size = reader.getObjectSize(walk.getObjectId(level), Constants.OBJ_BLOB)
             Blob(RepositoryDoc.this, commit, fullPath, size)
           })
