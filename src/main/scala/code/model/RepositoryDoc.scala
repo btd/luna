@@ -54,7 +54,7 @@ import Helper._
 class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk[RepositoryDoc] with Loggable {
 
   //имя папки репозитория not null unique primary key хеш наверно SHA-1
-  object fsName extends StringField(this, 50, DigestUtils.sha(id.get.toString).toString)
+  object fsName extends StringField(this, 50, DigestUtils.sha1(id.get.toString).toString)
 
   //имя репозитория для пользователя not null
   object name extends StringField(this, 50) {
@@ -123,11 +123,12 @@ class RepositoryDoc private() extends MongoRecord[RepositoryDoc] with ObjectIdPk
       val list = new ArrayBuffer[SourceElement](50)
       while (walk.next) {
         val fullPath = (guessString(Some(walk.getRawPath)) getOrElse walk.getPathString()).split("/").toList
+        val fileMode = walk.getFileMode(level)
 
         list +=
-          (if (walk.getFileMode(level) == FileMode.TREE) 
+          (if (fileMode == FileMode.TREE || fileMode == FileMode.GITLINK) {
             Tree(RepositoryDoc.this, commit, fullPath)
-          else {
+          } else {
             val size = reader.getObjectSize(walk.getObjectId(level), Constants.OBJ_BLOB)
             Blob(RepositoryDoc.this, commit, fullPath, size)
           })
