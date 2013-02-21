@@ -129,7 +129,7 @@ object UserDoc extends UserDoc with MongoMetaRecord[UserDoc] with Loggable {
 
   def logUserIn(who: UserDoc, postLogin: () => Nothing): Nothing = {
     if (destroySessionOnLogin) {
-      S.session.open_!.destroySessionAndContinueInNewSession(() => {
+      S.session.openOrThrowException("assume session is exists").destroySessionAndContinueInNewSession(() => {
         logUserIn(who)
         postLogin()
       })
